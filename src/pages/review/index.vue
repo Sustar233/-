@@ -14,7 +14,9 @@ const chapters = ref<Chapter[]>([])
 const rating = ref(false)
 
 const progress = computed(() =>
-  reviewStore.total ? Math.round((reviewStore.completed / reviewStore.total) * 100) : 0,
+  reviewStore.total
+    ? Math.round((Math.min(reviewStore.completed + 1, reviewStore.total) / reviewStore.total) * 100)
+    : 0,
 )
 const breadcrumb = computed(() => {
   const card = reviewStore.currentCard
@@ -49,11 +51,14 @@ function goBack(): void {
 <template>
   <view class="review-page safe-top">
     <view class="review-header">
-      <button class="close-button" @click="goBack">×</button>
+      <button class="close-button" aria-label="退出复习" @click="goBack">×</button>
       <view class="progress-copy">
-        <text class="progress-count">
-          {{ Math.min(reviewStore.completed + 1, reviewStore.total) }} / {{ reviewStore.total }}
-        </text>
+        <view class="progress-meta">
+          <text class="progress-label">今日复习</text>
+          <text class="progress-count">
+            {{ Math.min(reviewStore.completed + 1, reviewStore.total) }} / {{ reviewStore.total }}
+          </text>
+        </view>
         <view class="progress-track">
           <view class="progress-fill" :style="{ width: `${progress}%` }" />
         </view>
@@ -108,7 +113,7 @@ function goBack(): void {
 <style scoped>
 .review-page {
   width: 100%;
-  max-width: 920rpx;
+  max-width: 860rpx;
   min-height: 100vh;
   margin: 0 auto;
   padding-right: 28rpx;
@@ -131,8 +136,9 @@ function goBack(): void {
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  background: #e9ede9;
-  color: #5f6c65;
+  border: 1rpx solid var(--color-line);
+  background: var(--color-surface);
+  color: var(--color-muted);
   font-size: 44rpx;
   font-weight: 350;
 }
@@ -141,14 +147,24 @@ function goBack(): void {
   display: flex;
   flex: 1;
   flex-direction: column;
+  gap: 9rpx;
+}
+
+.progress-meta {
+  display: flex;
   align-items: center;
-  gap: 10rpx;
+  justify-content: space-between;
+}
+
+.progress-label {
+  color: var(--color-muted);
+  font-size: 21rpx;
 }
 
 .progress-count {
-  color: #65716a;
+  color: var(--color-primary);
   font-size: 23rpx;
-  font-weight: 650;
+  font-weight: 720;
 }
 
 .progress-track {
@@ -156,13 +172,13 @@ function goBack(): void {
   height: 8rpx;
   overflow: hidden;
   border-radius: 999rpx;
-  background: #dfe6e1;
+  background: #ded8ce;
 }
 
 .progress-fill {
   height: 100%;
   border-radius: inherit;
-  background: #3e795f;
+  background: linear-gradient(90deg, var(--color-accent) 0%, var(--color-primary) 100%);
   transition: width 180ms ease;
 }
 
@@ -172,7 +188,7 @@ function goBack(): void {
 
 .loading-copy {
   padding: 180rpx 0;
-  color: #7d8781;
+  color: var(--color-muted);
   text-align: center;
 }
 
@@ -181,25 +197,26 @@ function goBack(): void {
 }
 
 .card-stage {
-  padding-top: 28rpx;
+  padding-top: 24rpx;
 }
 
 .breadcrumb {
   display: block;
   margin-bottom: 18rpx;
-  color: #738078;
+  color: var(--color-muted);
   font-size: 23rpx;
   text-align: center;
 }
 
 .review-card {
-  min-height: 610rpx;
+  min-height: 570rpx;
   padding: 48rpx 38rpx;
+  border-top: 6rpx solid var(--color-accent);
 }
 
 .card-kicker {
   display: block;
-  color: #5c796b;
+  color: var(--color-primary);
   font-size: 21rpx;
   font-weight: 750;
   letter-spacing: 2rpx;
@@ -214,7 +231,8 @@ function goBack(): void {
 .review-question {
   margin-top: 28rpx;
   font-size: 38rpx;
-  font-weight: 760;
+  color: var(--color-text);
+  font-weight: 780;
   line-height: 1.65;
 }
 
@@ -226,12 +244,12 @@ function goBack(): void {
   width: 100%;
   height: 1rpx;
   margin-bottom: 40rpx;
-  background: #e4e9e5;
+  background: var(--color-line);
 }
 
 .review-answer {
   margin-top: 24rpx;
-  color: #34433b;
+  color: #394139;
   font-size: 30rpx;
   line-height: 1.8;
 }
@@ -240,7 +258,8 @@ function goBack(): void {
   margin-top: 32rpx;
   padding: 22rpx;
   border-radius: 16rpx;
-  background: #f3f5f2;
+  border-left: 4rpx solid #d7b18f;
+  background: #faf3eb;
 }
 
 .note-label,
@@ -249,13 +268,13 @@ function goBack(): void {
 }
 
 .note-label {
-  color: #78827c;
+  color: var(--color-accent);
   font-size: 21rpx;
 }
 
 .note-copy {
   margin-top: 9rpx;
-  color: #57635c;
+  color: #5e625b;
   font-size: 24rpx;
   line-height: 1.65;
 }

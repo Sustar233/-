@@ -66,7 +66,7 @@ function importData(): void {
 <template>
   <view class="page-shell">
     <view class="page-heading">
-      <text class="eyebrow">PREFERENCES</text>
+      <text class="eyebrow">偏好与数据</text>
       <text class="page-title">设置</text>
       <text class="page-subtitle">只有真正影响复习的选项。</text>
     </view>
@@ -101,7 +101,7 @@ function importData(): void {
         placeholder="导出的 JSON 会显示在这里，也可以粘贴备份以恢复数据。"
       />
       <view class="backup-actions">
-        <button class="secondary-button" :loading="working" @click="exportData">导出并复制</button>
+        <button class="secondary-button" :loading="working" :disabled="working" @click="exportData">导出并复制</button>
         <button class="danger-button" :disabled="working || !backupText.trim()" @click="importData">
           导入并覆盖
         </button>
@@ -109,7 +109,10 @@ function importData(): void {
     </view>
 
     <view class="about-card">
-      <text class="about-name">RecallLab 1.0</text>
+      <view class="about-title-row">
+        <view class="about-seal">舟</view>
+        <text class="about-name">苦作舟 1.0</text>
+      </view>
       <text class="about-copy">数据仅保存在当前设备。无账号、无云端、无额外追踪。</text>
     </view>
   </view>
@@ -117,7 +120,7 @@ function importData(): void {
 
 <style scoped>
 .page-heading {
-  margin: 10rpx 2rpx 34rpx;
+  margin: 10rpx 2rpx 36rpx;
 }
 
 .eyebrow,
@@ -127,7 +130,7 @@ function importData(): void {
 }
 
 .eyebrow {
-  color: #7b8b82;
+  color: var(--color-accent);
   font-size: 19rpx;
   font-weight: 700;
   letter-spacing: 3rpx;
@@ -136,18 +139,27 @@ function importData(): void {
 .page-title {
   margin-top: 7rpx;
   font-size: 48rpx;
-  font-weight: 800;
+  color: var(--color-text);
+  font-weight: 820;
 }
 
 .page-subtitle {
   margin-top: 10rpx;
-  color: #7d8781;
+  color: var(--color-muted);
   font-size: 24rpx;
 }
 
 .setting-card,
 .backup-card {
   padding: 30rpx;
+}
+
+.setting-card {
+  border-left: 5rpx solid var(--color-primary);
+}
+
+.backup-card {
+  border-left: 5rpx solid var(--color-accent);
 }
 
 .setting-name,
@@ -162,7 +174,7 @@ function importData(): void {
 
 .setting-description {
   margin-top: 9rpx;
-  color: #7d8781;
+  color: var(--color-muted);
   font-size: 23rpx;
 }
 
@@ -178,15 +190,15 @@ function importData(): void {
   height: 76rpx;
   min-height: 76rpx;
   padding: 0 20rpx;
-  border: 1rpx solid #dce3dd;
+  border: 1rpx solid #ddd5c8;
   border-radius: 16rpx;
-  background: #f9faf8;
+  background: #fffdf8;
   font-size: 30rpx;
   text-align: center;
 }
 
 .limit-unit {
-  color: #6e7973;
+  color: var(--color-muted);
 }
 
 .save-limit {
@@ -195,7 +207,7 @@ function importData(): void {
 
 .backup-intro {
   display: block;
-  color: #647068;
+  color: #5f675f;
   font-size: 24rpx;
   line-height: 1.7;
 }
@@ -205,10 +217,10 @@ function importData(): void {
   height: 330rpx;
   margin-top: 24rpx;
   padding: 22rpx;
-  border: 1rpx solid #dde4de;
+  border: 1rpx solid #ddd5c8;
   border-radius: 16rpx;
-  background: #f7f8f6;
-  color: #445149;
+  background: #faf7f1;
+  color: #444a44;
   font-family: monospace;
   font-size: 20rpx;
   line-height: 1.55;
@@ -224,7 +236,26 @@ function importData(): void {
 .about-card {
   margin-top: 52rpx;
   padding: 30rpx 6rpx;
-  border-top: 1rpx solid #dde3de;
+  border-top: 1rpx solid var(--color-line);
+}
+
+.about-title-row {
+  display: flex;
+  align-items: center;
+  gap: 14rpx;
+}
+
+.about-seal {
+  display: flex;
+  width: 44rpx;
+  height: 44rpx;
+  align-items: center;
+  justify-content: center;
+  border-radius: 11rpx 11rpx 11rpx 4rpx;
+  background: var(--color-accent);
+  color: #fffaf3;
+  font-family: "STKaiti", "KaiTi", serif;
+  font-size: 24rpx;
 }
 
 .about-name,
@@ -233,13 +264,13 @@ function importData(): void {
 }
 
 .about-name {
-  color: #516058;
+  color: var(--color-text);
   font-weight: 700;
 }
 
 .about-copy {
   margin-top: 10rpx;
-  color: #909893;
+  color: var(--color-subtle);
   font-size: 22rpx;
   line-height: 1.6;
 }

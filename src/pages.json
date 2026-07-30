@@ -10,14 +10,14 @@
   ],
   "globalStyle": {
     "navigationBarTextStyle": "black",
-    "navigationBarTitleText": "RecallLab",
-    "navigationBarBackgroundColor": "#f6f7f3",
-    "backgroundColor": "#f6f7f3"
+    "navigationBarTitleText": "苦作舟",
+    "navigationBarBackgroundColor": "#f6f1e8",
+    "backgroundColor": "#f6f1e8"
   },
   "tabBar": {
-    "color": "#8a8f86",
-    "selectedColor": "#245b47",
-    "backgroundColor": "#ffffff",
+    "color": "#777c75",
+    "selectedColor": "#1f5a49",
+    "backgroundColor": "#fffdf8",
     "borderStyle": "white",
     "list": [
       { "pagePath": "pages/index/index", "text": "首页" },

@@ -43,7 +43,7 @@ function editWeakCard(cardId: string, subjectId: string): void {
 <template>
   <view class="page-shell">
     <view class="page-heading">
-      <text class="eyebrow">LEARNING INSIGHTS</text>
+      <text class="eyebrow">学习轨迹</text>
       <text class="page-title">学习统计</text>
       <text class="page-subtitle">看见节奏，也看见容易遗忘的知识。</text>
     </view>
@@ -51,7 +51,7 @@ function editWeakCard(cardId: string, subjectId: string): void {
     <view class="stat-grid">
       <StatCard label="今日复习" :value="summary.todayReviews" hint="次回答" />
       <StatCard label="今日新卡" :value="summary.todayNewCards" hint="首次学习" />
-      <StatCard label="Again" :value="summary.todayAgain" hint="次重来" />
+      <StatCard label="今日重来" :value="summary.todayAgain" hint="次遗忘" />
       <StatCard label="连续学习" :value="`${summary.streakDays} 天`" hint="有记录的天数" />
     </view>
 
@@ -100,7 +100,7 @@ function editWeakCard(cardId: string, subjectId: string): void {
 
 <style scoped>
 .page-heading {
-  margin: 10rpx 2rpx 34rpx;
+  margin: 10rpx 2rpx 36rpx;
 }
 
 .eyebrow,
@@ -110,7 +110,7 @@ function editWeakCard(cardId: string, subjectId: string): void {
 }
 
 .eyebrow {
-  color: #7b8b82;
+  color: var(--color-accent);
   font-size: 19rpx;
   font-weight: 700;
   letter-spacing: 3rpx;
@@ -119,12 +119,13 @@ function editWeakCard(cardId: string, subjectId: string): void {
 .page-title {
   margin-top: 7rpx;
   font-size: 48rpx;
-  font-weight: 800;
+  color: var(--color-text);
+  font-weight: 820;
 }
 
 .page-subtitle {
   margin-top: 10rpx;
-  color: #7d8781;
+  color: var(--color-muted);
   font-size: 24rpx;
 }
 
@@ -137,7 +138,7 @@ function editWeakCard(cardId: string, subjectId: string): void {
 .chart {
   display: flex;
   height: 360rpx;
-  padding: 28rpx 18rpx 22rpx;
+  padding: 30rpx 18rpx 22rpx;
   align-items: stretch;
   justify-content: space-between;
 }
@@ -151,7 +152,7 @@ function editWeakCard(cardId: string, subjectId: string): void {
 
 .bar-value {
   height: 32rpx;
-  color: #65726b;
+  color: var(--color-muted);
   font-size: 19rpx;
 }
 
@@ -166,16 +167,16 @@ function editWeakCard(cardId: string, subjectId: string): void {
 .bar {
   width: 42rpx;
   border-radius: 12rpx 12rpx 5rpx 5rpx;
-  background: #39745a;
+  background: linear-gradient(180deg, #b9683d 0%, #8f4f2f 100%);
 }
 
 .bar.empty {
-  background: #e4e9e5;
+  background: #e7e0d5;
 }
 
 .bar-label {
   margin-top: 12rpx;
-  color: #808a84;
+  color: var(--color-muted);
   font-size: 18rpx;
 }
 
@@ -195,8 +196,8 @@ function editWeakCard(cardId: string, subjectId: string): void {
   align-items: center;
   justify-content: center;
   border-radius: 14rpx;
-  background: #f6eae6;
-  color: #a55348;
+  background: var(--color-accent-soft);
+  color: #a05231;
   font-weight: 760;
 }
 
@@ -217,12 +218,12 @@ function editWeakCard(cardId: string, subjectId: string): void {
 }
 
 .weak-meta {
-  color: #828b86;
+  color: var(--color-muted);
   font-size: 21rpx;
 }
 
 .chevron {
-  color: #a1aaa5;
+  color: #aaa298;
   font-size: 40rpx;
 }
 </style>

@@ -23,7 +23,7 @@ withDefaults(
   padding: 80rpx 36rpx;
   flex-direction: column;
   align-items: center;
-  color: #7c8780;
+  color: var(--color-muted);
   text-align: center;
 }
 
@@ -35,14 +35,15 @@ withDefaults(
   justify-content: center;
   margin-bottom: 24rpx;
   border-radius: 50%;
-  background: #e5efea;
-  color: #347159;
+  border: 1rpx solid #cedfd5;
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
   font-size: 42rpx;
   font-weight: 800;
 }
 
 .empty-title {
-  color: #304038;
+  color: var(--color-text);
   font-size: 31rpx;
   font-weight: 720;
 }

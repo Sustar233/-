@@ -17,6 +17,7 @@ const tags = ref('')
 const importance = ref<CardImportance>(2)
 const note = ref('')
 const saving = ref(false)
+const loading = ref(true)
 
 const subjectNames = computed(() => subjects.value.map((subject) => subject.name))
 const availableChapters = computed(() =>
@@ -30,27 +31,30 @@ const selectedChapterName = computed(
   () => availableChapters.value.find((chapter) => chapter.id === chapterId.value)?.name ?? '未分类',
 )
 const importanceLabels = ['一般', '重要', '非常重要']
+const pageTitle = computed(() => (cardId.value ? '编辑知识卡' : '添加知识卡'))
 
 onLoad(async (query) => {
-  cardId.value = String(query?.cardId ?? '')
-  subjectId.value = String(query?.subjectId ?? '')
-  chapterId.value = String(query?.chapterId ?? '')
-  ;[subjects.value, chapters.value] = await Promise.all([getSubjects(), getChapters()])
-  if (!subjectId.value && subjects.value.length) subjectId.value = subjects.value[0].id
-  if (cardId.value) {
-    const card = (await getCards()).find((item) => item.id === cardId.value)
-    if (card) {
-      subjectId.value = card.subjectId
-      chapterId.value = card.chapterId ?? ''
-      question.value = card.question
-      answer.value = card.answer
-      tags.value = card.tags.join(', ')
-      importance.value = card.importance
-      note.value = card.note ?? ''
-      uni.setNavigationBarTitle({ title: '编辑知识卡' })
+  try {
+    cardId.value = String(query?.cardId ?? '')
+    subjectId.value = String(query?.subjectId ?? '')
+    chapterId.value = String(query?.chapterId ?? '')
+    ;[subjects.value, chapters.value] = await Promise.all([getSubjects(), getChapters()])
+    if (!subjectId.value && subjects.value.length) subjectId.value = subjects.value[0].id
+    if (cardId.value) {
+      const card = (await getCards()).find((item) => item.id === cardId.value)
+      if (card) {
+        subjectId.value = card.subjectId
+        chapterId.value = card.chapterId ?? ''
+        question.value = card.question
+        answer.value = card.answer
+        tags.value = card.tags.join(', ')
+        importance.value = card.importance
+        note.value = card.note ?? ''
+      }
     }
-  } else {
-    uni.setNavigationBarTitle({ title: '添加知识卡' })
+    uni.setNavigationBarTitle({ title: pageTitle.value })
+  } finally {
+    loading.value = false
   }
 })
 
@@ -100,53 +104,63 @@ async function save(): Promise<void> {
 
 <template>
   <view class="page-shell form-page">
-    <view v-if="!subjects.length" class="notice surface">
+    <view class="page-heading">
+      <text class="eyebrow">主动回忆</text>
+      <text class="page-title">{{ pageTitle }}</text>
+      <text class="page-subtitle">用清晰的问题和简洁的答案，留下真正值得记住的内容。</text>
+    </view>
+
+    <view v-if="!loading && !subjects.length" class="notice surface">
       请先到知识库创建科目，再添加知识卡。
     </view>
 
-    <text class="field-label">科目</text>
-    <picker :range="subjectNames" @change="changeSubject">
-      <view class="picker-field">{{ selectedSubjectName }}</view>
-    </picker>
+    <view class="form-card surface">
+      <text class="field-label first-label">科目</text>
+      <picker :range="subjectNames" @change="changeSubject">
+        <view class="picker-field">{{ selectedSubjectName }}</view>
+      </picker>
 
-    <text class="field-label">章节</text>
-    <picker :range="chapterNames" @change="changeChapter">
-      <view class="picker-field">{{ selectedChapterName }}</view>
-    </picker>
+      <text class="field-label">章节</text>
+      <picker :range="chapterNames" @change="changeChapter">
+        <view class="picker-field">{{ selectedChapterName }}</view>
+      </picker>
 
-    <text class="field-label required">问题</text>
-    <textarea
-      v-model="question"
-      class="field-textarea question-input"
-      maxlength="1000"
-      placeholder="输入需要主动回忆的问题"
-    />
+      <view class="form-divider" />
 
-    <text class="field-label required">答案</text>
-    <textarea
-      v-model="answer"
-      class="field-textarea answer-input"
-      maxlength="5000"
-      placeholder="输入标准答案"
-    />
+      <text class="field-label required">问题</text>
+      <textarea
+        v-model="question"
+        class="field-textarea question-input"
+        maxlength="1000"
+        placeholder="输入需要主动回忆的问题"
+      />
 
-    <text class="field-label">标签</text>
-    <input v-model="tags" class="field-input" maxlength="200" placeholder="用逗号分隔，例如：概念, 重点" />
+      <text class="field-label required">答案</text>
+      <textarea
+        v-model="answer"
+        class="field-textarea answer-input"
+        maxlength="5000"
+        placeholder="输入标准答案"
+      />
 
-    <text class="field-label">重要程度</text>
-    <picker :range="importanceLabels" :value="importance - 1" @change="changeImportance">
-      <view class="picker-field">{{ importanceLabels[importance - 1] }}</view>
-    </picker>
+      <text class="field-label">标签</text>
+      <input v-model="tags" class="field-input" maxlength="200" placeholder="用逗号分隔，例如：概念, 重点" />
 
-    <text class="field-label">备注</text>
-    <textarea
-      v-model="note"
-      class="field-textarea note-input"
-      maxlength="2000"
-      placeholder="补充说明（可选）"
-    />
+      <text class="field-label">重要程度</text>
+      <picker :range="importanceLabels" :value="importance - 1" @change="changeImportance">
+        <view class="picker-field">{{ importanceLabels[importance - 1] }}</view>
+      </picker>
 
-    <button class="primary-button save-button" :loading="saving" @click="save">保存知识卡</button>
+      <text class="field-label">备注</text>
+      <textarea
+        v-model="note"
+        class="field-textarea note-input"
+        maxlength="2000"
+        placeholder="补充说明（可选）"
+      />
+
+      <button class="primary-button save-button" :loading="saving" :disabled="saving || loading" @click="save">保存知识卡</button>
+    </view>
   </view>
 </template>
 
@@ -155,15 +169,33 @@ async function save(): Promise<void> {
   padding-bottom: 90rpx;
 }
 
+.form-card {
+  padding: 30rpx;
+  border-top: 5rpx solid var(--color-primary);
+}
+
+.first-label {
+  margin-top: 0;
+}
+
+.form-divider {
+  width: 100%;
+  height: 1rpx;
+  margin: 34rpx 0 4rpx;
+  background: var(--color-line);
+}
+
 .notice {
   padding: 24rpx;
-  color: #9a662f;
+  margin-bottom: 22rpx;
+  border-left: 5rpx solid var(--color-accent);
+  color: #8f5b2e;
   line-height: 1.6;
 }
 
 .required::after {
   margin-left: 6rpx;
-  color: #b9524d;
+  color: var(--color-danger);
   content: '*';
 }
 

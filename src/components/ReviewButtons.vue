@@ -47,12 +47,13 @@ function intervalFor(rating: ReviewRating): string {
   align-items: center;
   justify-content: center;
   color: #ffffff;
+  box-shadow: 0 8rpx 18rpx rgba(43, 48, 43, 0.1);
 }
 
-.again { background: #b9524d; }
-.hard { background: #a97b35; }
-.good { background: #357257; }
-.easy { background: #35688a; }
+.again { background: #a8473f; }
+.hard { background: #a56a29; }
+.good { background: #1f5a49; }
+.easy { background: #3d6781; }
 
 .rating-label,
 .rating-interval {
@@ -67,6 +68,6 @@ function intervalFor(rating: ReviewRating): string {
 .rating-interval {
   margin-top: 8rpx;
   font-size: 19rpx;
-  opacity: 0.84;
+  opacity: 0.88;
 }
 </style>

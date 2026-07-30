@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { onLoad, onShow } from '@dcloudio/uni-app'
 import EmptyState from '@/components/EmptyState.vue'
 import KnowledgeCardItem from '@/components/KnowledgeCard.vue'
@@ -9,17 +9,44 @@ import { useSubjectStore } from '@/stores/subject'
 const subjectStore = useSubjectStore()
 const cardStore = useCardStore()
 const subjectId = ref('')
-const selectedChapterId = ref<string | undefined>(undefined)
+const selectedChapterId = ref('all')
 const chapterName = ref('')
 const editingChapterId = ref('')
+const searchQuery = ref('')
+const displayLimit = ref(20)
 
 const subject = computed(() => subjectStore.subjects.find((item) => item.id === subjectId.value))
 const chapters = computed(() =>
   subjectStore.chapters.filter((chapter) => chapter.subjectId === subjectId.value),
 )
-const visibleCards = computed(() =>
-  cardStore.cards.filter((card) => card.chapterId === selectedChapterId.value),
-)
+const visibleCards = computed(() => {
+  if (selectedChapterId.value === 'all') return cardStore.cards
+  if (selectedChapterId.value === 'uncategorized') {
+    return cardStore.cards.filter((card) => !card.chapterId)
+  }
+  return cardStore.cards.filter((card) => card.chapterId === selectedChapterId.value)
+})
+const selectedChapterName = computed(() => {
+  if (selectedChapterId.value === 'all') return '全部知识卡'
+  if (selectedChapterId.value === 'uncategorized') return '未分类'
+  return chapters.value.find((item) => item.id === selectedChapterId.value)?.name ?? '知识卡'
+})
+const filteredCards = computed(() => {
+  const query = searchQuery.value.trim().toLocaleLowerCase()
+  if (!query) return visibleCards.value
+  return visibleCards.value.filter((card) =>
+    [card.question, card.answer, card.note ?? '', ...card.tags]
+      .join(' ')
+      .toLocaleLowerCase()
+      .includes(query),
+  )
+})
+const displayedCards = computed(() => filteredCards.value.slice(0, displayLimit.value))
+const hasMoreCards = computed(() => displayedCards.value.length < filteredCards.value.length)
+
+watch([selectedChapterId, searchQuery], () => {
+  displayLimit.value = 20
+})
 
 onLoad((query) => {
   subjectId.value = String(query?.id ?? '')
@@ -69,7 +96,7 @@ function removeChapter(id: string): void {
     success: async ({ confirm }) => {
       if (!confirm) return
       await subjectStore.removeChapter(id)
-      if (selectedChapterId.value === id) selectedChapterId.value = undefined
+      if (selectedChapterId.value === id) selectedChapterId.value = 'all'
       await refresh()
     },
   })
@@ -77,7 +104,9 @@ function removeChapter(id: string): void {
 
 function openCardEditor(cardId?: string): void {
   const parts = [`subjectId=${encodeURIComponent(subjectId.value)}`]
-  if (selectedChapterId.value) parts.push(`chapterId=${encodeURIComponent(selectedChapterId.value)}`)
+  if (!['all', 'uncategorized'].includes(selectedChapterId.value)) {
+    parts.push(`chapterId=${encodeURIComponent(selectedChapterId.value)}`)
+  }
   if (cardId) parts.push(`cardId=${encodeURIComponent(cardId)}`)
   uni.navigateTo({ url: `/pages/card-edit/index?${parts.join('&')}` })
 }
@@ -104,11 +133,11 @@ async function toggleCard(id: string): Promise<void> {
 <template>
   <view class="page-shell">
     <view class="subject-header">
-      <view>
+      <view class="subject-heading-copy">
         <text class="subject-title">{{ subject?.name ?? '科目' }}</text>
         <text class="subject-meta">{{ cardStore.cards.length }} 张知识卡 · {{ chapters.length }} 个章节</text>
       </view>
-      <button class="primary-button add-card" @click="openCardEditor()">+ 添加知识卡</button>
+      <button class="primary-button add-card" @click="openCardEditor()">+ 添加卡片</button>
     </view>
 
     <view class="section-heading">
@@ -136,8 +165,15 @@ async function toggleCard(id: string): Promise<void> {
       <view class="chapter-list">
         <button
           class="chapter-pill"
-          :class="{ active: selectedChapterId === undefined }"
-          @click="selectedChapterId = undefined"
+          :class="{ active: selectedChapterId === 'all' }"
+          @click="selectedChapterId = 'all'"
+        >
+          全部 · {{ cardStore.cards.length }}
+        </button>
+        <button
+          class="chapter-pill"
+          :class="{ active: selectedChapterId === 'uncategorized' }"
+          @click="selectedChapterId = 'uncategorized'"
         >
           未分类 · {{ countFor() }}
         </button>
@@ -157,28 +193,42 @@ async function toggleCard(id: string): Promise<void> {
       </view>
     </scroll-view>
 
+    <view class="search-row">
+      <text class="search-symbol">⌕</text>
+      <input
+        v-model="searchQuery"
+        class="field-input search-input"
+        maxlength="100"
+        placeholder="搜索问题、答案或标签"
+      />
+      <text v-if="searchQuery" class="clear-search" @click="searchQuery = ''">清除</text>
+    </view>
+
     <view class="section-heading">
       <text class="section-title">
-        {{ selectedChapterId ? chapters.find((item) => item.id === selectedChapterId)?.name : '未分类' }}
+        {{ selectedChapterName }}
       </text>
-      <text class="muted">{{ visibleCards.length }} 张</text>
+      <text class="muted">{{ filteredCards.length }} 张</text>
     </view>
 
     <EmptyState
-      v-if="!cardStore.loading && !visibleCards.length"
-      title="这里还没有知识卡"
-      description="添加一张问答卡，稍后它会进入今日复习。"
+      v-if="!cardStore.loading && !filteredCards.length"
+      :title="searchQuery ? '没有找到相关知识卡' : '这里还没有知识卡'"
+      :description="searchQuery ? '换一个关键词，或清除搜索后再试。' : '添加一张问答卡，稍后它会进入今日复习。'"
     >
-      <button class="secondary-button empty-action" @click="openCardEditor()">添加知识卡</button>
+      <button v-if="!searchQuery" class="secondary-button empty-action" @click="openCardEditor()">添加知识卡</button>
     </EmptyState>
     <KnowledgeCardItem
-      v-for="card in visibleCards"
+      v-for="card in displayedCards"
       :key="card.id"
       :card="card"
       @edit="openCardEditor(card.id)"
       @toggle="toggleCard(card.id)"
       @remove="removeCard(card.id)"
     />
+    <button v-if="hasMoreCards" class="secondary-button load-more" @click="displayLimit += 20">
+      再显示 20 张
+    </button>
   </view>
 </template>
 
@@ -188,7 +238,12 @@ async function toggleCard(id: string): Promise<void> {
   align-items: flex-start;
   justify-content: space-between;
   gap: 24rpx;
-  margin: 10rpx 2rpx 18rpx;
+  margin: 10rpx 2rpx 24rpx;
+}
+
+.subject-heading-copy {
+  min-width: 0;
+  flex: 1;
 }
 
 .subject-title,
@@ -197,13 +252,16 @@ async function toggleCard(id: string): Promise<void> {
 }
 
 .subject-title {
+  overflow-wrap: anywhere;
+  color: var(--color-text);
   font-size: 43rpx;
-  font-weight: 800;
+  font-weight: 820;
+  line-height: 1.35;
 }
 
 .subject-meta {
   margin-top: 10rpx;
-  color: #7c8780;
+  color: var(--color-muted);
   font-size: 23rpx;
 }
 
@@ -216,11 +274,46 @@ async function toggleCard(id: string): Promise<void> {
 .chapter-scroll {
   width: 100%;
   margin-top: 18rpx;
+  scrollbar-width: none;
   white-space: nowrap;
+}
+
+.chapter-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.search-row {
+  display: flex;
+  position: relative;
+  align-items: center;
+  margin-top: 18rpx;
+}
+
+.search-symbol {
+  position: absolute;
+  z-index: 1;
+  left: 24rpx;
+  color: var(--color-muted);
+  font-size: 30rpx;
+}
+
+.search-input {
+  padding-right: 92rpx;
+  padding-left: 66rpx;
+  background: var(--color-surface);
+}
+
+.clear-search {
+  position: absolute;
+  z-index: 1;
+  right: 22rpx;
+  color: var(--color-primary);
+  font-size: 22rpx;
 }
 
 .chapter-list {
   display: flex;
+  width: max-content;
   gap: 14rpx;
   padding: 2rpx 2rpx 12rpx;
 }
@@ -232,24 +325,26 @@ async function toggleCard(id: string): Promise<void> {
   padding: 18rpx 22rpx;
   flex: 0 0 auto;
   align-items: center;
-  border: 1rpx solid #dfe5df;
+  border: 1rpx solid #ddd5c8;
   border-radius: 18rpx;
-  background: #ffffff;
-  color: #526058;
+  background: var(--color-surface);
+  color: #545d55;
   font-size: 24rpx;
 }
 
 .chapter-pill.active,
 .chapter-item.active {
-  border-color: #7da08f;
-  background: #e8f0ec;
-  color: #245b47;
+  border-color: #82a694;
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
 }
 
 .chapter-item {
   height: auto;
+  max-width: 430rpx;
   flex-direction: column;
   align-items: flex-start;
+  white-space: normal;
 }
 
 .chapter-name {
@@ -260,15 +355,30 @@ async function toggleCard(id: string): Promise<void> {
   display: flex;
   gap: 22rpx;
   margin-top: 10rpx;
-  color: #668074;
+  color: #557566;
   font-size: 20rpx;
 }
 
 .remove {
-  color: #a9443d;
+  color: var(--color-danger);
 }
 
 .empty-action {
   margin-top: 28rpx;
+}
+
+.load-more {
+  width: 100%;
+  margin-top: 12rpx;
+}
+
+@media (max-width: 430px) {
+  .subject-header {
+    flex-direction: column;
+  }
+
+  .add-card {
+    width: 100%;
+  }
 }
 </style>

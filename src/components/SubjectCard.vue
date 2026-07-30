@@ -22,8 +22,8 @@ defineEmits<{
       <text class="subject-count">{{ cardCount }} 张知识卡</text>
     </view>
     <view class="subject-actions">
-      <button class="text-button" size="mini" @click.stop="$emit('edit')">编辑</button>
-      <button class="text-button remove" size="mini" @click.stop="$emit('remove')">删除</button>
+      <button class="text-button" size="mini" aria-label="编辑科目" @click.stop="$emit('edit')">编辑</button>
+      <button class="text-button remove" size="mini" aria-label="删除科目" @click.stop="$emit('remove')">删除</button>
     </view>
   </view>
 </template>
@@ -35,6 +35,7 @@ defineEmits<{
   gap: 22rpx;
   margin-bottom: 18rpx;
   padding: 26rpx;
+  transition: border-color 160ms ease, transform 160ms ease;
 }
 
 .subject-mark {
@@ -45,8 +46,8 @@ defineEmits<{
   align-items: center;
   justify-content: center;
   border-radius: 22rpx;
-  background: #e5efea;
-  color: #245b47;
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
   font-size: 34rpx;
   font-weight: 800;
 }
@@ -61,13 +62,13 @@ defineEmits<{
 
 .subject-name {
   font-size: 30rpx;
-  font-weight: 750;
+  font-weight: 760;
 }
 
 .subject-description,
 .subject-count {
   overflow: hidden;
-  color: #818a84;
+  color: var(--color-muted);
   font-size: 24rpx;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -76,9 +77,10 @@ defineEmits<{
 .subject-actions {
   display: flex;
   flex-direction: column;
+  align-items: flex-end;
 }
 
 .remove {
-  color: #a9443d;
+  color: var(--color-danger);
 }
 </style>

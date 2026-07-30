@@ -84,7 +84,7 @@ function openSubject(id: string): void {
   <view class="page-shell">
     <view class="page-header">
       <view>
-        <text class="eyebrow">KNOWLEDGE BASE</text>
+        <text class="eyebrow">知识归档</text>
         <text class="page-title">知识库</text>
       </view>
       <text class="subject-total">{{ subjectStore.subjects.length }} 个科目</text>
@@ -102,7 +102,7 @@ function openSubject(id: string): void {
         maxlength="100"
         placeholder="一句话说明（可选）"
       />
-      <button class="primary-button submit" :loading="saving" @click="submit">
+      <button class="primary-button submit" :loading="saving" :disabled="saving || !name.trim()" @click="submit">
         {{ editingId ? '保存修改' : '创建科目' }}
       </button>
     </view>
@@ -134,7 +134,7 @@ function openSubject(id: string): void {
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
-  margin: 10rpx 2rpx 30rpx;
+  margin: 10rpx 2rpx 32rpx;
 }
 
 .eyebrow,
@@ -143,7 +143,7 @@ function openSubject(id: string): void {
 }
 
 .eyebrow {
-  color: #7b8b82;
+  color: var(--color-accent);
   font-size: 19rpx;
   font-weight: 700;
   letter-spacing: 3rpx;
@@ -152,16 +152,23 @@ function openSubject(id: string): void {
 .page-title {
   margin-top: 7rpx;
   font-size: 48rpx;
-  font-weight: 800;
+  color: var(--color-text);
+  font-weight: 820;
 }
 
 .subject-total {
-  padding-bottom: 6rpx;
-  color: #78827c;
+  margin-bottom: 5rpx;
+  padding: 8rpx 14rpx;
+  border: 1rpx solid #dfd5c7;
+  border-radius: 999rpx;
+  background: rgba(255, 253, 248, 0.72);
+  color: var(--color-muted);
+  font-size: 22rpx;
 }
 
 .editor {
-  padding: 28rpx;
+  padding: 30rpx;
+  border-top: 5rpx solid var(--color-primary);
 }
 
 .editor-heading {
@@ -173,7 +180,7 @@ function openSubject(id: string): void {
 
 .editor-title {
   font-size: 28rpx;
-  font-weight: 720;
+  font-weight: 750;
 }
 
 .description-input {
@@ -183,5 +190,11 @@ function openSubject(id: string): void {
 .submit {
   width: 100%;
   margin-top: 18rpx;
+}
+
+@media (max-width: 360px) {
+  .page-header {
+    align-items: flex-start;
+  }
 }
 </style>

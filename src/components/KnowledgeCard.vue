@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import type { KnowledgeCard } from '@/types/card'
 
+const importanceLabels = ['', '一般', '重要', '重点']
+
 defineProps<{ card: KnowledgeCard }>()
 
 defineEmits<{
@@ -13,7 +15,7 @@ defineEmits<{
 <template>
   <view class="knowledge-card surface" :class="{ suspended: card.status === 'suspended' }">
     <view class="card-topline">
-      <text class="importance">重要度 {{ card.importance }}</text>
+      <text class="importance">{{ importanceLabels[card.importance] }}知识</text>
       <text v-if="card.status === 'suspended'" class="status">已暂停</text>
     </view>
     <text class="question">{{ card.question }}</text>
@@ -22,11 +24,11 @@ defineEmits<{
       <text v-for="tag in card.tags" :key="tag" class="tag"># {{ tag }}</text>
     </view>
     <view class="card-actions">
-      <button class="text-button" size="mini" @click="$emit('edit')">编辑</button>
-      <button class="text-button" size="mini" @click="$emit('toggle')">
+      <button class="text-button" size="mini" aria-label="编辑知识卡" @click="$emit('edit')">编辑</button>
+      <button class="text-button" size="mini" aria-label="切换知识卡状态" @click="$emit('toggle')">
         {{ card.status === 'suspended' ? '恢复' : '暂停' }}
       </button>
-      <button class="text-button remove" size="mini" @click="$emit('remove')">删除</button>
+      <button class="text-button remove" size="mini" aria-label="删除知识卡" @click="$emit('remove')">删除</button>
     </view>
   </view>
 </template>
@@ -35,10 +37,12 @@ defineEmits<{
 .knowledge-card {
   margin-bottom: 18rpx;
   padding: 28rpx;
+  border-left: 5rpx solid #d8e6de;
 }
 
 .suspended {
-  opacity: 0.68;
+  border-left-color: #ddc4a3;
+  opacity: 0.72;
 }
 
 .card-topline {
@@ -49,12 +53,12 @@ defineEmits<{
 
 .importance,
 .status {
-  color: #6e7a73;
+  color: var(--color-muted);
   font-size: 22rpx;
 }
 
 .status {
-  color: #aa6c2d;
+  color: #9c6026;
 }
 
 .question,
@@ -72,7 +76,7 @@ defineEmits<{
   display: -webkit-box;
   overflow: hidden;
   margin-top: 12rpx;
-  color: #69736d;
+  color: var(--color-muted);
   font-size: 25rpx;
   line-height: 1.55;
   -webkit-box-orient: vertical;
@@ -89,8 +93,9 @@ defineEmits<{
 .tag {
   padding: 7rpx 13rpx;
   border-radius: 999rpx;
-  background: #f0f4f1;
-  color: #527060;
+  border: 1rpx solid #d7e2db;
+  background: #edf3ef;
+  color: #466957;
   font-size: 21rpx;
 }
 
@@ -98,9 +103,11 @@ defineEmits<{
   display: flex;
   justify-content: flex-end;
   margin-top: 18rpx;
+  border-top: 1rpx solid #eee8de;
+  padding-top: 10rpx;
 }
 
 .remove {
-  color: #a9443d;
+  color: var(--color-danger);
 }
 </style>

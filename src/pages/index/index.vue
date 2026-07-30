@@ -71,15 +71,21 @@ function openLibrary(): void {
 <template>
   <view class="page-shell safe-top home-page">
     <view class="brand-row">
-      <view>
-        <text class="brand">RecallLab</text>
-        <text class="tagline">把重要知识，记得更久</text>
+      <view class="brand-lockup">
+        <view class="brand-seal">舟</view>
+        <view>
+          <text class="brand">苦作舟</text>
+          <text class="tagline">学海无涯，把知识记得更久</text>
+        </view>
       </view>
-      <view class="brand-dot" />
+      <text class="today-mark">每日精进</text>
     </view>
 
     <view class="review-hero surface">
-      <text class="hero-label">今日待复习</text>
+      <view class="hero-topline">
+        <text class="hero-label">今日待复习</text>
+        <text class="hero-badge">FSRS 智能排序</text>
+      </view>
       <view class="hero-number-row">
         <text class="hero-number">{{ dueCount }}</text>
         <text class="hero-unit">张</text>
@@ -88,13 +94,13 @@ function openLibrary(): void {
         {{ dueCount ? '到期卡片优先，新卡随后进入队列' : '今天的复习已经完成。' }}
       </text>
       <button class="hero-button" :disabled="loading" @click="startReview">
-        {{ dueCount ? '开始复习' : '今日已完成' }}
+        {{ loading ? '正在准备…' : dueCount ? '开始今日复习' : '今日已完成' }}
       </button>
     </view>
 
     <view class="section-heading">
       <text class="section-title">今天</text>
-      <text class="muted">保持一点进展</text>
+      <text class="muted">日日有功，不疾而速</text>
     </view>
     <view class="stat-grid">
       <StatCard label="已复习" :value="summary.todayReviews" hint="次回答" />
@@ -141,7 +147,14 @@ function openLibrary(): void {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin: 10rpx 2rpx 34rpx;
+  margin: 8rpx 2rpx 32rpx;
+}
+
+.brand-lockup {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 18rpx;
 }
 
 .brand,
@@ -150,30 +163,71 @@ function openLibrary(): void {
 }
 
 .brand {
-  font-size: 47rpx;
-  font-weight: 850;
-  letter-spacing: -1rpx;
+  color: var(--color-text);
+  font-size: 46rpx;
+  font-weight: 860;
+  letter-spacing: 2rpx;
 }
 
 .tagline {
   margin-top: 7rpx;
-  color: #7d8781;
-  font-size: 23rpx;
+  color: var(--color-muted);
+  font-size: 22rpx;
 }
 
-.brand-dot {
-  width: 20rpx;
-  height: 20rpx;
-  border: 7rpx solid #d9e8e0;
-  border-radius: 50%;
-  background: #2e6a52;
+.brand-seal {
+  display: flex;
+  width: 66rpx;
+  height: 66rpx;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  border-radius: 18rpx 18rpx 18rpx 6rpx;
+  background: var(--color-accent);
+  color: #fffaf3;
+  font-family: "STKaiti", "KaiTi", serif;
+  font-size: 34rpx;
+  font-weight: 700;
+  box-shadow: 0 8rpx 18rpx rgba(185, 104, 61, 0.2);
+}
+
+.today-mark {
+  flex: 0 0 auto;
+  padding: 9rpx 14rpx;
+  border: 1rpx solid #e3cbb8;
+  border-radius: 999rpx;
+  color: var(--color-accent);
+  font-size: 19rpx;
+  letter-spacing: 1rpx;
 }
 
 .review-hero {
+  position: relative;
   padding: 38rpx;
   overflow: hidden;
-  background: #204f3e;
+  border-color: rgba(255, 255, 255, 0.08);
+  background: linear-gradient(145deg, #235e4d 0%, #174538 100%);
   color: #ffffff;
+  box-shadow: 0 20rpx 44rpx rgba(23, 69, 56, 0.2);
+}
+
+.review-hero::after {
+  position: absolute;
+  top: -86rpx;
+  right: -78rpx;
+  width: 230rpx;
+  height: 230rpx;
+  border: 1rpx solid rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  content: '';
+}
+
+.hero-topline {
+  display: flex;
+  position: relative;
+  z-index: 1;
+  align-items: center;
+  justify-content: space-between;
 }
 
 .hero-label,
@@ -182,13 +236,24 @@ function openLibrary(): void {
 }
 
 .hero-label {
-  color: #c9dcd3;
+  color: #d6e6de;
   font-size: 24rpx;
-  font-weight: 650;
+  font-weight: 680;
+}
+
+.hero-badge {
+  padding: 8rpx 13rpx;
+  border: 1rpx solid rgba(255, 255, 255, 0.16);
+  border-radius: 999rpx;
+  background: rgba(255, 255, 255, 0.08);
+  color: #dcebe4;
+  font-size: 18rpx;
 }
 
 .hero-number-row {
   display: flex;
+  position: relative;
+  z-index: 1;
   align-items: baseline;
   margin-top: 8rpx;
 }
@@ -201,23 +266,28 @@ function openLibrary(): void {
 
 .hero-unit {
   margin-left: 12rpx;
-  color: #c9dcd3;
+  color: #d1e1d9;
   font-size: 25rpx;
 }
 
 .hero-note {
+  position: relative;
+  z-index: 1;
   margin-top: 12rpx;
-  color: #bdd2c8;
+  color: #c8dbd2;
   font-size: 22rpx;
 }
 
 .hero-button {
+  position: relative;
+  z-index: 1;
   width: 100%;
   margin-top: 32rpx;
   padding: 25rpx;
-  background: #f4f8f5;
-  color: #204f3e;
-  font-weight: 750;
+  background: #fffaf1;
+  color: var(--color-primary-dark);
+  font-weight: 780;
+  box-shadow: 0 10rpx 26rpx rgba(11, 43, 34, 0.16);
 }
 
 .stat-grid {
@@ -227,8 +297,9 @@ function openLibrary(): void {
 }
 
 .section-link {
-  color: #356a53;
+  color: var(--color-primary);
   font-size: 24rpx;
+  font-weight: 650;
 }
 
 .recent-subject {
@@ -236,7 +307,8 @@ function openLibrary(): void {
   align-items: center;
   gap: 20rpx;
   margin-bottom: 16rpx;
-  padding: 24rpx 26rpx;
+  padding: 25rpx 26rpx;
+  transition: transform 160ms ease, box-shadow 160ms ease;
 }
 
 .recent-mark {
@@ -246,8 +318,8 @@ function openLibrary(): void {
   align-items: center;
   justify-content: center;
   border-radius: 19rpx;
-  background: #e7f0eb;
-  color: #2c664f;
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
   font-weight: 800;
 }
 
@@ -260,20 +332,26 @@ function openLibrary(): void {
 
 .recent-name {
   font-size: 28rpx;
-  font-weight: 720;
+  font-weight: 740;
 }
 
 .recent-count {
-  color: #828b86;
+  color: var(--color-muted);
   font-size: 22rpx;
 }
 
 .chevron {
-  color: #9ba49f;
+  color: #a29d94;
   font-size: 42rpx;
 }
 
 .empty-action {
   margin-top: 26rpx;
+}
+
+@media (max-width: 360px) {
+  .today-mark {
+    display: none;
+  }
 }
 </style>

@@ -1,8 +1,8 @@
 {
-  "name": "recalllab",
+  "name": "kuzuozhou",
   "version": "1.0.0",
   "private": true,
-  "description": "A lightweight personal knowledge review tool powered by FSRS.",
+  "description": "苦作舟：一款由 FSRS 驱动的轻量个人知识复习工具。",
   "scripts": {
     "dev:h5": "uni",
     "dev:lan": "uni --host 0.0.0.0",
