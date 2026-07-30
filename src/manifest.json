@@ -1,0 +1,19 @@
+{
+  "name": "RecallLab",
+  "appid": "__UNI__RECALLLAB",
+  "description": "个人专业知识记忆工具",
+  "versionName": "1.0.0",
+  "versionCode": "100",
+  "transformPx": false,
+  "h5": { "title": "RecallLab" },
+  "mp-weixin": {
+    "appid": "",
+    "setting": {
+      "urlCheck": false,
+      "es6": true,
+      "postcss": true,
+      "minified": true
+    },
+    "usingComponents": true
+  }
+}

@@ -1,0 +1,6 @@
+node_modules/
+dist/
+.recalllab-template/
+.recalllab-data/
+*.local
+*.log
