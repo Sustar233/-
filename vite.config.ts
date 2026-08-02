@@ -3,5 +3,8 @@ import uni from '@dcloudio/vite-plugin-uni'
 import { lanStoragePlugin } from './server/lanStoragePlugin'
 
 export default defineConfig({
-  plugins: [lanStoragePlugin(), uni()],
+  plugins: [
+    ...(process.env.UNI_PLATFORM === 'h5' ? [lanStoragePlugin()] : []),
+    uni(),
+  ],
 })

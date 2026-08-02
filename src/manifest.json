@@ -5,11 +5,15 @@
   "versionName": "1.0.0",
   "versionCode": "100",
   "transformPx": false,
+  "uniStatistics": {
+    "enable": false
+  },
   "h5": { "title": "苦作舟" },
   "mp-weixin": {
     "appid": "",
     "setting": {
       "urlCheck": false,
+      "checkSiteMap": false,
       "es6": true,
       "postcss": true,
       "minified": true

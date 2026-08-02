@@ -1,3 +1,4 @@
+// #ifdef H5
 interface StorageResponse<T> {
   value: T
 }
@@ -7,6 +8,7 @@ const API_PREFIX = '/api/storage/'
 function usesLanStorage(): boolean {
   return typeof window !== 'undefined' && typeof window.fetch === 'function'
 }
+// #endif
 
 function getLocalStorage<T>(key: string): Promise<T | null> {
   return new Promise((resolve, reject) => {
@@ -46,6 +48,7 @@ function removeLocalStorage(key: string): Promise<void> {
   })
 }
 
+// #ifdef H5
 function storageUrl(key: string): string {
   return `${API_PREFIX}${encodeURIComponent(key)}`
 }
@@ -70,27 +73,38 @@ async function deleteStorage(key: string): Promise<void> {
   const response = await window.fetch(storageUrl(key), { method: 'DELETE' })
   if (!response.ok) throw new Error('无法删除局域网共享数据，请确认电脑端服务仍在运行')
 }
+// #endif
 
 export async function getStorage<T>(key: string): Promise<T | null> {
-  if (!usesLanStorage()) return getLocalStorage<T>(key)
+  // #ifdef H5
+  if (usesLanStorage()) {
+    const sharedValue = await requestStorage<T>(key)
+    if (sharedValue !== null) return sharedValue
 
-  const sharedValue = await requestStorage<T>(key)
-  if (sharedValue !== null) return sharedValue
+    // Migrate data created before LAN sharing was enabled. Each key is copied only
+    // when the shared store is empty, so an existing shared value is never replaced.
+    const localValue = await getLocalStorage<T>(key)
+    if (localValue === null) return null
+    await writeStorage(key, localValue)
+    return localValue
+  }
+  // #endif
 
-  // Migrate data created before LAN sharing was enabled. Each key is copied only
-  // when the shared store is empty, so an existing shared value is never replaced.
-  const localValue = await getLocalStorage<T>(key)
-  if (localValue === null) return null
-  await writeStorage(key, localValue)
-  return localValue
+  return getLocalStorage<T>(key)
 }
 
 export async function setStorage<T>(key: string, value: T): Promise<void> {
-  if (!usesLanStorage()) return setLocalStorage(key, value)
-  await writeStorage(key, value)
+  // #ifdef H5
+  if (usesLanStorage()) return writeStorage(key, value)
+  // #endif
+
+  return setLocalStorage(key, value)
 }
 
 export async function removeStorage(key: string): Promise<void> {
-  if (!usesLanStorage()) return removeLocalStorage(key)
-  await deleteStorage(key)
+  // #ifdef H5
+  if (usesLanStorage()) return deleteStorage(key)
+  // #endif
+
+  return removeLocalStorage(key)
 }
