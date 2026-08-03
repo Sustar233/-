@@ -5,4 +5,5 @@ export const STORAGE_KEYS = {
   reviewStates: 'recalllab:reviewStates',
   reviewLogs: 'recalllab:reviewLogs',
   settings: 'recalllab:settings',
+  presetKnowledgeVersion: 'recalllab:presetKnowledgeVersion',
 } as const

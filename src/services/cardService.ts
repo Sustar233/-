@@ -3,8 +3,10 @@ import { getStorage, setStorage } from '@/storage/storage'
 import type { KnowledgeCard, KnowledgeCardInput } from '@/types/card'
 import type { ReviewLog, ReviewState } from '@/types/review'
 import { generateId } from '@/utils/id'
+import { ensurePresetKnowledge } from './presetKnowledgeService'
 
 export async function getCards(subjectId?: string): Promise<KnowledgeCard[]> {
+  await ensurePresetKnowledge()
   const cards = (await getStorage<KnowledgeCard[]>(STORAGE_KEYS.cards)) ?? []
   return subjectId ? cards.filter((card) => card.subjectId === subjectId) : cards
 }

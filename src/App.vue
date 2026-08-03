@@ -1,8 +1,13 @@
 <script setup lang="ts">
 import { onLaunch } from '@dcloudio/uni-app'
+import { ensurePresetKnowledge } from '@/services/presetKnowledgeService'
 
-onLaunch(() => {
-  // Storage is initialized lazily by each store to keep startup lightweight.
+onLaunch(async () => {
+  try {
+    await ensurePresetKnowledge()
+  } catch (error) {
+    console.warn('预设知识卡初始化失败，将在读取知识库时重试。', error)
+  }
 })
 </script>
 

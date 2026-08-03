@@ -4,12 +4,15 @@ import type { KnowledgeCard } from '@/types/card'
 import type { ReviewLog, ReviewState } from '@/types/review'
 import type { Chapter, Subject } from '@/types/subject'
 import { generateId } from '@/utils/id'
+import { ensurePresetKnowledge } from './presetKnowledgeService'
 
 export async function getSubjects(): Promise<Subject[]> {
+  await ensurePresetKnowledge()
   return (await getStorage<Subject[]>(STORAGE_KEYS.subjects)) ?? []
 }
 
 export async function getChapters(subjectId?: string): Promise<Chapter[]> {
+  await ensurePresetKnowledge()
   const chapters = (await getStorage<Chapter[]>(STORAGE_KEYS.chapters)) ?? []
   return subjectId ? chapters.filter((chapter) => chapter.subjectId === subjectId) : chapters
 }

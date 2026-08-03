@@ -5,6 +5,7 @@ import type { KnowledgeCard } from '@/types/card'
 import type { ReviewLog, ReviewPreview, ReviewRating, ReviewState } from '@/types/review'
 import type { Settings } from '@/types/settings'
 import { DEFAULT_SETTINGS } from '@/types/settings'
+import { startOfDay } from '@/utils/date'
 import { generateId } from '@/utils/id'
 import { getCards } from './cardService'
 
@@ -17,9 +18,10 @@ export async function getReviewLogs(): Promise<ReviewLog[]> {
 }
 
 export async function buildReviewQueue(now = Date.now()): Promise<KnowledgeCard[]> {
-  const [cards, states, settings] = await Promise.all([
+  const [cards, states, logs, settings] = await Promise.all([
     getCards(),
     getStates(),
+    getReviewLogs(),
     getStorage<Settings>(STORAGE_KEYS.settings).then((value) => value ?? DEFAULT_SETTINGS),
   ])
   const activeCards = cards.filter((card) => card.status === 'active')
@@ -30,10 +32,22 @@ export async function buildReviewQueue(now = Date.now()): Promise<KnowledgeCard[
       return state && state.dueAt <= now
     })
     .sort((first, second) => stateByCard.get(first.id)!.dueAt - stateByCard.get(second.id)!.dueAt)
+  const firstReviewByCard = new Map<string, number>()
+  for (const log of logs) {
+    const firstReviewAt = firstReviewByCard.get(log.cardId)
+    if (firstReviewAt === undefined || log.reviewedAt < firstReviewAt) {
+      firstReviewByCard.set(log.cardId, log.reviewedAt)
+    }
+  }
+  const today = startOfDay(now)
+  const studiedNewCardsToday = [...firstReviewByCard.values()].filter(
+    (reviewedAt) => startOfDay(reviewedAt) === today,
+  ).length
+  const remainingNewCardLimit = Math.max(0, settings.dailyNewCards - studiedNewCardsToday)
   const newCards = activeCards
     .filter((card) => !stateByCard.has(card.id))
     .sort((first, second) => first.createdAt - second.createdAt)
-    .slice(0, Math.max(0, settings.dailyNewCards))
+    .slice(0, remainingNewCardLimit)
   return [...dueCards, ...newCards]
 }
 

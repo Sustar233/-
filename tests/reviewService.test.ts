@@ -45,6 +45,28 @@ test('review queue puts due cards before old-to-new limited new cards', async ()
   )
 })
 
+test('rebuilding the queue does not refill new cards already studied today', async () => {
+  const now = new Date(2026, 6, 30, 12).getTime()
+  const cards = Array.from({ length: 5 }, (_, index) => card(`new-${index + 1}`, now + index))
+
+  await Promise.all([
+    setStorage(STORAGE_KEYS.cards, cards),
+    setStorage(STORAGE_KEYS.settings, { dailyNewCards: 3 }),
+  ])
+
+  assert.deepEqual(
+    (await buildReviewQueue(now)).map((item) => item.id),
+    ['new-1', 'new-2', 'new-3'],
+  )
+
+  await reviewCard(cards[0], 4, now)
+
+  assert.deepEqual(
+    (await buildReviewQueue(now)).map((item) => item.id),
+    ['new-2', 'new-3'],
+  )
+})
+
 test('reviewing a card saves its FSRS state and a compact log', async () => {
   const now = new Date('2026-07-30T08:00:00.000Z').getTime()
   const target = card('card_1', now)
