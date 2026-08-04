@@ -1,23 +1,49 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { onShow } from '@dcloudio/uni-app'
-import { exportBackup, importBackup, parseBackup } from '@/services/backupService'
+import {
+  exportBackup,
+  hasAutomaticBackup,
+  importBackup,
+  parseBackup,
+  restoreAutomaticBackup as restoreAutomaticBackupData,
+} from '@/services/backupService'
 import { useSettingsStore } from '@/stores/settings'
 
 const settingsStore = useSettingsStore()
 const dailyNewCards = ref('20')
 const backupText = ref('')
 const working = ref(false)
+const desiredRetention = ref('90')
+const enableFuzz = ref(true)
+const automaticBackupAvailable = ref(false)
 
 onShow(async () => {
   await settingsStore.load()
   dailyNewCards.value = String(settingsStore.settings.dailyNewCards)
+  desiredRetention.value = String(Math.round(settingsStore.settings.desiredRetention * 100))
+  enableFuzz.value = settingsStore.settings.enableFuzz
+  automaticBackupAvailable.value = await hasAutomaticBackup()
 })
 
 async function saveDailyLimit(): Promise<void> {
   await settingsStore.setDailyNewCards(Number(dailyNewCards.value) || 0)
   dailyNewCards.value = String(settingsStore.settings.dailyNewCards)
   uni.showToast({ title: '已保存', icon: 'success' })
+}
+
+async function saveFsrsPreferences(): Promise<void> {
+  await settingsStore.setFsrsPreferences(
+    Number(desiredRetention.value) / 100,
+    enableFuzz.value,
+  )
+  desiredRetention.value = String(Math.round(settingsStore.settings.desiredRetention * 100))
+  enableFuzz.value = settingsStore.settings.enableFuzz
+  uni.showToast({ title: '调度偏好已保存', icon: 'success' })
+}
+
+function changeFuzz(event: Event): void {
+  enableFuzz.value = (event as Event & { detail: { value: boolean } }).detail.value
 }
 
 async function exportData(): Promise<void> {
@@ -43,7 +69,7 @@ function importData(): void {
 
   uni.showModal({
     title: '覆盖当前数据',
-    content: '导入会覆盖当前全部科目、卡片和复习记录。建议先导出备份。',
+    content: '导入会覆盖当前全部科目、卡片和复习记录。系统会先自动保存当前数据。',
     confirmColor: '#a9443d',
     success: async ({ confirm }) => {
       if (!confirm) return
@@ -52,7 +78,38 @@ function importData(): void {
         await importBackup(backupText.value)
         await settingsStore.load()
         dailyNewCards.value = String(settingsStore.settings.dailyNewCards)
+        desiredRetention.value = String(
+          Math.round(settingsStore.settings.desiredRetention * 100),
+        )
+        enableFuzz.value = settingsStore.settings.enableFuzz
+        automaticBackupAvailable.value = true
         uni.showToast({ title: '导入成功', icon: 'success' })
+      } catch (error) {
+        uni.showToast({ title: (error as Error).message, icon: 'none' })
+      } finally {
+        working.value = false
+      }
+    },
+  })
+}
+
+function restoreAutomaticBackup(): void {
+  uni.showModal({
+    title: '恢复导入前备份',
+    content: '将恢复最近一次导入前的数据，当前数据也会自动保留为新的恢复点。',
+    confirmColor: '#1f5a49',
+    success: async ({ confirm }) => {
+      if (!confirm) return
+      working.value = true
+      try {
+        await restoreAutomaticBackupData()
+        await settingsStore.load()
+        dailyNewCards.value = String(settingsStore.settings.dailyNewCards)
+        desiredRetention.value = String(
+          Math.round(settingsStore.settings.desiredRetention * 100),
+        )
+        enableFuzz.value = settingsStore.settings.enableFuzz
+        uni.showToast({ title: '已恢复备份', icon: 'success' })
       } catch (error) {
         uni.showToast({ title: (error as Error).message, icon: 'none' })
       } finally {
@@ -86,6 +143,25 @@ function importData(): void {
       </view>
     </view>
 
+    <view class="fsrs-card surface">
+      <view class="setting-copy">
+        <text class="setting-name">目标记忆率</text>
+        <text class="setting-description">越高复习越频繁，推荐保持在 85%～95%，从下一次评分生效。</text>
+      </view>
+      <view class="retention-row">
+        <input v-model="desiredRetention" class="limit-input" type="number" maxlength="2" />
+        <text class="limit-unit">%</text>
+      </view>
+      <view class="fuzz-row">
+        <view>
+          <text class="setting-name small-name">分散到期日期</text>
+          <text class="setting-description">为较长间隔加入轻微浮动，避免卡片集中到期。</text>
+        </view>
+        <switch :checked="enableFuzz" color="#1f5a49" @change="changeFuzz" />
+      </view>
+      <button class="secondary-button save-fsrs" @click="saveFsrsPreferences">保存调度偏好</button>
+    </view>
+
     <view class="section-heading">
       <text class="section-title">数据备份</text>
       <text class="muted">JSON</text>
@@ -106,6 +182,14 @@ function importData(): void {
           导入并覆盖
         </button>
       </view>
+      <button
+        v-if="automaticBackupAvailable"
+        class="text-button snapshot-action"
+        :disabled="working"
+        @click="restoreAutomaticBackup"
+      >
+        恢复最近一次导入前备份
+      </button>
     </view>
 
     <view class="about-card">
@@ -150,12 +234,18 @@ function importData(): void {
 }
 
 .setting-card,
+.fsrs-card,
 .backup-card {
   padding: 30rpx;
 }
 
 .setting-card {
   border-left: 5rpx solid var(--color-primary);
+}
+
+.fsrs-card {
+  margin-top: 18rpx;
+  border-left: 5rpx solid #5f7d9a;
 }
 
 .backup-card {
@@ -205,6 +295,32 @@ function importData(): void {
   margin-left: auto;
 }
 
+.retention-row {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  margin-top: 22rpx;
+}
+
+.fuzz-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24rpx;
+  margin-top: 28rpx;
+  padding-top: 25rpx;
+  border-top: 1rpx solid var(--color-line);
+}
+
+.small-name {
+  font-size: 26rpx;
+}
+
+.save-fsrs {
+  width: 100%;
+  margin-top: 26rpx;
+}
+
 .backup-intro {
   display: block;
   color: #5f675f;
@@ -231,6 +347,12 @@ function importData(): void {
   grid-template-columns: repeat(2, 1fr);
   gap: 16rpx;
   margin-top: 20rpx;
+}
+
+.snapshot-action {
+  width: 100%;
+  margin-top: 18rpx;
+  text-align: center;
 }
 
 .about-card {

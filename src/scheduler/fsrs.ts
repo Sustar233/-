@@ -1,5 +1,6 @@
 import { createEmptyCard, fsrs, type Card, type CardInput, type Grade } from 'ts-fsrs'
 import type { ReviewPreview, ReviewRating, ReviewState } from '@/types/review'
+import { DEFAULT_SETTINGS, type Settings } from '@/types/settings'
 import { formatInterval } from '@/utils/date'
 
 interface StoredFsrsCard extends Omit<Card, 'due' | 'last_review'> {
@@ -7,7 +8,12 @@ interface StoredFsrsCard extends Omit<Card, 'due' | 'last_review'> {
   last_review?: string
 }
 
-const scheduler = fsrs({ enable_fuzz: false })
+function createScheduler(settings: Settings) {
+  return fsrs({
+    enable_fuzz: settings.enableFuzz,
+    request_retention: settings.desiredRetention,
+  })
+}
 
 function serializeCard(card: Card): StoredFsrsCard {
   return {
@@ -38,7 +44,12 @@ export function createReviewState(cardId: string, now = Date.now()): ReviewState
   }
 }
 
-export function previewReview(state: ReviewState, now = Date.now()): ReviewPreview[] {
+export function previewReview(
+  state: ReviewState,
+  now = Date.now(),
+  settings = DEFAULT_SETTINGS,
+): ReviewPreview[] {
+  const scheduler = createScheduler(settings)
   const result = scheduler.repeat(restoreCard(state.fsrsData), new Date(now))
   return ([1, 2, 3, 4] as ReviewRating[]).map((rating) => {
     const dueAt = result[rating].card.due.getTime()
@@ -54,7 +65,9 @@ export function applyReview(
   state: ReviewState,
   rating: ReviewRating,
   now = Date.now(),
+  settings = DEFAULT_SETTINGS,
 ): ReviewState {
+  const scheduler = createScheduler(settings)
   const result = scheduler.next(restoreCard(state.fsrsData), new Date(now), rating as Grade)
   return {
     cardId: state.cardId,

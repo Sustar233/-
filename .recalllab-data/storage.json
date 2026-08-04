@@ -1732,23 +1732,6 @@
       "lastReviewAt": 1785424420322
     },
     {
-      "cardId": "card_os_01005",
-      "dueAt": 1785425540368,
-      "fsrsData": {
-        "due": "2026-07-30T15:32:20.368Z",
-        "stability": 0.24668919,
-        "difficulty": 6.40211507,
-        "elapsed_days": 0,
-        "scheduled_days": 0,
-        "reps": 2,
-        "lapses": 0,
-        "learning_steps": 1,
-        "state": 1,
-        "last_review": "2026-07-30T15:22:20.368Z"
-      },
-      "lastReviewAt": 1785424940368
-    },
-    {
       "cardId": "card_os_01008",
       "dueAt": 1785425564879,
       "fsrsData": {
@@ -1764,23 +1747,6 @@
         "last_review": "2026-07-30T15:22:44.879Z"
       },
       "lastReviewAt": 1785424964879
-    },
-    {
-      "cardId": "card_os_01009",
-      "dueAt": 1785425345451,
-      "fsrsData": {
-        "due": "2026-07-30T15:29:05.451Z",
-        "stability": 1.2931,
-        "difficulty": 5.11217071,
-        "elapsed_days": 0,
-        "scheduled_days": 0,
-        "reps": 1,
-        "lapses": 0,
-        "learning_steps": 0,
-        "state": 1,
-        "last_review": "2026-07-30T15:23:05.451Z"
-      },
-      "lastReviewAt": 1785424985451
     },
     {
       "cardId": "card_os_01002",
@@ -1817,23 +1783,6 @@
       "lastReviewAt": 1785513990769
     },
     {
-      "cardId": "card_os_01004",
-      "dueAt": 1785514354109,
-      "fsrsData": {
-        "due": "2026-07-31T16:12:34.109Z",
-        "stability": 5.31879273,
-        "difficulty": 4.75285849,
-        "elapsed_days": 1,
-        "scheduled_days": 0,
-        "reps": 2,
-        "lapses": 0,
-        "learning_steps": 1,
-        "state": 1,
-        "last_review": "2026-07-31T16:06:34.109Z"
-      },
-      "lastReviewAt": 1785513994109
-    },
-    {
       "cardId": "card_os_01007",
       "dueAt": 1786118795188,
       "fsrsData": {
@@ -1866,6 +1815,57 @@
         "last_review": "2026-07-31T16:06:36.482Z"
       },
       "lastReviewAt": 1785513996482
+    },
+    {
+      "cardId": "card_os_01009",
+      "dueAt": 1785858466215,
+      "fsrsData": {
+        "due": "2026-08-04T15:47:46.215Z",
+        "stability": 6.6072728,
+        "difficulty": 6.74045952,
+        "elapsed_days": 5,
+        "scheduled_days": 0,
+        "reps": 2,
+        "lapses": 0,
+        "learning_steps": 0,
+        "state": 1,
+        "last_review": "2026-08-04T15:41:46.215Z"
+      },
+      "lastReviewAt": 1785858106215
+    },
+    {
+      "cardId": "card_os_01005",
+      "dueAt": 1786376510274,
+      "fsrsData": {
+        "due": "2026-08-10T15:41:50.274Z",
+        "stability": 6.29586948,
+        "difficulty": 5.18509795,
+        "elapsed_days": 5,
+        "scheduled_days": 6,
+        "reps": 3,
+        "lapses": 0,
+        "learning_steps": 0,
+        "state": 2,
+        "last_review": "2026-08-04T15:41:50.274Z"
+      },
+      "lastReviewAt": 1785858110274
+    },
+    {
+      "cardId": "card_os_01004",
+      "dueAt": 1786981341115,
+      "fsrsData": {
+        "due": "2026-08-17T15:42:21.115Z",
+        "stability": 16.30049692,
+        "difficulty": 4.743334,
+        "elapsed_days": 4,
+        "scheduled_days": 13,
+        "reps": 3,
+        "lapses": 0,
+        "learning_steps": 0,
+        "state": 2,
+        "last_review": "2026-08-04T15:42:21.115Z"
+      },
+      "lastReviewAt": 1785858141115
     }
   ],
   "recalllab:settings": {
@@ -1990,7 +1990,106 @@
       "subjectId": "subject_operating_system_13180",
       "rating": 2,
       "reviewedAt": 1785513996482
+    },
+    {
+      "id": "review_1785858106221_85jo",
+      "cardId": "card_os_01009",
+      "subjectId": "subject_operating_system_13180",
+      "rating": 2,
+      "reviewedAt": 1785858106215
+    },
+    {
+      "id": "review_1785858110280_h3a7",
+      "cardId": "card_os_01005",
+      "subjectId": "subject_operating_system_13180",
+      "rating": 4,
+      "reviewedAt": 1785858110274
+    },
+    {
+      "id": "review_1785858141120_htsq",
+      "cardId": "card_os_01004",
+      "subjectId": "subject_operating_system_13180",
+      "rating": 3,
+      "reviewedAt": 1785858141115
     }
   ],
-  "recalllab:presetKnowledgeVersion": 1
+  "recalllab:presetKnowledgeVersion": 1,
+  "recalllab:reviewSession": {
+    "version": 1,
+    "cardIds": [
+      "card_os_01009",
+      "card_os_01005",
+      "card_os_01004",
+      "card_os_01001",
+      "card_os_01010",
+      "card_os_01011",
+      "card_os_01012",
+      "card_os_01013",
+      "card_os_01014",
+      "card_os_01015",
+      "card_os_01016",
+      "card_os_01017",
+      "card_os_01018",
+      "card_os_01019",
+      "card_os_01020",
+      "card_os_01021",
+      "card_os_01022",
+      "card_os_01023",
+      "card_os_01024",
+      "card_os_01025",
+      "card_os_01026",
+      "card_os_01027",
+      "card_os_01028",
+      "card_os_01029",
+      "card_os_01008",
+      "card_os_01003"
+    ],
+    "currentIndex": 3,
+    "startedAt": 1785858103071,
+    "filter": {},
+    "lastCommit": {
+      "cardId": "card_os_01004",
+      "previousState": {
+        "cardId": "card_os_01004",
+        "dueAt": 1785514354109,
+        "fsrsData": {
+          "due": "2026-07-31T16:12:34.109Z",
+          "stability": 5.31879273,
+          "difficulty": 4.75285849,
+          "elapsed_days": 1,
+          "scheduled_days": 0,
+          "reps": 2,
+          "lapses": 0,
+          "learning_steps": 1,
+          "state": 1,
+          "last_review": "2026-07-31T16:06:34.109Z"
+        },
+        "lastReviewAt": 1785513994109
+      },
+      "nextState": {
+        "cardId": "card_os_01004",
+        "dueAt": 1786981341115,
+        "fsrsData": {
+          "due": "2026-08-17T15:42:21.115Z",
+          "stability": 16.30049692,
+          "difficulty": 4.743334,
+          "elapsed_days": 4,
+          "scheduled_days": 13,
+          "reps": 3,
+          "lapses": 0,
+          "learning_steps": 0,
+          "state": 2,
+          "last_review": "2026-08-04T15:42:21.115Z"
+        },
+        "lastReviewAt": 1785858141115
+      },
+      "log": {
+        "id": "review_1785858141120_htsq",
+        "cardId": "card_os_01004",
+        "subjectId": "subject_operating_system_13180",
+        "rating": 3,
+        "reviewedAt": 1785858141115
+      }
+    }
+  }
 }

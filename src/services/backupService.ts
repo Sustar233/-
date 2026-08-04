@@ -1,9 +1,9 @@
 import { STORAGE_KEYS } from '@/storage/keys'
-import { getStorage, setStorage } from '@/storage/storage'
+import { getStorage, removeStorage, setStorage } from '@/storage/storage'
 import type { KnowledgeCard } from '@/types/card'
 import type { ReviewLog, ReviewState } from '@/types/review'
 import type { BackupData, Settings } from '@/types/settings'
-import { DEFAULT_SETTINGS } from '@/types/settings'
+import { normalizeSettings } from '@/types/settings'
 import type { Chapter, Subject } from '@/types/subject'
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -23,6 +23,7 @@ function isSubject(value: unknown): value is Subject {
     isRecord(value) &&
     hasString(value, 'id') &&
     hasString(value, 'name') &&
+    (!('description' in value) || typeof value.description === 'string') &&
     hasNumber(value, 'createdAt') &&
     hasNumber(value, 'updatedAt')
   )
@@ -46,6 +47,8 @@ function isCard(value: unknown): value is KnowledgeCard {
     hasString(value, 'subjectId') &&
     hasString(value, 'question') &&
     hasString(value, 'answer') &&
+    (!('chapterId' in value) || typeof value.chapterId === 'string') &&
+    (!('note' in value) || typeof value.note === 'string') &&
     Array.isArray(value.tags) &&
     value.tags.every((tag) => typeof tag === 'string') &&
     [1, 2, 3].includes(value.importance as number) &&
@@ -56,7 +59,12 @@ function isCard(value: unknown): value is KnowledgeCard {
 }
 
 function isReviewState(value: unknown): value is ReviewState {
-  return isRecord(value) && hasString(value, 'cardId') && hasNumber(value, 'dueAt') && 'fsrsData' in value
+  return (
+    isRecord(value) &&
+    hasString(value, 'cardId') &&
+    hasNumber(value, 'dueAt') &&
+    isRecord(value.fsrsData)
+  )
 }
 
 function isReviewLog(value: unknown): value is ReviewLog {
@@ -73,7 +81,7 @@ function isReviewLog(value: unknown): value is ReviewLog {
 export function validateBackupData(value: unknown): value is BackupData {
   if (!isRecord(value) || value.version !== 1) return false
   const settings = value.settings
-  return (
+  const shapeIsValid =
     Array.isArray(value.subjects) &&
     value.subjects.every(isSubject) &&
     Array.isArray(value.chapters) &&
@@ -86,24 +94,76 @@ export function validateBackupData(value: unknown): value is BackupData {
     value.reviewLogs.every(isReviewLog) &&
     isRecord(settings) &&
     hasNumber(settings, 'dailyNewCards') &&
-    (settings.dailyNewCards as number) >= 0
-  )
+    (settings.dailyNewCards as number) >= 0 &&
+    (!('desiredRetention' in settings) ||
+      (hasNumber(settings, 'desiredRetention') &&
+        (settings.desiredRetention as number) >= 0.75 &&
+        (settings.desiredRetention as number) <= 0.97)) &&
+    (!('enableFuzz' in settings) || typeof settings.enableFuzz === 'boolean')
+
+  if (!shapeIsValid) return false
+
+  const data = value as unknown as BackupData
+  const unique = (ids: string[]) => new Set(ids).size === ids.length
+  if (
+    !unique(data.subjects.map((item) => item.id)) ||
+    !unique(data.chapters.map((item) => item.id)) ||
+    !unique(data.cards.map((item) => item.id)) ||
+    !unique(data.reviewStates.map((item) => item.cardId)) ||
+    !unique(data.reviewLogs.map((item) => item.id))
+  ) {
+    return false
+  }
+
+  const subjectIds = new Set(data.subjects.map((item) => item.id))
+  const chapterById = new Map(data.chapters.map((item) => [item.id, item]))
+  const cardById = new Map(data.cards.map((item) => [item.id, item]))
+  if (data.chapters.some((chapter) => !subjectIds.has(chapter.subjectId))) return false
+  if (
+    data.cards.some((card) => {
+      if (!subjectIds.has(card.subjectId)) return true
+      if (!card.chapterId) return false
+      return chapterById.get(card.chapterId)?.subjectId !== card.subjectId
+    })
+  ) {
+    return false
+  }
+  if (data.reviewStates.some((state) => !cardById.has(state.cardId))) return false
+  if (
+    data.reviewLogs.some(
+      (log) => !cardById.has(log.cardId) || cardById.get(log.cardId)?.subjectId !== log.subjectId,
+    )
+  ) {
+    return false
+  }
+
+  return true
 }
 
-export async function exportBackup(): Promise<string> {
+async function readCurrentBackup(): Promise<BackupData> {
   const [subjects, chapters, cards, reviewStates, reviewLogs, settings] = await Promise.all([
     getStorage<Subject[]>(STORAGE_KEYS.subjects).then((value) => value ?? []),
     getStorage<Chapter[]>(STORAGE_KEYS.chapters).then((value) => value ?? []),
     getStorage<KnowledgeCard[]>(STORAGE_KEYS.cards).then((value) => value ?? []),
     getStorage<ReviewState[]>(STORAGE_KEYS.reviewStates).then((value) => value ?? []),
     getStorage<ReviewLog[]>(STORAGE_KEYS.reviewLogs).then((value) => value ?? []),
-    getStorage<Settings>(STORAGE_KEYS.settings).then((value) => value ?? DEFAULT_SETTINGS),
+    getStorage<Settings>(STORAGE_KEYS.settings).then((value) => normalizeSettings(value)),
   ])
-  return JSON.stringify(
-    { version: 1, subjects, chapters, cards, reviewStates, reviewLogs, settings } satisfies BackupData,
-    null,
-    2,
-  )
+  return { version: 1, subjects, chapters, cards, reviewStates, reviewLogs, settings }
+}
+
+async function writeBackupData(data: BackupData): Promise<void> {
+  await setStorage(STORAGE_KEYS.subjects, data.subjects)
+  await setStorage(STORAGE_KEYS.chapters, data.chapters)
+  await setStorage(STORAGE_KEYS.cards, data.cards)
+  await setStorage(STORAGE_KEYS.reviewStates, data.reviewStates)
+  await setStorage(STORAGE_KEYS.reviewLogs, data.reviewLogs)
+  await setStorage(STORAGE_KEYS.settings, normalizeSettings(data.settings))
+  await removeStorage(STORAGE_KEYS.reviewSession)
+}
+
+export async function exportBackup(): Promise<string> {
+  return JSON.stringify(await readCurrentBackup(), null, 2)
 }
 
 export function parseBackup(json: string): BackupData {
@@ -113,18 +173,46 @@ export function parseBackup(json: string): BackupData {
   } catch {
     throw new Error('JSON 格式错误，当前数据未更改')
   }
-  if (!validateBackupData(data)) throw new Error('备份结构无效，当前数据未更改')
-  return data
+  if (!validateBackupData(data)) {
+    throw new Error('备份结构或数据关联无效，当前数据未更改')
+  }
+  return {
+    ...data,
+    settings: normalizeSettings(data.settings),
+  }
 }
 
 export async function importBackup(json: string): Promise<void> {
   const data = parseBackup(json)
-  await Promise.all([
-    setStorage(STORAGE_KEYS.subjects, data.subjects),
-    setStorage(STORAGE_KEYS.chapters, data.chapters),
-    setStorage(STORAGE_KEYS.cards, data.cards),
-    setStorage(STORAGE_KEYS.reviewStates, data.reviewStates),
-    setStorage(STORAGE_KEYS.reviewLogs, data.reviewLogs),
-    setStorage(STORAGE_KEYS.settings, data.settings),
-  ])
+  const previous = await readCurrentBackup()
+  await setStorage(STORAGE_KEYS.automaticBackup, {
+    createdAt: Date.now(),
+    json: JSON.stringify(previous, null, 2),
+  })
+
+  try {
+    await writeBackupData(data)
+  } catch (error) {
+    try {
+      await writeBackupData(previous)
+    } catch {
+      throw new Error('导入失败且自动回滚未完成，请使用导入前备份恢复数据')
+    }
+    throw new Error(`导入失败，已恢复原数据：${(error as Error).message}`)
+  }
+}
+
+export async function hasAutomaticBackup(): Promise<boolean> {
+  const snapshot = await getStorage<{ createdAt: number; json: string }>(
+    STORAGE_KEYS.automaticBackup,
+  )
+  return Boolean(snapshot?.json)
+}
+
+export async function restoreAutomaticBackup(): Promise<void> {
+  const snapshot = await getStorage<{ createdAt: number; json: string }>(
+    STORAGE_KEYS.automaticBackup,
+  )
+  if (!snapshot?.json) throw new Error('没有可恢复的导入前备份')
+  await importBackup(snapshot.json)
 }

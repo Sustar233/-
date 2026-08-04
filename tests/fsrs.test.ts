@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import { applyReview, createReviewState, previewReview } from '../src/scheduler/fsrs'
+import { normalizeSettings } from '../src/types/settings'
 
 test('FSRS adapter previews and applies all four ratings', () => {
   const now = new Date('2026-07-30T08:00:00.000Z').getTime()
@@ -18,4 +19,16 @@ test('FSRS adapter previews and applies all four ratings', () => {
   assert.equal(reviewed.cardId, 'card_1')
   assert.equal(reviewed.lastReviewAt, now)
   assert.ok(reviewed.dueAt > now)
+})
+
+test('scheduler settings normalize legacy and out-of-range values', () => {
+  assert.deepEqual(normalizeSettings({ dailyNewCards: 12 }), {
+    dailyNewCards: 12,
+    desiredRetention: 0.9,
+    enableFuzz: true,
+  })
+  assert.deepEqual(
+    normalizeSettings({ dailyNewCards: 999, desiredRetention: 0.5, enableFuzz: false }),
+    { dailyNewCards: 200, desiredRetention: 0.75, enableFuzz: false },
+  )
 })

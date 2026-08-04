@@ -5,13 +5,23 @@ import EmptyState from '@/components/EmptyState.vue'
 import ReviewButtons from '@/components/ReviewButtons.vue'
 import { useReviewStore } from '@/stores/review'
 import { getChapters, getSubjects } from '@/services/subjectService'
-import type { ReviewRating } from '@/types/review'
+import type { ReviewFilter, ReviewRating } from '@/types/review'
 import type { Chapter, Subject } from '@/types/subject'
 
 const reviewStore = useReviewStore()
 const subjects = ref<Subject[]>([])
 const chapters = ref<Chapter[]>([])
 const rating = ref(false)
+
+const isFocusedReview = computed(() =>
+  Boolean(
+    reviewStore.activeFilter.subjectId ||
+      reviewStore.activeFilter.chapterId ||
+      reviewStore.activeFilter.uncategorizedOnly ||
+      reviewStore.activeFilter.tag,
+  ),
+)
+const progressLabel = computed(() => (isFocusedReview.value ? '专项复习' : '今日复习'))
 
 const progress = computed(() =>
   reviewStore.total
@@ -26,9 +36,15 @@ const breadcrumb = computed(() => {
   return chapter ? `${subject} · ${chapter}` : `${subject} · 未分类`
 })
 
-onLoad(async () => {
+onLoad(async (query) => {
   ;[subjects.value, chapters.value] = await Promise.all([getSubjects(), getChapters()])
-  await reviewStore.start()
+  const filter: ReviewFilter = {
+    subjectId: query?.subjectId ? String(query.subjectId) : undefined,
+    chapterId: query?.chapterId ? String(query.chapterId) : undefined,
+    uncategorizedOnly: query?.uncategorized === '1' || undefined,
+    tag: query?.tag ? String(query.tag) : undefined,
+  }
+  await reviewStore.start(filter, query?.fresh !== '1')
 })
 
 async function rateCard(value: ReviewRating): Promise<void> {
@@ -43,7 +59,24 @@ async function rateCard(value: ReviewRating): Promise<void> {
   }
 }
 
-function goBack(): void {
+async function skipCard(): Promise<void> {
+  if (!(await reviewStore.skip())) {
+    uni.showToast({ title: '当前只剩这一张卡片', icon: 'none' })
+  }
+}
+
+async function undoLastRating(): Promise<void> {
+  try {
+    if (!(await reviewStore.undoLast())) {
+      uni.showToast({ title: '没有可撤销的评分', icon: 'none' })
+    }
+  } catch (error) {
+    uni.showToast({ title: (error as Error).message, icon: 'none' })
+  }
+}
+
+async function goBack(): Promise<void> {
+  if (reviewStore.finished) await reviewStore.finishSession()
   uni.navigateBack()
 }
 </script>
@@ -54,7 +87,7 @@ function goBack(): void {
       <button class="close-button" aria-label="退出复习" @click="goBack">×</button>
       <view class="progress-copy">
         <view class="progress-meta">
-          <text class="progress-label">今日复习</text>
+          <text class="progress-label">{{ progressLabel }}</text>
           <text class="progress-count">
             {{ Math.min(reviewStore.completed + 1, reviewStore.total) }} / {{ reviewStore.total }}
           </text>
@@ -70,13 +103,19 @@ function goBack(): void {
 
     <EmptyState
       v-else-if="reviewStore.finished"
-      title="今天的复习已经完成"
+      :title="isFocusedReview ? '本次专项复习已完成' : '今天的复习已经完成'"
       :description="reviewStore.total ? `完成了 ${reviewStore.total} 张知识卡` : '当前没有到期卡片或新卡。'"
     >
-      <button class="primary-button finish-button" @click="goBack">返回首页</button>
+      <view class="finish-actions">
+        <button v-if="reviewStore.canUndo" class="secondary-button" @click="undoLastRating">
+          撤销上次评分
+        </button>
+        <button class="primary-button" @click="goBack">完成并返回</button>
+      </view>
     </EmptyState>
 
     <view v-else-if="reviewStore.currentCard" class="card-stage">
+      <view v-if="reviewStore.resumed" class="resume-notice">已恢复上次复习进度</view>
       <text class="breadcrumb">{{ breadcrumb }}</text>
       <view class="review-card surface">
         <text class="card-kicker">问题</text>
@@ -100,12 +139,21 @@ function goBack(): void {
       >
         显示答案
       </button>
+      <view v-if="!reviewStore.revealed" class="session-actions">
+        <button class="text-button" @click="skipCard">稍后再答</button>
+        <button v-if="reviewStore.canUndo" class="text-button" @click="undoLastRating">
+          撤销上次评分
+        </button>
+      </view>
       <ReviewButtons
         v-else
         :previews="reviewStore.previews"
         :class="{ disabled: rating }"
         @rate="rateCard"
       />
+      <view v-if="reviewStore.revealed && reviewStore.canUndo" class="session-actions">
+        <button class="text-button" @click="undoLastRating">撤销上次评分</button>
+      </view>
     </view>
   </view>
 </template>
@@ -192,8 +240,24 @@ function goBack(): void {
   text-align: center;
 }
 
-.finish-button {
+.resume-notice {
+  margin: 8rpx 0 14rpx;
+  padding: 13rpx 18rpx;
+  border: 1rpx solid #cbdad2;
+  border-radius: 14rpx;
+  background: #edf5f0;
+  color: var(--color-primary);
+  font-size: 22rpx;
+  text-align: center;
+}
+
+.finish-actions {
+  display: flex;
+  width: 100%;
+  max-width: 520rpx;
   margin-top: 30rpx;
+  flex-direction: column;
+  gap: 14rpx;
 }
 
 .card-stage {
@@ -292,5 +356,13 @@ function goBack(): void {
 
 .review-buttons {
   margin-top: 24rpx;
+}
+
+.session-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18rpx;
+  margin-top: 12rpx;
 }
 </style>

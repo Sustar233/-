@@ -1,7 +1,15 @@
 import assert from 'node:assert/strict'
 import { beforeEach, test } from 'node:test'
 import { createReviewState } from '../src/scheduler/fsrs'
-import { buildReviewQueue, reviewCard } from '../src/services/reviewService'
+import {
+  buildReviewQueue,
+  clearReviewSession,
+  commitReview,
+  getReviewSession,
+  reviewCard,
+  saveReviewSession,
+  undoReview,
+} from '../src/services/reviewService'
 import { STORAGE_KEYS } from '../src/storage/keys'
 import { setStorage } from '../src/storage/storage'
 import type { KnowledgeCard } from '../src/types/card'
@@ -84,4 +92,68 @@ test('reviewing a card saves its FSRS state and a compact log', async () => {
     { cardId: logs?.[0].cardId, subjectId: logs?.[0].subjectId, rating: logs?.[0].rating },
     { cardId: 'card_1', subjectId: 'subject_1', rating: 3 },
   )
+})
+
+test('review queue can be narrowed by subject, chapter, uncategorized cards, and tag', async () => {
+  const now = new Date('2026-07-30T08:00:00.000Z').getTime()
+  const chapterCard = { ...card('chapter', now), chapterId: 'chapter_1', tags: ['重点'] }
+  const uncategorizedCard = { ...card('uncategorized', now + 1), tags: ['重点'] }
+  const otherSubjectCard = {
+    ...card('other', now + 2),
+    subjectId: 'subject_2',
+    chapterId: 'chapter_2',
+    tags: ['重点'],
+  }
+  await Promise.all([
+    setStorage(STORAGE_KEYS.cards, [chapterCard, uncategorizedCard, otherSubjectCard]),
+    setStorage(STORAGE_KEYS.settings, { dailyNewCards: 20 }),
+  ])
+
+  assert.deepEqual(
+    (await buildReviewQueue(now, { subjectId: 'subject_1', chapterId: 'chapter_1' })).map(
+      (item) => item.id,
+    ),
+    ['chapter'],
+  )
+  assert.deepEqual(
+    (
+      await buildReviewQueue(now, {
+        subjectId: 'subject_1',
+        uncategorizedOnly: true,
+        tag: '重点',
+      })
+    ).map((item) => item.id),
+    ['uncategorized'],
+  )
+})
+
+test('undo removes the exact log and restores the previous review state', async () => {
+  const firstReviewAt = new Date('2026-07-30T08:00:00.000Z').getTime()
+  const secondReviewAt = firstReviewAt + 86_400_000
+  const target = card('card_undo', firstReviewAt)
+  await setStorage(STORAGE_KEYS.cards, [target])
+  const originalState = await reviewCard(target, 3, firstReviewAt)
+
+  const commit = await commitReview(target, 1, secondReviewAt)
+  await undoReview(commit)
+
+  assert.deepEqual(readStored(STORAGE_KEYS.reviewStates), [originalState])
+  const logs = readStored<Array<{ id: string }>>(STORAGE_KEYS.reviewLogs) ?? []
+  assert.equal(logs.length, 1)
+  assert.equal(logs.some((log) => log.id === commit.log.id), false)
+})
+
+test('review session can be persisted and cleared', async () => {
+  const session = {
+    version: 1 as const,
+    cardIds: ['card_1', 'card_2'],
+    currentIndex: 1,
+    startedAt: Date.now(),
+    filter: { subjectId: 'subject_1' },
+  }
+
+  await saveReviewSession(session)
+  assert.deepEqual(await getReviewSession(), session)
+  await clearReviewSession()
+  assert.equal(await getReviewSession(), null)
 })

@@ -111,6 +111,12 @@ function openCardEditor(cardId?: string): void {
   uni.navigateTo({ url: `/pages/card-edit/index?${parts.join('&')}` })
 }
 
+function openStudy(): void {
+  uni.navigateTo({
+    url: `/pages/study/index?subjectId=${encodeURIComponent(subjectId.value)}`,
+  })
+}
+
 function removeCard(id: string): void {
   uni.showModal({
     title: '删除知识卡',
@@ -137,7 +143,10 @@ async function toggleCard(id: string): Promise<void> {
         <text class="subject-title">{{ subject?.name ?? '科目' }}</text>
         <text class="subject-meta">{{ cardStore.cards.length }} 张知识卡 · {{ chapters.length }} 个章节</text>
       </view>
-      <button class="primary-button add-card" @click="openCardEditor()">+ 添加卡片</button>
+      <view class="subject-header-actions">
+        <button class="secondary-button header-action" @click="openStudy">专项复习</button>
+        <button class="primary-button header-action" @click="openCardEditor()">+ 添加卡片</button>
+      </view>
     </view>
 
     <view class="section-heading">
@@ -265,9 +274,14 @@ async function toggleCard(id: string): Promise<void> {
   font-size: 23rpx;
 }
 
-.add-card {
-  padding: 22rpx 24rpx;
+.subject-header-actions {
+  display: flex;
   flex: 0 0 auto;
+  gap: 12rpx;
+}
+
+.header-action {
+  padding: 22rpx 24rpx;
   font-size: 24rpx;
 }
 
@@ -377,8 +391,14 @@ async function toggleCard(id: string): Promise<void> {
     flex-direction: column;
   }
 
-  .add-card {
+  .subject-header-actions,
+  .header-action {
     width: 100%;
+  }
+
+  .subject-header-actions {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 </style>

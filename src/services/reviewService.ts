@@ -1,10 +1,18 @@
 import { applyReview, createReviewState, previewReview } from '@/scheduler/fsrs'
 import { STORAGE_KEYS } from '@/storage/keys'
-import { getStorage, setStorage } from '@/storage/storage'
+import { getStorage, removeStorage, setStorage } from '@/storage/storage'
 import type { KnowledgeCard } from '@/types/card'
-import type { ReviewLog, ReviewPreview, ReviewRating, ReviewState } from '@/types/review'
+import type {
+  ReviewCommit,
+  ReviewFilter,
+  ReviewLog,
+  ReviewPreview,
+  ReviewRating,
+  ReviewSession,
+  ReviewState,
+} from '@/types/review'
 import type { Settings } from '@/types/settings'
-import { DEFAULT_SETTINGS } from '@/types/settings'
+import { normalizeSettings } from '@/types/settings'
 import { startOfDay } from '@/utils/date'
 import { generateId } from '@/utils/id'
 import { getCards } from './cardService'
@@ -17,14 +25,36 @@ export async function getReviewLogs(): Promise<ReviewLog[]> {
   return (await getStorage<ReviewLog[]>(STORAGE_KEYS.reviewLogs)) ?? []
 }
 
-export async function buildReviewQueue(now = Date.now()): Promise<KnowledgeCard[]> {
+function matchesFilter(card: KnowledgeCard, filter: ReviewFilter): boolean {
+  if (filter.subjectId && card.subjectId !== filter.subjectId) return false
+  if (filter.uncategorizedOnly && card.chapterId) return false
+  if (filter.chapterId && card.chapterId !== filter.chapterId) return false
+  if (filter.tag && !card.tags.includes(filter.tag)) return false
+  return true
+}
+
+export function reviewFiltersEqual(first: ReviewFilter, second: ReviewFilter): boolean {
+  return (
+    first.subjectId === second.subjectId &&
+    first.chapterId === second.chapterId &&
+    Boolean(first.uncategorizedOnly) === Boolean(second.uncategorizedOnly) &&
+    first.tag === second.tag
+  )
+}
+
+export async function buildReviewQueue(
+  now = Date.now(),
+  filter: ReviewFilter = {},
+): Promise<KnowledgeCard[]> {
   const [cards, states, logs, settings] = await Promise.all([
     getCards(),
     getStates(),
     getReviewLogs(),
-    getStorage<Settings>(STORAGE_KEYS.settings).then((value) => value ?? DEFAULT_SETTINGS),
+    getStorage<Settings>(STORAGE_KEYS.settings),
   ])
-  const activeCards = cards.filter((card) => card.status === 'active')
+  const activeCards = cards.filter(
+    (card) => card.status === 'active' && matchesFilter(card, filter),
+  )
   const stateByCard = new Map(states.map((state) => [state.cardId, state]))
   const dueCards = activeCards
     .filter((card) => {
@@ -43,7 +73,11 @@ export async function buildReviewQueue(now = Date.now()): Promise<KnowledgeCard[
   const studiedNewCardsToday = [...firstReviewByCard.values()].filter(
     (reviewedAt) => startOfDay(reviewedAt) === today,
   ).length
-  const remainingNewCardLimit = Math.max(0, settings.dailyNewCards - studiedNewCardsToday)
+  const normalizedSettings = normalizeSettings(settings)
+  const remainingNewCardLimit = Math.max(
+    0,
+    normalizedSettings.dailyNewCards - studiedNewCardsToday,
+  )
   const newCards = activeCards
     .filter((card) => !stateByCard.has(card.id))
     .sort((first, second) => first.createdAt - second.createdAt)
@@ -52,19 +86,27 @@ export async function buildReviewQueue(now = Date.now()): Promise<KnowledgeCard[
 }
 
 export async function previewCard(cardId: string, now = Date.now()): Promise<ReviewPreview[]> {
-  const states = await getStates()
+  const [states, settingsValue] = await Promise.all([
+    getStates(),
+    getStorage<Settings>(STORAGE_KEYS.settings),
+  ])
   const state = states.find((item) => item.cardId === cardId) ?? createReviewState(cardId, now)
-  return previewReview(state, now)
+  return previewReview(state, now, normalizeSettings(settingsValue))
 }
 
-export async function reviewCard(
+export async function commitReview(
   card: KnowledgeCard,
   rating: ReviewRating,
   now = Date.now(),
-): Promise<ReviewState> {
-  const [states, logs] = await Promise.all([getStates(), getReviewLogs()])
-  const current = states.find((state) => state.cardId === card.id) ?? createReviewState(card.id, now)
-  const next = applyReview(current, rating, now)
+): Promise<ReviewCommit> {
+  const [states, logs, settingsValue] = await Promise.all([
+    getStates(),
+    getReviewLogs(),
+    getStorage<Settings>(STORAGE_KEYS.settings),
+  ])
+  const previousState = states.find((state) => state.cardId === card.id)
+  const current = previousState ?? createReviewState(card.id, now)
+  const next = applyReview(current, rating, now, normalizeSettings(settingsValue))
   const log: ReviewLog = {
     id: generateId('review'),
     cardId: card.id,
@@ -79,5 +121,59 @@ export async function reviewCard(
     ]),
     setStorage(STORAGE_KEYS.reviewLogs, [...logs, log]),
   ])
-  return next
+  return { cardId: card.id, previousState, nextState: next, log }
+}
+
+export async function reviewCard(
+  card: KnowledgeCard,
+  rating: ReviewRating,
+  now = Date.now(),
+): Promise<ReviewState> {
+  return (await commitReview(card, rating, now)).nextState
+}
+
+export async function undoReview(commit: ReviewCommit): Promise<void> {
+  const [states, logs] = await Promise.all([getStates(), getReviewLogs()])
+  if (!logs.some((log) => log.id === commit.log.id)) {
+    throw new Error('上一次评分已无法撤销')
+  }
+
+  const restoredStates = commit.previousState
+    ? [
+        ...states.filter((state) => state.cardId !== commit.cardId),
+        commit.previousState,
+      ]
+    : states.filter((state) => state.cardId !== commit.cardId)
+
+  await Promise.all([
+    setStorage(STORAGE_KEYS.reviewStates, restoredStates),
+    setStorage(
+      STORAGE_KEYS.reviewLogs,
+      logs.filter((log) => log.id !== commit.log.id),
+    ),
+  ])
+}
+
+export async function getReviewSession(): Promise<ReviewSession | null> {
+  const session = await getStorage<ReviewSession>(STORAGE_KEYS.reviewSession)
+  if (
+    !session ||
+    session.version !== 1 ||
+    !Array.isArray(session.cardIds) ||
+    !Number.isInteger(session.currentIndex) ||
+    session.currentIndex < 0 ||
+    typeof session.startedAt !== 'number' ||
+    !session.filter
+  ) {
+    return null
+  }
+  return session
+}
+
+export async function saveReviewSession(session: ReviewSession): Promise<void> {
+  await setStorage(STORAGE_KEYS.reviewSession, session)
+}
+
+export async function clearReviewSession(): Promise<void> {
+  await removeStorage(STORAGE_KEYS.reviewSession)
 }

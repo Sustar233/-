@@ -4,15 +4,18 @@ import { onShow } from '@dcloudio/uni-app'
 import EmptyState from '@/components/EmptyState.vue'
 import StatCard from '@/components/StatCard.vue'
 import { getCards } from '@/services/cardService'
-import { buildReviewQueue } from '@/services/reviewService'
+import { buildReviewQueue, getReviewSession } from '@/services/reviewService'
 import { getStatistics, type StatisticsSummary } from '@/services/statisticsService'
 import { getSubjects } from '@/services/subjectService'
 import type { KnowledgeCard } from '@/types/card'
+import type { ReviewSession } from '@/types/review'
 import type { Subject } from '@/types/subject'
+import { startOfDay } from '@/utils/date'
 
 const subjects = ref<Subject[]>([])
 const cards = ref<KnowledgeCard[]>([])
 const dueCount = ref(0)
+const resumableSession = ref<ReviewSession | null>(null)
 const loading = ref(false)
 const summary = ref<StatisticsSummary>({
   todayReviews: 0,
@@ -26,20 +29,33 @@ const summary = ref<StatisticsSummary>({
 const recentSubjects = computed(() =>
   [...subjects.value].sort((first, second) => second.updatedAt - first.updatedAt).slice(0, 3),
 )
+const isResuming = computed(() => Boolean(resumableSession.value))
+const reviewCount = computed(() =>
+  resumableSession.value
+    ? Math.max(0, resumableSession.value.cardIds.length - resumableSession.value.currentIndex)
+    : dueCount.value,
+)
 
 async function refresh(): Promise<void> {
   loading.value = true
   try {
-    const [subjectData, cardData, queue, statistics] = await Promise.all([
+    const [subjectData, cardData, queue, statistics, session] = await Promise.all([
       getSubjects(),
       getCards(),
       buildReviewQueue(),
       getStatistics(),
+      getReviewSession(),
     ])
     subjects.value = subjectData
     cards.value = cardData
     dueCount.value = queue.length
     summary.value = statistics
+    resumableSession.value =
+      session &&
+      startOfDay(session.startedAt) === startOfDay(Date.now()) &&
+      session.currentIndex < session.cardIds.length
+        ? session
+        : null
   } finally {
     loading.value = false
   }
@@ -52,11 +68,17 @@ function cardCount(subjectId: string): number {
 }
 
 function startReview(): void {
-  if (!dueCount.value) {
+  if (!reviewCount.value) {
     uni.showToast({ title: '今天的复习已经完成', icon: 'none' })
     return
   }
-  uni.navigateTo({ url: '/pages/review/index' })
+  const filter = resumableSession.value?.filter
+  const parts: string[] = []
+  if (filter?.subjectId) parts.push(`subjectId=${encodeURIComponent(filter.subjectId)}`)
+  if (filter?.chapterId) parts.push(`chapterId=${encodeURIComponent(filter.chapterId)}`)
+  if (filter?.uncategorizedOnly) parts.push('uncategorized=1')
+  if (filter?.tag) parts.push(`tag=${encodeURIComponent(filter.tag)}`)
+  uni.navigateTo({ url: `/pages/review/index${parts.length ? `?${parts.join('&')}` : ''}` })
 }
 
 function openSubject(id: string): void {
@@ -65,6 +87,10 @@ function openSubject(id: string): void {
 
 function openLibrary(): void {
   uni.switchTab({ url: '/pages/library/index' })
+}
+
+function openStudy(): void {
+  uni.navigateTo({ url: '/pages/study/index' })
 }
 </script>
 
@@ -83,24 +109,24 @@ function openLibrary(): void {
 
     <view class="review-hero surface">
       <view class="hero-topline">
-        <text class="hero-label">今日待复习</text>
-        <text class="hero-badge">FSRS 智能排序</text>
+        <text class="hero-label">{{ isResuming ? '继续上次复习' : '今日待复习' }}</text>
+        <text class="hero-badge">{{ isResuming ? '进度已保存' : 'FSRS 智能排序' }}</text>
       </view>
       <view class="hero-number-row">
-        <text class="hero-number">{{ dueCount }}</text>
+        <text class="hero-number">{{ reviewCount }}</text>
         <text class="hero-unit">张</text>
       </view>
       <text class="hero-note">
-        {{ dueCount ? '到期卡片优先，新卡随后进入队列' : '今天的复习已经完成。' }}
+        {{ isResuming ? '从中断处继续，已完成的进度不会丢失' : reviewCount ? '到期卡片优先，新卡随后进入队列' : '今天的复习已经完成。' }}
       </text>
       <button class="hero-button" :disabled="loading" @click="startReview">
-        {{ loading ? '正在准备…' : dueCount ? '开始今日复习' : '今日已完成' }}
+        {{ loading ? '正在准备…' : isResuming ? '继续复习' : reviewCount ? '开始今日复习' : '今日已完成' }}
       </button>
     </view>
 
     <view class="section-heading">
       <text class="section-title">今天</text>
-      <text class="muted">日日有功，不疾而速</text>
+      <text class="section-link" @click="openStudy">专项复习 ›</text>
     </view>
     <view class="stat-grid">
       <StatCard label="已复习" :value="summary.todayReviews" hint="次回答" />

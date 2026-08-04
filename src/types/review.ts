@@ -20,3 +20,26 @@ export interface ReviewPreview {
   dueAt: number
   intervalLabel: string
 }
+
+export interface ReviewFilter {
+  subjectId?: string
+  chapterId?: string
+  uncategorizedOnly?: boolean
+  tag?: string
+}
+
+export interface ReviewCommit {
+  cardId: string
+  previousState?: ReviewState
+  nextState: ReviewState
+  log: ReviewLog
+}
+
+export interface ReviewSession {
+  version: 1
+  cardIds: string[]
+  currentIndex: number
+  startedAt: number
+  filter: ReviewFilter
+  lastCommit?: ReviewCommit
+}
