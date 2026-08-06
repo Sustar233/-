@@ -35,10 +35,16 @@ export function calculateWeakCards(
   cards: KnowledgeCard[],
   logs: ReviewLog[],
 ): Array<{ card: KnowledgeCard; score: number; reviewCount: number }> {
+  const logsByCard = new Map<string, ReviewLog[]>()
+  for (const log of logs) {
+    const cardLogs = logsByCard.get(log.cardId) ?? []
+    cardLogs.push(log)
+    logsByCard.set(log.cardId, cardLogs)
+  }
+
   return cards
     .map((card) => {
-      const recent = logs
-        .filter((log) => log.cardId === card.id)
+      const recent = (logsByCard.get(card.id) ?? [])
         .sort((first, second) => second.reviewedAt - first.reviewedAt)
         .slice(0, 10)
       const weights: Record<number, number> = { 1: 3, 2: 1, 3: 0, 4: -1 }
@@ -56,23 +62,34 @@ export function calculateStatistics(
   now = Date.now(),
 ): StatisticsSummary {
   const today = startOfDay(now)
-  const todayLogs = logs.filter((log) => startOfDay(log.reviewedAt) === today)
+  const reviewsByDay = new Map<number, number>()
   const firstReviewByCard = new Map<string, number>()
-  for (const log of [...logs].sort((first, second) => first.reviewedAt - second.reviewedAt)) {
-    if (!firstReviewByCard.has(log.cardId)) firstReviewByCard.set(log.cardId, log.reviewedAt)
+  let todayReviews = 0
+  let todayAgain = 0
+  for (const log of logs) {
+    const day = startOfDay(log.reviewedAt)
+    reviewsByDay.set(day, (reviewsByDay.get(day) ?? 0) + 1)
+    if (day === today) {
+      todayReviews += 1
+      if (log.rating === 1) todayAgain += 1
+    }
+    const firstReviewAt = firstReviewByCard.get(log.cardId)
+    if (firstReviewAt === undefined || log.reviewedAt < firstReviewAt) {
+      firstReviewByCard.set(log.cardId, log.reviewedAt)
+    }
   }
   const last7Days = Array.from({ length: 7 }, (_, index) => {
     const day = addDays(today, index - 6)
     return {
       day,
       label: formatShortDate(day),
-      count: logs.filter((log) => startOfDay(log.reviewedAt) === day).length,
+      count: reviewsByDay.get(day) ?? 0,
     }
   })
   return {
-    todayReviews: todayLogs.length,
+    todayReviews,
     todayNewCards: [...firstReviewByCard.values()].filter((time) => startOfDay(time) === today).length,
-    todayAgain: todayLogs.filter((log) => log.rating === 1).length,
+    todayAgain,
     streakDays: calculateStreak(logs, now),
     last7Days,
     weakCards: calculateWeakCards(cards, logs),

@@ -59,11 +59,27 @@ function isCard(value: unknown): value is KnowledgeCard {
 }
 
 function isReviewState(value: unknown): value is ReviewState {
+  if (!isRecord(value) || !isRecord(value.fsrsData)) return false
+  const fsrsData = value.fsrsData
+  const parsedDue = typeof fsrsData.due === 'string' ? Date.parse(fsrsData.due) : Number.NaN
   return (
-    isRecord(value) &&
     hasString(value, 'cardId') &&
     hasNumber(value, 'dueAt') &&
-    isRecord(value.fsrsData)
+    Number.isInteger(value.dueAt) &&
+    Number.isFinite(parsedDue) &&
+    parsedDue === value.dueAt &&
+    hasNumber(fsrsData, 'reps') &&
+    Number.isInteger(fsrsData.reps) &&
+    (fsrsData.reps as number) >= 0 &&
+    hasNumber(fsrsData, 'state') &&
+    [0, 1, 2, 3].includes(fsrsData.state as number) &&
+    (!('last_review' in fsrsData) ||
+      fsrsData.last_review === undefined ||
+      (typeof fsrsData.last_review === 'string' &&
+        Number.isFinite(Date.parse(fsrsData.last_review)))) &&
+    (!('lastReviewAt' in value) ||
+      value.lastReviewAt === undefined ||
+      hasNumber(value, 'lastReviewAt'))
   )
 }
 

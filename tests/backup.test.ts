@@ -8,6 +8,7 @@ import {
   restoreAutomaticBackup,
   validateBackupData,
 } from '../src/services/backupService'
+import { createReviewState } from '../src/scheduler/fsrs'
 import { STORAGE_KEYS } from '../src/storage/keys'
 import { setStorage } from '../src/storage/storage'
 import { installStorageMock, readStored, resetStorage } from './helpers/storageMock'
@@ -84,6 +85,44 @@ test('backup validation rejects duplicate IDs and broken references', () => {
     ],
   }
   assert.equal(validateBackupData(orphanCard), false)
+})
+
+test('backup validation rejects corrupt or inconsistent FSRS state', () => {
+  const subject = { id: 'subject_1', name: 'One', createdAt: 1, updatedAt: 1 }
+  const card = {
+    id: 'card_1',
+    subjectId: subject.id,
+    question: 'Question',
+    answer: 'Answer',
+    tags: [],
+    importance: 2 as const,
+    status: 'active' as const,
+    createdAt: 1,
+    updatedAt: 1,
+  }
+  const validState = createReviewState(card.id, new Date(2026, 6, 30, 12).getTime())
+  const backup = {
+    ...backupWithSubject(subject.id, subject.name),
+    subjects: [subject],
+    cards: [card],
+    reviewStates: [validState],
+  }
+
+  assert.equal(validateBackupData(backup), true)
+  assert.equal(
+    validateBackupData({
+      ...backup,
+      reviewStates: [{ ...validState, fsrsData: {} }],
+    }),
+    false,
+  )
+  assert.equal(
+    validateBackupData({
+      ...backup,
+      reviewStates: [{ ...validState, dueAt: validState.dueAt + 1 }],
+    }),
+    false,
+  )
 })
 
 test('import creates a restorable snapshot of the previous data', async () => {

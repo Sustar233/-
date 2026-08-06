@@ -39,3 +39,21 @@ test('statistics apply streak and weakness rules', () => {
 test('streak starts yesterday when today has no review', () => {
   assert.equal(calculateStreak(logs.slice(0, 2), now), 2)
 })
+
+test('statistics remain correct when logs are not chronological', () => {
+  const unsortedLogs: ReviewLog[] = [
+    { id: 'later', cardId: 'new-card', subjectId: 'subject_1', rating: 3, reviewedAt: now },
+    {
+      id: 'earlier',
+      cardId: 'new-card',
+      subjectId: 'subject_1',
+      rating: 3,
+      reviewedAt: now - day,
+    },
+  ]
+
+  const summary = calculateStatistics([], unsortedLogs, now)
+  assert.equal(summary.todayReviews, 1)
+  assert.equal(summary.todayNewCards, 0)
+  assert.equal(summary.last7Days.at(-1)?.count, 1)
+})
