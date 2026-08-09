@@ -104,12 +104,15 @@ export const useReviewStore = defineStore('review', () => {
 
   async function rate(rating: ReviewRating): Promise<void> {
     if (!currentCard.value) return
-    lastCommit.value = await commitReview(currentCard.value, rating)
+    const nextSession: ReviewSession = {
+      ...sessionSnapshot(),
+      currentIndex: currentIndex.value + 1,
+    }
+    lastCommit.value = await commitReview(currentCard.value, rating, Date.now(), nextSession)
     currentIndex.value += 1
     revealed.value = false
     previews.value = []
     resumed.value = false
-    await persist()
   }
 
   async function skip(): Promise<boolean> {
@@ -128,13 +131,17 @@ export const useReviewStore = defineStore('review', () => {
   async function undoLast(): Promise<boolean> {
     if (!lastCommit.value) return false
     const commit = lastCommit.value
-    await undoReview(commit)
+    const restoredSession: ReviewSession = {
+      ...sessionSnapshot(),
+      currentIndex: Math.max(0, currentIndex.value - 1),
+      lastCommit: undefined,
+    }
+    await undoReview(commit, restoredSession)
     currentIndex.value = Math.max(0, currentIndex.value - 1)
     lastCommit.value = undefined
     previews.value = await previewCard(commit.cardId)
     revealed.value = true
     resumed.value = false
-    await persist()
     return true
   }
 

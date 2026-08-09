@@ -3,6 +3,10 @@ import { dirname } from 'node:path'
 
 export type JsonStorageRecord = Record<string, unknown>
 
+export type JsonStorageMutation =
+  | { type: 'set'; key: string; value: unknown }
+  | { type: 'remove'; key: string }
+
 export class JsonStorage {
   private statePromise: Promise<JsonStorageRecord> | null = null
   private writeQueue: Promise<void> = Promise.resolve()
@@ -25,6 +29,16 @@ export class JsonStorage {
   async remove(key: string): Promise<void> {
     await this.enqueueWrite((state) => {
       delete state[key]
+    })
+  }
+
+  async batch(mutations: JsonStorageMutation[]): Promise<void> {
+    if (!mutations.length) return
+    await this.enqueueWrite((state) => {
+      for (const mutation of mutations) {
+        if (mutation.type === 'set') state[mutation.key] = mutation.value
+        else delete state[mutation.key]
+      }
     })
   }
 

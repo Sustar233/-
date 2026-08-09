@@ -1,7 +1,7 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import { resolve } from 'node:path'
 import type { Plugin } from 'vite'
-import { JsonStorage } from './jsonStorage'
+import { JsonStorage, type JsonStorageMutation } from './jsonStorage'
 
 const API_PREFIX = '/api/storage/'
 const MAX_BODY_BYTES = 10 * 1024 * 1024
@@ -42,6 +42,28 @@ function isAllowedKey(key: string): boolean {
   return key.startsWith('recalllab:') && key.length <= 100
 }
 
+function parseBatchMutations(value: unknown): JsonStorageMutation[] | null {
+  if (!value || typeof value !== 'object') return null
+  const mutations = (value as { mutations?: unknown }).mutations
+  if (!Array.isArray(mutations) || mutations.length > 100) return null
+
+  const parsed: JsonStorageMutation[] = []
+  for (const mutation of mutations) {
+    if (!mutation || typeof mutation !== 'object') return null
+    const candidate = mutation as Record<string, unknown>
+    if (typeof candidate.key !== 'string' || !isAllowedKey(candidate.key)) return null
+    if (candidate.type === 'remove') {
+      parsed.push({ type: 'remove', key: candidate.key })
+      continue
+    }
+    if (candidate.type !== 'set' || !Object.prototype.hasOwnProperty.call(candidate, 'value')) {
+      return null
+    }
+    parsed.push({ type: 'set', key: candidate.key, value: candidate.value })
+  }
+  return parsed
+}
+
 export function lanStoragePlugin(): Plugin {
   const storage = new JsonStorage(resolve(process.cwd(), '.recalllab-data', 'storage.json'))
 
@@ -58,6 +80,27 @@ export function lanStoragePlugin(): Plugin {
         }
         if (!url.pathname.startsWith(API_PREFIX)) {
           next()
+          return
+        }
+
+        if (url.pathname === `${API_PREFIX}batch`) {
+          if (request.method !== 'POST') {
+            response.setHeader('Allow', 'POST')
+            sendJson(response, 405, { error: '不支持的请求方法' })
+            return
+          }
+          try {
+            const mutations = parseBatchMutations(await readJsonBody(request))
+            if (!mutations) {
+              sendJson(response, 400, { error: '批量写入格式无效' })
+              return
+            }
+            await storage.batch(mutations)
+            sendJson(response, 200, { ok: true })
+          } catch (error) {
+            console.error('[RecallLab shared storage batch]', error)
+            sendJson(response, 500, { error: '共享数据批量写入失败' })
+          }
           return
         }
 

@@ -220,13 +220,14 @@ async function goBack(): Promise<void> {
   height: 8rpx;
   overflow: hidden;
   border-radius: 999rpx;
-  background: #ded8ce;
+  background: rgba(167, 184, 197, 0.18);
 }
 
 .progress-fill {
   height: 100%;
   border-radius: inherit;
   background: linear-gradient(90deg, var(--color-accent) 0%, var(--color-primary) 100%);
+  box-shadow: 0 0 14rpx rgba(103, 216, 197, 0.38);
   transition: width 180ms ease;
 }
 
@@ -243,9 +244,9 @@ async function goBack(): Promise<void> {
 .resume-notice {
   margin: 8rpx 0 14rpx;
   padding: 13rpx 18rpx;
-  border: 1rpx solid #cbdad2;
+  border: 1rpx solid rgba(103, 216, 197, 0.32);
   border-radius: 14rpx;
-  background: #edf5f0;
+  background: rgba(54, 143, 132, 0.14);
   color: var(--color-primary);
   font-size: 22rpx;
   text-align: center;
@@ -276,6 +277,9 @@ async function goBack(): Promise<void> {
   min-height: 570rpx;
   padding: 48rpx 38rpx;
   border-top: 6rpx solid var(--color-accent);
+  background:
+    radial-gradient(circle at 86% 12%, rgba(215, 173, 102, 0.12) 0, transparent 24%),
+    linear-gradient(145deg, rgba(12, 39, 65, 0.98), rgba(7, 27, 48, 0.98));
 }
 
 .card-kicker {
@@ -313,7 +317,7 @@ async function goBack(): Promise<void> {
 
 .review-answer {
   margin-top: 24rpx;
-  color: #394139;
+  color: #e3e9e5;
   font-size: 30rpx;
   line-height: 1.8;
 }
@@ -322,8 +326,8 @@ async function goBack(): Promise<void> {
   margin-top: 32rpx;
   padding: 22rpx;
   border-radius: 16rpx;
-  border-left: 4rpx solid #d7b18f;
-  background: #faf3eb;
+  border-left: 4rpx solid var(--color-accent);
+  background: rgba(215, 173, 102, 0.1);
 }
 
 .note-label,
@@ -338,7 +342,7 @@ async function goBack(): Promise<void> {
 
 .note-copy {
   margin-top: 9rpx;
-  color: #5e625b;
+  color: var(--color-muted);
   font-size: 24rpx;
   line-height: 1.65;
 }

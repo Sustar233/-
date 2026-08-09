@@ -65,7 +65,7 @@ function removeSubject(id: string): void {
   uni.showModal({
     title: '删除科目',
     content: `“${subject.name}”下的章节、卡片和复习记录都会删除，确定继续吗？`,
-    confirmColor: '#a9443d',
+    confirmColor: '#c65f5b',
     success: async ({ confirm }) => {
       if (!confirm) return
       await subjectStore.removeSubject(id)
@@ -159,9 +159,9 @@ function openSubject(id: string): void {
 .subject-total {
   margin-bottom: 5rpx;
   padding: 8rpx 14rpx;
-  border: 1rpx solid #dfd5c7;
+  border: 1rpx solid var(--color-line);
   border-radius: 999rpx;
-  background: rgba(255, 253, 248, 0.72);
+  background: rgba(10, 34, 58, 0.72);
   color: var(--color-muted);
   font-size: 22rpx;
 }

@@ -1,5 +1,5 @@
 import { STORAGE_KEYS } from '@/storage/keys'
-import { getStorage, removeStorage, setStorage } from '@/storage/storage'
+import { getStorage, setStorage, setStorageBatch } from '@/storage/storage'
 import type { KnowledgeCard } from '@/types/card'
 import type { ReviewLog, ReviewState } from '@/types/review'
 import type { BackupData, Settings } from '@/types/settings'
@@ -169,13 +169,19 @@ async function readCurrentBackup(): Promise<BackupData> {
 }
 
 async function writeBackupData(data: BackupData): Promise<void> {
-  await setStorage(STORAGE_KEYS.subjects, data.subjects)
-  await setStorage(STORAGE_KEYS.chapters, data.chapters)
-  await setStorage(STORAGE_KEYS.cards, data.cards)
-  await setStorage(STORAGE_KEYS.reviewStates, data.reviewStates)
-  await setStorage(STORAGE_KEYS.reviewLogs, data.reviewLogs)
-  await setStorage(STORAGE_KEYS.settings, normalizeSettings(data.settings))
-  await removeStorage(STORAGE_KEYS.reviewSession)
+  await setStorageBatch([
+    { type: 'set', key: STORAGE_KEYS.subjects, value: data.subjects },
+    { type: 'set', key: STORAGE_KEYS.chapters, value: data.chapters },
+    { type: 'set', key: STORAGE_KEYS.cards, value: data.cards },
+    { type: 'set', key: STORAGE_KEYS.reviewStates, value: data.reviewStates },
+    { type: 'set', key: STORAGE_KEYS.reviewLogs, value: data.reviewLogs },
+    {
+      type: 'set',
+      key: STORAGE_KEYS.settings,
+      value: normalizeSettings(data.settings),
+    },
+    { type: 'remove', key: STORAGE_KEYS.reviewSession },
+  ])
 }
 
 export async function exportBackup(): Promise<string> {

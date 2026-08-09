@@ -1,5 +1,5 @@
 import { STORAGE_KEYS } from '@/storage/keys'
-import { getStorage, setStorage } from '@/storage/storage'
+import { getStorage, setStorage, setStorageBatch } from '@/storage/storage'
 import type { KnowledgeCard, KnowledgeCardInput } from '@/types/card'
 import type { ReviewLog, ReviewState } from '@/types/review'
 import { generateId } from '@/utils/id'
@@ -67,10 +67,19 @@ export async function deleteCard(id: string): Promise<void> {
     getStorage<ReviewState[]>(STORAGE_KEYS.reviewStates).then((value) => value ?? []),
     getStorage<ReviewLog[]>(STORAGE_KEYS.reviewLogs).then((value) => value ?? []),
   ])
-  await Promise.all([
-    setStorage(STORAGE_KEYS.cards, cards.filter((card) => card.id !== id)),
-    setStorage(STORAGE_KEYS.reviewStates, states.filter((state) => state.cardId !== id)),
-    setStorage(STORAGE_KEYS.reviewLogs, logs.filter((log) => log.cardId !== id)),
+  await setStorageBatch([
+    { type: 'set', key: STORAGE_KEYS.cards, value: cards.filter((card) => card.id !== id) },
+    {
+      type: 'set',
+      key: STORAGE_KEYS.reviewStates,
+      value: states.filter((state) => state.cardId !== id),
+    },
+    {
+      type: 'set',
+      key: STORAGE_KEYS.reviewLogs,
+      value: logs.filter((log) => log.cardId !== id),
+    },
+    { type: 'remove', key: STORAGE_KEYS.reviewSession },
   ])
 }
 

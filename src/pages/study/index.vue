@@ -187,7 +187,7 @@ function startStudy(): void {
 }
 
 .picker-field.disabled {
-  background: #f2eee7;
+  background: rgba(119, 139, 156, 0.1);
   color: var(--color-subtle);
 }
 

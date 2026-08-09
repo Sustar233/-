@@ -10,10 +10,10 @@
   },
   "h5": { "title": "苦作舟" },
   "mp-weixin": {
-    "appid": "",
+    "appid": "wx5b914c7d954302ad",
     "setting": {
-      "urlCheck": false,
-      "checkSiteMap": false,
+      "urlCheck": true,
+      "checkSiteMap": true,
       "es6": true,
       "postcss": true,
       "minified": true

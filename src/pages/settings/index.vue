@@ -70,7 +70,7 @@ function importData(): void {
   uni.showModal({
     title: '覆盖当前数据',
     content: '导入会覆盖当前全部科目、卡片和复习记录。系统会先自动保存当前数据。',
-    confirmColor: '#a9443d',
+    confirmColor: '#c65f5b',
     success: async ({ confirm }) => {
       if (!confirm) return
       working.value = true
@@ -97,7 +97,7 @@ function restoreAutomaticBackup(): void {
   uni.showModal({
     title: '恢复导入前备份',
     content: '将恢复最近一次导入前的数据，当前数据也会自动保留为新的恢复点。',
-    confirmColor: '#1f5a49',
+    confirmColor: '#2c9f8e',
     success: async ({ confirm }) => {
       if (!confirm) return
       working.value = true
@@ -157,7 +157,7 @@ function restoreAutomaticBackup(): void {
           <text class="setting-name small-name">分散到期日期</text>
           <text class="setting-description">为较长间隔加入轻微浮动，避免卡片集中到期。</text>
         </view>
-        <switch :checked="enableFuzz" color="#1f5a49" @change="changeFuzz" />
+        <switch :checked="enableFuzz" color="#2c9f8e" @change="changeFuzz" />
       </view>
       <button class="secondary-button save-fsrs" @click="saveFsrsPreferences">保存调度偏好</button>
     </view>
@@ -245,7 +245,7 @@ function restoreAutomaticBackup(): void {
 
 .fsrs-card {
   margin-top: 18rpx;
-  border-left: 5rpx solid #5f7d9a;
+  border-left: 5rpx solid #668fb3;
 }
 
 .backup-card {
@@ -280,9 +280,10 @@ function restoreAutomaticBackup(): void {
   height: 76rpx;
   min-height: 76rpx;
   padding: 0 20rpx;
-  border: 1rpx solid #ddd5c8;
+  border: 1rpx solid var(--color-line);
   border-radius: 16rpx;
-  background: #fffdf8;
+  background: var(--color-surface-strong);
+  color: var(--color-text);
   font-size: 30rpx;
   text-align: center;
 }
@@ -323,7 +324,7 @@ function restoreAutomaticBackup(): void {
 
 .backup-intro {
   display: block;
-  color: #5f675f;
+  color: var(--color-muted);
   font-size: 24rpx;
   line-height: 1.7;
 }
@@ -333,10 +334,10 @@ function restoreAutomaticBackup(): void {
   height: 330rpx;
   margin-top: 24rpx;
   padding: 22rpx;
-  border: 1rpx solid #ddd5c8;
+  border: 1rpx solid var(--color-line);
   border-radius: 16rpx;
-  background: #faf7f1;
-  color: #444a44;
+  background: rgba(5, 21, 38, 0.72);
+  color: #dce5e8;
   font-family: monospace;
   font-size: 20rpx;
   line-height: 1.55;
@@ -374,8 +375,9 @@ function restoreAutomaticBackup(): void {
   align-items: center;
   justify-content: center;
   border-radius: 11rpx 11rpx 11rpx 4rpx;
-  background: var(--color-accent);
-  color: #fffaf3;
+  border: 1rpx solid rgba(230, 154, 116, 0.72);
+  background: #842f35;
+  color: #ffd8b4;
   font-family: "STKaiti", "KaiTi", serif;
   font-size: 24rpx;
 }

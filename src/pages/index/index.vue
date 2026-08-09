@@ -96,18 +96,40 @@ function openStudy(): void {
 
 <template>
   <view class="page-shell safe-top home-page">
+    <view class="constellation-mark" aria-hidden="true">
+      <view class="constellation-line line-one" />
+      <view class="constellation-line line-two" />
+      <view class="constellation-line line-three" />
+      <text class="constellation-star star-one">✦</text>
+      <text class="constellation-star star-two">✧</text>
+      <text class="constellation-star star-three">✦</text>
+      <text class="constellation-star star-four">·</text>
+    </view>
     <view class="brand-row">
       <view class="brand-lockup">
         <view class="brand-seal">舟</view>
         <view>
           <text class="brand">苦作舟</text>
-          <text class="tagline">学海无涯，把知识记得更久</text>
+          <text class="tagline">学海无涯 · 苦作舟以渡</text>
         </view>
       </view>
       <text class="today-mark">每日精进</text>
     </view>
 
     <view class="review-hero surface">
+      <view class="hero-constellation" aria-hidden="true">
+        <view class="hero-star-node hero-node-one" />
+        <view class="hero-star-node hero-node-two" />
+        <view class="hero-star-node hero-node-three" />
+        <view class="hero-star-line hero-line-one" />
+        <view class="hero-star-line hero-line-two" />
+      </view>
+      <view class="hero-cloud" aria-hidden="true">
+        <view class="cloud-lobe cloud-lobe-one" />
+        <view class="cloud-lobe cloud-lobe-two" />
+        <view class="cloud-lobe cloud-lobe-three" />
+        <view class="cloud-lobe cloud-lobe-four" />
+      </view>
       <view class="hero-topline">
         <text class="hero-label">{{ isResuming ? '继续上次复习' : '今日待复习' }}</text>
         <text class="hero-badge">{{ isResuming ? '进度已保存' : 'FSRS 智能排序' }}</text>
@@ -128,11 +150,13 @@ function openStudy(): void {
       <text class="section-title">今天</text>
       <text class="section-link" @click="openStudy">专项复习 ›</text>
     </view>
-    <view class="stat-grid">
-      <StatCard label="已复习" :value="summary.todayReviews" hint="次回答" />
-      <StatCard label="新学习" :value="summary.todayNewCards" hint="张新卡" />
-      <StatCard label="重来" :value="summary.todayAgain" hint="次遗忘" />
-      <StatCard label="连续" :value="`${summary.streakDays} 天`" hint="学习节奏" />
+    <view class="progress-panel surface">
+      <view class="stat-grid">
+        <StatCard variant="orbit" label="已复习" :value="summary.todayReviews" hint="次回答" />
+        <StatCard variant="orbit" label="新学习" :value="summary.todayNewCards" hint="张新卡" />
+        <StatCard variant="orbit" label="重来" :value="summary.todayAgain" hint="次遗忘" />
+        <StatCard variant="orbit" label="连续" :value="`${summary.streakDays} 天`" hint="学习节奏" />
+      </view>
     </view>
 
     <view class="section-heading">
@@ -166,11 +190,47 @@ function openStudy(): void {
 
 <style scoped>
 .home-page {
+  position: relative;
   padding-bottom: 70rpx;
 }
 
+.constellation-mark {
+  position: absolute;
+  z-index: 0;
+  top: 24rpx;
+  right: 26rpx;
+  width: 250rpx;
+  height: 150rpx;
+  opacity: 0.68;
+  pointer-events: none;
+}
+
+.constellation-line {
+  position: absolute;
+  height: 1rpx;
+  transform-origin: left center;
+  background: linear-gradient(90deg, rgba(215, 173, 102, 0.76), rgba(215, 173, 102, 0.12));
+}
+
+.line-one { top: 48rpx; left: 34rpx; width: 108rpx; transform: rotate(17deg); }
+.line-two { top: 80rpx; left: 131rpx; width: 82rpx; transform: rotate(-28deg); }
+.line-three { top: 63rpx; left: 70rpx; width: 72rpx; transform: rotate(64deg); }
+
+.constellation-star {
+  position: absolute;
+  color: var(--color-accent);
+  text-shadow: 0 0 14rpx rgba(255, 213, 138, 0.55);
+}
+
+.star-one { top: 34rpx; left: 23rpx; }
+.star-two { top: 63rpx; left: 129rpx; }
+.star-three { top: 21rpx; right: 14rpx; }
+.star-four { top: 116rpx; left: 116rpx; }
+
 .brand-row {
   display: flex;
+  position: relative;
+  z-index: 1;
   align-items: center;
   justify-content: space-between;
   margin: 8rpx 2rpx 32rpx;
@@ -189,10 +249,11 @@ function openStudy(): void {
 }
 
 .brand {
-  color: var(--color-text);
-  font-size: 46rpx;
-  font-weight: 860;
-  letter-spacing: 2rpx;
+  color: #f6e5be;
+  font-size: 50rpx;
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: 7rpx;
 }
 
 .tagline {
@@ -209,18 +270,19 @@ function openStudy(): void {
   align-items: center;
   justify-content: center;
   border-radius: 18rpx 18rpx 18rpx 6rpx;
-  background: var(--color-accent);
-  color: #fffaf3;
+  border: 1rpx solid rgba(230, 154, 116, 0.72);
+  background: #842f35;
+  color: #ffd8b4;
   font-family: "STKaiti", "KaiTi", serif;
   font-size: 34rpx;
   font-weight: 700;
-  box-shadow: 0 8rpx 18rpx rgba(185, 104, 61, 0.2);
+  box-shadow: 0 8rpx 20rpx rgba(0, 6, 18, 0.3);
 }
 
 .today-mark {
   flex: 0 0 auto;
   padding: 9rpx 14rpx;
-  border: 1rpx solid #e3cbb8;
+  border: 1rpx solid rgba(215, 173, 102, 0.45);
   border-radius: 999rpx;
   color: var(--color-accent);
   font-size: 19rpx;
@@ -231,22 +293,89 @@ function openStudy(): void {
   position: relative;
   padding: 38rpx;
   overflow: hidden;
-  border-color: rgba(255, 255, 255, 0.08);
-  background: linear-gradient(145deg, #235e4d 0%, #174538 100%);
-  color: #ffffff;
-  box-shadow: 0 20rpx 44rpx rgba(23, 69, 56, 0.2);
+  border-color: rgba(215, 173, 102, 0.56);
+  background:
+    radial-gradient(circle at 76% 26%, rgba(100, 167, 195, 0.12) 0, transparent 34%),
+    linear-gradient(145deg, rgba(11, 38, 65, 0.98), rgba(6, 24, 43, 0.98));
+  color: #f8e8c5;
+  box-shadow: 0 22rpx 50rpx rgba(0, 6, 18, 0.38);
+}
+
+.review-hero::before {
+  position: absolute;
+  top: -118rpx;
+  right: -60rpx;
+  width: 330rpx;
+  height: 330rpx;
+  border: 1rpx solid rgba(215, 173, 102, 0.28);
+  border-radius: 50%;
+  content: '';
 }
 
 .review-hero::after {
   position: absolute;
-  top: -86rpx;
-  right: -78rpx;
-  width: 230rpx;
-  height: 230rpx;
-  border: 1rpx solid rgba(255, 255, 255, 0.1);
-  border-radius: 50%;
-  content: '';
+  top: 82rpx;
+  right: 54rpx;
+  color: rgba(238, 197, 122, 0.78);
+  font-size: 34rpx;
+  text-shadow: 0 0 16rpx rgba(238, 197, 122, 0.5);
+  content: '✦';
 }
+
+.hero-constellation {
+  position: absolute;
+  z-index: 0;
+  top: 84rpx;
+  right: 38rpx;
+  width: 190rpx;
+  height: 96rpx;
+  opacity: 0.68;
+}
+
+.hero-cloud {
+  position: absolute;
+  z-index: 0;
+  right: -42rpx;
+  bottom: -68rpx;
+  width: 300rpx;
+  height: 170rpx;
+  opacity: 0.2;
+  pointer-events: none;
+}
+
+.cloud-lobe {
+  position: absolute;
+  border: 1rpx solid rgba(226, 187, 117, 0.88);
+  border-radius: 50%;
+}
+
+.cloud-lobe-one { bottom: 0; left: 0; width: 106rpx; height: 106rpx; }
+.cloud-lobe-two { bottom: -6rpx; left: 72rpx; width: 154rpx; height: 154rpx; }
+.cloud-lobe-three { right: 0; bottom: 8rpx; width: 112rpx; height: 112rpx; }
+.cloud-lobe-four { right: 48rpx; bottom: -36rpx; width: 206rpx; height: 124rpx; }
+
+.hero-star-node {
+  position: absolute;
+  width: 7rpx;
+  height: 7rpx;
+  border-radius: 50%;
+  background: var(--color-accent);
+  box-shadow: 0 0 14rpx rgba(238, 197, 122, 0.65);
+}
+
+.hero-node-one { top: 16rpx; left: 12rpx; }
+.hero-node-two { top: 58rpx; left: 82rpx; }
+.hero-node-three { top: 26rpx; right: 8rpx; }
+
+.hero-star-line {
+  position: absolute;
+  height: 1rpx;
+  transform-origin: left center;
+  background: rgba(215, 173, 102, 0.52);
+}
+
+.hero-line-one { top: 20rpx; left: 17rpx; width: 80rpx; transform: rotate(31deg); }
+.hero-line-two { top: 61rpx; left: 88rpx; width: 92rpx; transform: rotate(-24deg); }
 
 .hero-topline {
   display: flex;
@@ -262,17 +391,18 @@ function openStudy(): void {
 }
 
 .hero-label {
-  color: #d6e6de;
+  color: #efd6a4;
   font-size: 24rpx;
+  font-family: var(--font-display);
   font-weight: 680;
 }
 
 .hero-badge {
   padding: 8rpx 13rpx;
-  border: 1rpx solid rgba(255, 255, 255, 0.16);
+  border: 1rpx solid rgba(215, 173, 102, 0.35);
   border-radius: 999rpx;
-  background: rgba(255, 255, 255, 0.08);
-  color: #dcebe4;
+  background: rgba(215, 173, 102, 0.08);
+  color: #dcc597;
   font-size: 18rpx;
 }
 
@@ -285,14 +415,16 @@ function openStudy(): void {
 }
 
 .hero-number {
-  font-size: 94rpx;
-  font-weight: 850;
+  color: #f4d89e;
+  font-size: 106rpx;
+  font-family: "Times New Roman", serif;
+  font-weight: 400;
   line-height: 1.05;
 }
 
 .hero-unit {
   margin-left: 12rpx;
-  color: #d1e1d9;
+  color: #e3c995;
   font-size: 25rpx;
 }
 
@@ -300,7 +432,7 @@ function openStudy(): void {
   position: relative;
   z-index: 1;
   margin-top: 12rpx;
-  color: #c8dbd2;
+  color: #aebdcc;
   font-size: 22rpx;
 }
 
@@ -310,16 +442,28 @@ function openStudy(): void {
   width: 100%;
   margin-top: 32rpx;
   padding: 25rpx;
-  background: #fffaf1;
-  color: var(--color-primary-dark);
+  border: 1rpx solid rgba(148, 230, 213, 0.52);
+  background: linear-gradient(135deg, #197b71 0%, #0b5753 100%);
+  color: #fff0ce;
   font-weight: 780;
-  box-shadow: 0 10rpx 26rpx rgba(11, 43, 34, 0.16);
+  box-shadow: 0 12rpx 28rpx rgba(0, 7, 18, 0.32);
+  border-radius: 999rpx;
+}
+
+.progress-panel {
+  position: relative;
+  padding: 10rpx;
+  overflow: hidden;
+  border-color: rgba(215, 173, 102, 0.44);
+  background:
+    radial-gradient(circle at 12% 18%, rgba(36, 129, 121, 0.14) 0, transparent 26%),
+    linear-gradient(145deg, rgba(11, 37, 62, 0.98), rgba(6, 25, 45, 0.98));
 }
 
 .stat-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 16rpx;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0;
 }
 
 .section-link {
@@ -344,8 +488,9 @@ function openStudy(): void {
   align-items: center;
   justify-content: center;
   border-radius: 19rpx;
-  background: var(--color-primary-soft);
-  color: var(--color-primary);
+  border: 1rpx solid rgba(103, 216, 197, 0.34);
+  background: linear-gradient(145deg, rgba(34, 118, 108, 0.58), rgba(12, 70, 70, 0.7));
+  color: #a1eddd;
   font-weight: 800;
 }
 
@@ -367,7 +512,7 @@ function openStudy(): void {
 }
 
 .chevron {
-  color: #a29d94;
+  color: var(--color-muted);
   font-size: 42rpx;
 }
 

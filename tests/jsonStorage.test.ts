@@ -23,6 +23,15 @@ test('shared JSON storage persists values across instances', async () => {
       'recalllab:cards': [{ id: 'card_1' }],
     })
 
+    await second.batch([
+      { type: 'set', key: 'recalllab:cards', value: [{ id: 'card_2' }] },
+      { type: 'set', key: 'recalllab:settings', value: { dailyNewCards: 10 } },
+    ])
+    assert.deepEqual(JSON.parse(await readFile(filePath, 'utf8')), {
+      'recalllab:cards': [{ id: 'card_2' }],
+      'recalllab:settings': { dailyNewCards: 10 },
+    })
+
     await second.remove('recalllab:cards')
     assert.deepEqual(await second.get('recalllab:cards'), { found: false })
   } finally {

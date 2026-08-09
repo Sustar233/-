@@ -4,7 +4,7 @@ import {
   PRESET_KNOWLEDGE_VERSION,
 } from '@/data/presetKnowledge'
 import { STORAGE_KEYS } from '@/storage/keys'
-import { getStorage, setStorage } from '@/storage/storage'
+import { getStorage, setStorage, setStorageBatch } from '@/storage/storage'
 import type { KnowledgeCard } from '@/types/card'
 import type { Chapter, Subject } from '@/types/subject'
 
@@ -38,12 +38,12 @@ async function initializePresetKnowledge(): Promise<void> {
   }
 
   const preset = buildPresetKnowledgeData()
-  await Promise.all([
-    setStorage(STORAGE_KEYS.subjects, [preset.subject]),
-    setStorage(STORAGE_KEYS.chapters, preset.chapters),
-    setStorage(STORAGE_KEYS.cards, preset.cards),
+  await setStorageBatch([
+    { type: 'set', key: STORAGE_KEYS.subjects, value: [preset.subject] },
+    { type: 'set', key: STORAGE_KEYS.chapters, value: preset.chapters },
+    { type: 'set', key: STORAGE_KEYS.cards, value: preset.cards },
+    { type: 'set', key: STORAGE_KEYS.presetKnowledgeVersion, value: PRESET_KNOWLEDGE_VERSION },
   ])
-  await setStorage(STORAGE_KEYS.presetKnowledgeVersion, PRESET_KNOWLEDGE_VERSION)
 }
 
 export function ensurePresetKnowledge(): Promise<void> {
@@ -54,4 +54,3 @@ export function ensurePresetKnowledge(): Promise<void> {
   }
   return initializationPromise
 }
-

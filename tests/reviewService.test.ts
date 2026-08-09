@@ -94,6 +94,26 @@ test('reviewing a card saves its FSRS state and a compact log', async () => {
   )
 })
 
+test('reviewing a card commits its state, log, and session together', async () => {
+  const now = new Date('2026-07-30T08:00:00.000Z').getTime()
+  const target = card('card_session', now)
+  await setStorage(STORAGE_KEYS.cards, [target])
+  const session = {
+    version: 1 as const,
+    cardIds: [target.id],
+    currentIndex: 1,
+    startedAt: now,
+    filter: {},
+  }
+
+  const commit = await commitReview(target, 3, now, session)
+  const storedSession = await getReviewSession()
+
+  assert.equal(storedSession?.currentIndex, 1)
+  assert.equal(storedSession?.lastCommit?.log.id, commit.log.id)
+  assert.equal(storedSession?.lastCommit?.nextState.cardId, target.id)
+})
+
 test('review queue can be narrowed by subject, chapter, uncategorized cards, and tag', async () => {
   const now = new Date('2026-07-30T08:00:00.000Z').getTime()
   const chapterCard = { ...card('chapter', now), chapterId: 'chapter_1', tags: ['重点'] }

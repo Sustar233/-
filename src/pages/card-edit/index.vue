@@ -189,7 +189,7 @@ async function save(): Promise<void> {
   padding: 24rpx;
   margin-bottom: 22rpx;
   border-left: 5rpx solid var(--color-accent);
-  color: #8f5b2e;
+  color: var(--color-accent);
   line-height: 1.6;
 }
 

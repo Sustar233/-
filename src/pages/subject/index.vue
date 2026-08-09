@@ -92,7 +92,7 @@ function removeChapter(id: string): void {
   uni.showModal({
     title: '删除章节',
     content: `删除“${chapter.name}”后，其中的卡片会移到未分类。`,
-    confirmColor: '#a9443d',
+    confirmColor: '#c65f5b',
     success: async ({ confirm }) => {
       if (!confirm) return
       await subjectStore.removeChapter(id)
@@ -121,7 +121,7 @@ function removeCard(id: string): void {
   uni.showModal({
     title: '删除知识卡',
     content: '卡片及其全部复习状态和记录都会删除。',
-    confirmColor: '#a9443d',
+    confirmColor: '#c65f5b',
     success: async ({ confirm }) => {
       if (!confirm) return
       await cardStore.remove(id, subjectId.value)
@@ -339,16 +339,16 @@ async function toggleCard(id: string): Promise<void> {
   padding: 18rpx 22rpx;
   flex: 0 0 auto;
   align-items: center;
-  border: 1rpx solid #ddd5c8;
+  border: 1rpx solid var(--color-line);
   border-radius: 18rpx;
   background: var(--color-surface);
-  color: #545d55;
+  color: var(--color-muted);
   font-size: 24rpx;
 }
 
 .chapter-pill.active,
 .chapter-item.active {
-  border-color: #82a694;
+  border-color: rgba(103, 216, 197, 0.6);
   background: var(--color-primary-soft);
   color: var(--color-primary);
 }
@@ -369,7 +369,7 @@ async function toggleCard(id: string): Promise<void> {
   display: flex;
   gap: 22rpx;
   margin-top: 10rpx;
-  color: #557566;
+  color: var(--color-primary);
   font-size: 20rpx;
 }
 

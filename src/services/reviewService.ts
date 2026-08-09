@@ -1,6 +1,12 @@
 import { applyReview, createReviewState, previewReview } from '@/scheduler/fsrs'
 import { STORAGE_KEYS } from '@/storage/keys'
-import { getStorage, removeStorage, setStorage } from '@/storage/storage'
+import {
+  getStorage,
+  removeStorage,
+  setStorage,
+  setStorageBatch,
+  type StorageMutation,
+} from '@/storage/storage'
 import type { KnowledgeCard } from '@/types/card'
 import type {
   ReviewCommit,
@@ -98,6 +104,7 @@ export async function commitReview(
   card: KnowledgeCard,
   rating: ReviewRating,
   now = Date.now(),
+  session?: ReviewSession,
 ): Promise<ReviewCommit> {
   const [states, logs, settingsValue] = await Promise.all([
     getStates(),
@@ -114,14 +121,23 @@ export async function commitReview(
     rating,
     reviewedAt: now,
   }
-  await Promise.all([
-    setStorage(STORAGE_KEYS.reviewStates, [
+  const commit: ReviewCommit = { cardId: card.id, previousState, nextState: next, log }
+  const mutations: StorageMutation[] = [
+    { type: 'set', key: STORAGE_KEYS.reviewStates, value: [
       ...states.filter((state) => state.cardId !== card.id),
       next,
-    ]),
-    setStorage(STORAGE_KEYS.reviewLogs, [...logs, log]),
-  ])
-  return { cardId: card.id, previousState, nextState: next, log }
+    ] },
+    { type: 'set', key: STORAGE_KEYS.reviewLogs, value: [...logs, log] },
+  ]
+  if (session) {
+    mutations.push({
+      type: 'set',
+      key: STORAGE_KEYS.reviewSession,
+      value: { ...session, lastCommit: commit },
+    })
+  }
+  await setStorageBatch(mutations)
+  return commit
 }
 
 export async function reviewCard(
@@ -132,7 +148,7 @@ export async function reviewCard(
   return (await commitReview(card, rating, now)).nextState
 }
 
-export async function undoReview(commit: ReviewCommit): Promise<void> {
+export async function undoReview(commit: ReviewCommit, session?: ReviewSession): Promise<void> {
   const [states, logs] = await Promise.all([getStates(), getReviewLogs()])
   if (!logs.some((log) => log.id === commit.log.id)) {
     throw new Error('上一次评分已无法撤销')
@@ -145,13 +161,18 @@ export async function undoReview(commit: ReviewCommit): Promise<void> {
       ]
     : states.filter((state) => state.cardId !== commit.cardId)
 
-  await Promise.all([
-    setStorage(STORAGE_KEYS.reviewStates, restoredStates),
-    setStorage(
-      STORAGE_KEYS.reviewLogs,
-      logs.filter((log) => log.id !== commit.log.id),
-    ),
-  ])
+  const mutations: StorageMutation[] = [
+    { type: 'set', key: STORAGE_KEYS.reviewStates, value: restoredStates },
+    {
+      type: 'set',
+      key: STORAGE_KEYS.reviewLogs,
+      value: logs.filter((log) => log.id !== commit.log.id),
+    },
+  ]
+  if (session) {
+    mutations.push({ type: 'set', key: STORAGE_KEYS.reviewSession, value: session })
+  }
+  await setStorageBatch(mutations)
 }
 
 export async function getReviewSession(): Promise<ReviewSession | null> {

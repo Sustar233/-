@@ -46,8 +46,10 @@ defineEmits<{
   align-items: center;
   justify-content: center;
   border-radius: 22rpx;
-  background: var(--color-primary-soft);
-  color: var(--color-primary);
+  border: 1rpx solid rgba(103, 216, 197, 0.32);
+  background: linear-gradient(145deg, rgba(33, 119, 108, 0.58), rgba(11, 66, 68, 0.72));
+  color: #a6ecdf;
+  font-family: var(--font-display);
   font-size: 34rpx;
   font-weight: 800;
 }

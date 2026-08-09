@@ -167,11 +167,13 @@ function editWeakCard(cardId: string, subjectId: string): void {
 .bar {
   width: 42rpx;
   border-radius: 12rpx 12rpx 5rpx 5rpx;
-  background: linear-gradient(180deg, #b9683d 0%, #8f4f2f 100%);
+  background: linear-gradient(180deg, #73ddc9 0%, #1e716d 100%);
+  box-shadow: 0 0 14rpx rgba(103, 216, 197, 0.22);
 }
 
 .bar.empty {
-  background: #e7e0d5;
+  background: rgba(158, 176, 191, 0.16);
+  box-shadow: none;
 }
 
 .bar-label {
@@ -197,7 +199,7 @@ function editWeakCard(cardId: string, subjectId: string): void {
   justify-content: center;
   border-radius: 14rpx;
   background: var(--color-accent-soft);
-  color: #a05231;
+  color: var(--color-accent);
   font-weight: 760;
 }
 
@@ -223,7 +225,7 @@ function editWeakCard(cardId: string, subjectId: string): void {
 }
 
 .chevron {
-  color: #aaa298;
+  color: var(--color-muted);
   font-size: 40rpx;
 }
 </style>

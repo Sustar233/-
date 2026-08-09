@@ -1,5 +1,5 @@
 import { STORAGE_KEYS } from '@/storage/keys'
-import { getStorage, setStorage } from '@/storage/storage'
+import { getStorage, setStorage, setStorageBatch } from '@/storage/storage'
 import type { KnowledgeCard } from '@/types/card'
 import type { ReviewLog, ReviewState } from '@/types/review'
 import type { Chapter, Subject } from '@/types/subject'
@@ -67,15 +67,33 @@ export async function deleteSubject(id: string): Promise<void> {
   ])
   const removedCardIds = new Set(cards.filter((card) => card.subjectId === id).map((card) => card.id))
 
-  await Promise.all([
-    setStorage(STORAGE_KEYS.subjects, subjects.filter((subject) => subject.id !== id)),
-    setStorage(STORAGE_KEYS.chapters, chapters.filter((chapter) => chapter.subjectId !== id)),
-    setStorage(STORAGE_KEYS.cards, cards.filter((card) => card.subjectId !== id)),
-    setStorage(
-      STORAGE_KEYS.reviewStates,
-      reviewStates.filter((state) => !removedCardIds.has(state.cardId)),
-    ),
-    setStorage(STORAGE_KEYS.reviewLogs, reviewLogs.filter((log) => log.subjectId !== id)),
+  await setStorageBatch([
+    {
+      type: 'set',
+      key: STORAGE_KEYS.subjects,
+      value: subjects.filter((subject) => subject.id !== id),
+    },
+    {
+      type: 'set',
+      key: STORAGE_KEYS.chapters,
+      value: chapters.filter((chapter) => chapter.subjectId !== id),
+    },
+    {
+      type: 'set',
+      key: STORAGE_KEYS.cards,
+      value: cards.filter((card) => card.subjectId !== id),
+    },
+    {
+      type: 'set',
+      key: STORAGE_KEYS.reviewStates,
+      value: reviewStates.filter((state) => !removedCardIds.has(state.cardId)),
+    },
+    {
+      type: 'set',
+      key: STORAGE_KEYS.reviewLogs,
+      value: reviewLogs.filter((log) => log.subjectId !== id),
+    },
+    { type: 'remove', key: STORAGE_KEYS.reviewSession },
   ])
 }
 
@@ -117,15 +135,20 @@ export async function deleteChapter(id: string): Promise<void> {
     getChapters(),
     getStorage<KnowledgeCard[]>(STORAGE_KEYS.cards).then((value) => value ?? []),
   ])
-  await Promise.all([
-    setStorage(STORAGE_KEYS.chapters, chapters.filter((chapter) => chapter.id !== id)),
-    setStorage(
-      STORAGE_KEYS.cards,
-      cards.map((card) => {
+  await setStorageBatch([
+    {
+      type: 'set',
+      key: STORAGE_KEYS.chapters,
+      value: chapters.filter((chapter) => chapter.id !== id),
+    },
+    {
+      type: 'set',
+      key: STORAGE_KEYS.cards,
+      value: cards.map((card) => {
         if (card.chapterId !== id) return card
         const { chapterId: _removed, ...uncategorized } = card
         return { ...uncategorized, updatedAt: Date.now() }
       }),
-    ),
+    },
   ])
 }

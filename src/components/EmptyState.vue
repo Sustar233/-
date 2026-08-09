@@ -35,7 +35,7 @@ withDefaults(
   justify-content: center;
   margin-bottom: 24rpx;
   border-radius: 50%;
-  border: 1rpx solid #cedfd5;
+  border: 1rpx solid rgba(103, 216, 197, 0.3);
   background: var(--color-primary-soft);
   color: var(--color-primary);
   font-size: 42rpx;

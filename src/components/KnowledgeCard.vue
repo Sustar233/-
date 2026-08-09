@@ -37,11 +37,11 @@ defineEmits<{
 .knowledge-card {
   margin-bottom: 18rpx;
   padding: 28rpx;
-  border-left: 5rpx solid #d8e6de;
+  border-left: 5rpx solid rgba(103, 216, 197, 0.58);
 }
 
 .suspended {
-  border-left-color: #ddc4a3;
+  border-left-color: rgba(215, 173, 102, 0.58);
   opacity: 0.72;
 }
 
@@ -58,7 +58,7 @@ defineEmits<{
 }
 
 .status {
-  color: #9c6026;
+  color: var(--color-accent);
 }
 
 .question,
@@ -93,9 +93,9 @@ defineEmits<{
 .tag {
   padding: 7rpx 13rpx;
   border-radius: 999rpx;
-  border: 1rpx solid #d7e2db;
-  background: #edf3ef;
-  color: #466957;
+  border: 1rpx solid rgba(103, 216, 197, 0.28);
+  background: rgba(53, 143, 130, 0.14);
+  color: #8ee0d0;
   font-size: 21rpx;
 }
 
@@ -103,7 +103,7 @@ defineEmits<{
   display: flex;
   justify-content: flex-end;
   margin-top: 18rpx;
-  border-top: 1rpx solid #eee8de;
+  border-top: 1rpx solid var(--color-line);
   padding-top: 10rpx;
 }
 
