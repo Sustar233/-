@@ -32,6 +32,13 @@ test('preset knowledge contains exactly 200 valid, uniquely identified cards', (
     ),
     true,
   )
+  for (const chapter of data.chapters) {
+    const chapterCards = data.cards.filter((card) => card.chapterId === chapter.id)
+    assert.equal(chapterCards[0]?.parentCardId, undefined)
+    chapterCards.slice(1).forEach((card, index) => {
+      assert.equal(card.parentCardId, chapterCards[index]?.id)
+    })
+  }
 })
 
 test('empty knowledge storage is seeded once', async () => {
@@ -85,4 +92,3 @@ test('an interrupted preset write is repaired before marking completion', async 
   assert.equal(readStored<Chapter[]>(STORAGE_KEYS.chapters)?.length, 7)
   assert.equal(readStored<KnowledgeCard[]>(STORAGE_KEYS.cards)?.length, 200)
 })
-

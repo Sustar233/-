@@ -6,7 +6,7 @@
     { "path": "pages/settings/index", "style": { "navigationBarTitleText": "设置" } },
     { "path": "pages/subject/index", "style": { "navigationBarTitleText": "科目详情" } },
     { "path": "pages/card-edit/index", "style": { "navigationBarTitleText": "知识卡" } },
-    { "path": "pages/study/index", "style": { "navigationBarTitleText": "专项复习" } },
+    { "path": "pages/study/index", "style": { "navigationBarTitleText": "路径学习" } },
     { "path": "pages/review/index", "style": { "navigationStyle": "custom" } }
   ],
   "globalStyle": {

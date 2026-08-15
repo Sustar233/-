@@ -3,7 +3,7 @@ import type { KnowledgeCard } from '@/types/card'
 
 const importanceLabels = ['', '一般', '重要', '重点']
 
-defineProps<{ card: KnowledgeCard }>()
+defineProps<{ card: KnowledgeCard; parentQuestion?: string }>()
 
 defineEmits<{
   edit: []
@@ -20,6 +20,12 @@ defineEmits<{
     </view>
     <text class="question">{{ card.question }}</text>
     <text class="answer-preview">{{ card.answer }}</text>
+    <view v-if="card.parentCardId || card.connection" class="connection-row">
+      <text class="connection-label">脉络</text>
+      <text class="connection-copy">
+        {{ card.connection || (parentQuestion ? `承接：${parentQuestion}` : '已关联前置知识') }}
+      </text>
+    </view>
     <view v-if="card.tags.length" class="tag-row">
       <text v-for="tag in card.tags" :key="tag" class="tag"># {{ tag }}</text>
     </view>
@@ -88,6 +94,33 @@ defineEmits<{
   flex-wrap: wrap;
   gap: 10rpx;
   margin-top: 18rpx;
+}
+
+.connection-row {
+  display: flex;
+  margin-top: 16rpx;
+  padding: 14rpx 16rpx;
+  gap: 12rpx;
+  border-left: 3rpx solid var(--color-primary);
+  border-radius: 10rpx;
+  background: var(--color-primary-soft);
+}
+
+.connection-label {
+  flex: 0 0 auto;
+  color: var(--color-primary);
+  font-size: 20rpx;
+  font-weight: 720;
+}
+
+.connection-copy {
+  display: -webkit-box;
+  overflow: hidden;
+  color: var(--color-muted);
+  font-size: 21rpx;
+  line-height: 1.5;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
 .tag {

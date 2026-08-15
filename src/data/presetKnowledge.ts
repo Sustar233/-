@@ -314,13 +314,16 @@ export function buildPresetKnowledgeData(): PresetKnowledgeData {
   const cards: KnowledgeCard[] = []
 
   for (const chapter of CHAPTER_DEFINITIONS) {
+    let previousCardId: string | undefined
     for (const [question, answer, tags, importance = 2] of CARD_GROUPS[chapter.key]) {
       const index = cards.length + 1
       const chapterDefinition = chapterByKey.get(chapter.key)!
+      const id = `${PRESET_ID_PREFIX}card_${String(index).padStart(3, '0')}`
       cards.push({
-        id: `${PRESET_ID_PREFIX}card_${String(index).padStart(3, '0')}`,
+        id,
         subjectId: PRESET_SUBJECT_ID,
         chapterId: chapterDefinition.id,
+        parentCardId: previousCardId,
         question,
         answer,
         tags: [...tags],
@@ -330,6 +333,7 @@ export function buildPresetKnowledgeData(): PresetKnowledgeData {
         createdAt: PRESET_CREATED_AT + index,
         updatedAt: PRESET_CREATED_AT + index,
       })
+      previousCardId = id
     }
   }
 
@@ -339,4 +343,3 @@ export function buildPresetKnowledgeData(): PresetKnowledgeData {
 
   return { subject, chapters, cards }
 }
-

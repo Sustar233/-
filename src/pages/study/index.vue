@@ -124,9 +124,9 @@ function startStudy(): void {
 <template>
   <view class="page-shell study-page">
     <view class="page-heading">
-      <text class="eyebrow">自由组卷</text>
-      <text class="page-title">专项复习</text>
-      <text class="page-subtitle">按科目、章节或标签聚焦当前最需要巩固的知识。</text>
+      <text class="eyebrow">沿脉络掌握</text>
+      <text class="page-title">路径学习</text>
+      <text class="page-subtitle">按前置关系安排学习顺序：先理解上下文，再尝试独立回忆。</text>
     </view>
 
     <view class="filter-card surface">
@@ -152,7 +152,7 @@ function startStudy(): void {
     <view class="queue-preview surface">
       <view>
         <text class="preview-label">本次待复习</text>
-        <text class="preview-note">仍遵循到期卡优先和每日新卡限额</text>
+        <text class="preview-note">前置知识优先，同时遵循 FSRS 到期时间</text>
       </view>
       <view class="preview-number-row">
         <text class="preview-number">{{ loading ? '—' : queueCount }}</text>
@@ -161,7 +161,7 @@ function startStudy(): void {
     </view>
 
     <button class="primary-button start-button" :disabled="loading || !queueCount" @click="startStudy">
-      开始专项复习
+      开始路径学习
     </button>
   </view>
 </template>

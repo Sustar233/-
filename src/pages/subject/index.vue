@@ -35,7 +35,7 @@ const filteredCards = computed(() => {
   const query = searchQuery.value.trim().toLocaleLowerCase()
   if (!query) return visibleCards.value
   return visibleCards.value.filter((card) =>
-    [card.question, card.answer, card.note ?? '', ...card.tags]
+    [card.question, card.answer, card.connection ?? '', card.note ?? '', ...card.tags]
       .join(' ')
       .toLocaleLowerCase()
       .includes(query),
@@ -62,6 +62,11 @@ async function refresh(): Promise<void> {
 
 function countFor(chapterId?: string): number {
   return cardStore.cards.filter((card) => card.chapterId === chapterId).length
+}
+
+function parentQuestion(parentCardId?: string): string {
+  if (!parentCardId) return ''
+  return cardStore.cards.find((card) => card.id === parentCardId)?.question ?? ''
 }
 
 async function saveChapter(): Promise<void> {
@@ -144,7 +149,7 @@ async function toggleCard(id: string): Promise<void> {
         <text class="subject-meta">{{ cardStore.cards.length }} 张知识卡 · {{ chapters.length }} 个章节</text>
       </view>
       <view class="subject-header-actions">
-        <button class="secondary-button header-action" @click="openStudy">专项复习</button>
+        <button class="secondary-button header-action" @click="openStudy">脉络学习</button>
         <button class="primary-button header-action" @click="openCardEditor()">+ 添加卡片</button>
       </view>
     </view>
@@ -231,6 +236,7 @@ async function toggleCard(id: string): Promise<void> {
       v-for="card in displayedCards"
       :key="card.id"
       :card="card"
+      :parent-question="parentQuestion(card.parentCardId)"
       @edit="openCardEditor(card.id)"
       @toggle="toggleCard(card.id)"
       @remove="removeCard(card.id)"

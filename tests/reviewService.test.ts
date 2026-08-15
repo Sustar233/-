@@ -53,6 +53,25 @@ test('review queue puts due cards before old-to-new limited new cards', async ()
   )
 })
 
+test('review queue places a prerequisite before its dependent card', async () => {
+  const now = new Date('2026-07-30T08:00:00.000Z').getTime()
+  const prerequisite = card('prerequisite', now + 2)
+  const dependent = {
+    ...card('dependent', now + 1),
+    parentCardId: prerequisite.id,
+  }
+
+  await Promise.all([
+    setStorage(STORAGE_KEYS.cards, [dependent, prerequisite]),
+    setStorage(STORAGE_KEYS.settings, { dailyNewCards: 20 }),
+  ])
+
+  assert.deepEqual(
+    (await buildReviewQueue(now)).map((item) => item.id),
+    ['prerequisite', 'dependent'],
+  )
+})
+
 test('rebuilding the queue does not refill new cards already studied today', async () => {
   const now = new Date(2026, 6, 30, 12).getTime()
   const cards = Array.from({ length: 5 }, (_, index) => card(`new-${index + 1}`, now + index))

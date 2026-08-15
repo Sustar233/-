@@ -85,6 +85,37 @@ test('backup validation rejects duplicate IDs and broken references', () => {
     ],
   }
   assert.equal(validateBackupData(orphanCard), false)
+
+  const cyclicCards = {
+    ...backupWithSubject('subject_1', 'One'),
+    cards: [
+      {
+        id: 'card_1',
+        subjectId: 'subject_1',
+        parentCardId: 'card_2',
+        question: 'One',
+        answer: 'One',
+        tags: [],
+        importance: 2,
+        status: 'active',
+        createdAt: 1,
+        updatedAt: 1,
+      },
+      {
+        id: 'card_2',
+        subjectId: 'subject_1',
+        parentCardId: 'card_1',
+        question: 'Two',
+        answer: 'Two',
+        tags: [],
+        importance: 2,
+        status: 'active',
+        createdAt: 2,
+        updatedAt: 2,
+      },
+    ],
+  }
+  assert.equal(validateBackupData(cyclicCards), false)
 })
 
 test('backup validation rejects corrupt or inconsistent FSRS state', () => {

@@ -21,13 +21,38 @@ function normalizeInput(input: KnowledgeCardInput): KnowledgeCardInput {
     answer,
     tags: (input.tags ?? []).map((tag) => tag.trim()).filter(Boolean),
     note: input.note?.trim() || undefined,
+    parentCardId: input.parentCardId?.trim() || undefined,
+    connection: input.connection?.trim() || undefined,
     importance: input.importance ?? 2,
+  }
+}
+
+function validateParentCard(
+  cards: KnowledgeCard[],
+  input: KnowledgeCardInput,
+  currentCardId?: string,
+): void {
+  if (!input.parentCardId) return
+  if (input.parentCardId === currentCardId) throw new Error('知识卡不能关联自身')
+  const parent = cards.find((card) => card.id === input.parentCardId)
+  if (!parent) throw new Error('选择的前置知识不存在')
+  if (parent.subjectId !== input.subjectId) throw new Error('前置知识必须属于同一科目')
+
+  const cardById = new Map(cards.map((card) => [card.id, card]))
+  const visited = new Set<string>()
+  let cursor: KnowledgeCard | undefined = parent
+  while (cursor) {
+    if (cursor.id === currentCardId) throw new Error('前置关系不能形成循环')
+    if (visited.has(cursor.id)) throw new Error('现有知识路径中存在循环，请先修正')
+    visited.add(cursor.id)
+    cursor = cursor.parentCardId ? cardById.get(cursor.parentCardId) : undefined
   }
 }
 
 export async function createCard(input: KnowledgeCardInput): Promise<KnowledgeCard> {
   const cards = await getCards()
   const normalized = normalizeInput(input)
+  validateParentCard(cards, normalized)
   const now = Date.now()
   const card: KnowledgeCard = {
     ...normalized,
@@ -47,6 +72,7 @@ export async function updateCard(id: string, input: KnowledgeCardInput): Promise
   const current = cards.find((card) => card.id === id)
   if (!current) throw new Error('知识卡不存在')
   const normalized = normalizeInput(input)
+  validateParentCard(cards, normalized, id)
   const updated: KnowledgeCard = {
     ...current,
     ...normalized,
@@ -68,7 +94,17 @@ export async function deleteCard(id: string): Promise<void> {
     getStorage<ReviewLog[]>(STORAGE_KEYS.reviewLogs).then((value) => value ?? []),
   ])
   await setStorageBatch([
-    { type: 'set', key: STORAGE_KEYS.cards, value: cards.filter((card) => card.id !== id) },
+    {
+      type: 'set',
+      key: STORAGE_KEYS.cards,
+      value: cards
+        .filter((card) => card.id !== id)
+        .map((card) =>
+          card.parentCardId === id
+            ? { ...card, parentCardId: undefined, updatedAt: Date.now() }
+            : card,
+        ),
+    },
     {
       type: 'set',
       key: STORAGE_KEYS.reviewStates,
@@ -101,9 +137,72 @@ export async function searchCards(query: string): Promise<KnowledgeCard[]> {
   const cards = await getCards()
   if (!normalized) return cards
   return cards.filter((card) =>
-    [card.question, card.answer, card.note ?? '', ...card.tags]
+    [card.question, card.answer, card.connection ?? '', card.note ?? '', ...card.tags]
       .join(' ')
       .toLocaleLowerCase()
       .includes(normalized),
   )
+}
+
+export function getKnowledgeContext(
+  card: KnowledgeCard,
+  cards: KnowledgeCard[],
+  maxDepth = 3,
+): KnowledgeCard[] {
+  const cardById = new Map(cards.map((item) => [item.id, item]))
+  const path: KnowledgeCard[] = []
+  const visited = new Set([card.id])
+  let parentId = card.parentCardId
+
+  // Older data has no explicit links. Nearby earlier cards in the same chapter are
+  // a useful, conservative fallback until the user builds a custom path.
+  if (!parentId && card.chapterId) {
+    return cards
+      .filter(
+        (item) =>
+          item.id !== card.id &&
+          item.subjectId === card.subjectId &&
+          item.chapterId === card.chapterId &&
+          item.createdAt < card.createdAt,
+      )
+      .sort((first, second) => first.createdAt - second.createdAt)
+      .slice(-maxDepth)
+  }
+
+  while (parentId && path.length < maxDepth && !visited.has(parentId)) {
+    const parent = cardById.get(parentId)
+    if (!parent || parent.subjectId !== card.subjectId) break
+    visited.add(parent.id)
+    path.unshift(parent)
+    parentId = parent.parentCardId
+  }
+  return path
+}
+
+export function orderCardsByKnowledgePath(
+  cards: KnowledgeCard[],
+  allCards: KnowledgeCard[] = cards,
+): KnowledgeCard[] {
+  const included = new Map(cards.map((card) => [card.id, card]))
+  const allById = new Map(allCards.map((card) => [card.id, card]))
+  const visited = new Set<string>()
+  const visiting = new Set<string>()
+  const ordered: KnowledgeCard[] = []
+
+  function visit(card: KnowledgeCard): void {
+    if (visited.has(card.id)) return
+    if (visiting.has(card.id)) return
+    visiting.add(card.id)
+    if (card.parentCardId) {
+      const parent = allById.get(card.parentCardId)
+      const includedParent = parent ? included.get(parent.id) : undefined
+      if (includedParent) visit(includedParent)
+    }
+    visiting.delete(card.id)
+    visited.add(card.id)
+    ordered.push(card)
+  }
+
+  cards.forEach(visit)
+  return ordered
 }

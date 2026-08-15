@@ -48,6 +48,8 @@ function isCard(value: unknown): value is KnowledgeCard {
     hasString(value, 'question') &&
     hasString(value, 'answer') &&
     (!('chapterId' in value) || typeof value.chapterId === 'string') &&
+    (!('parentCardId' in value) || typeof value.parentCardId === 'string') &&
+    (!('connection' in value) || typeof value.connection === 'string') &&
     (!('note' in value) || typeof value.note === 'string') &&
     Array.isArray(value.tags) &&
     value.tags.every((tag) => typeof tag === 'string') &&
@@ -138,11 +140,24 @@ export function validateBackupData(value: unknown): value is BackupData {
   if (
     data.cards.some((card) => {
       if (!subjectIds.has(card.subjectId)) return true
-      if (!card.chapterId) return false
-      return chapterById.get(card.chapterId)?.subjectId !== card.subjectId
+      if (card.chapterId && chapterById.get(card.chapterId)?.subjectId !== card.subjectId) {
+        return true
+      }
+      if (!card.parentCardId) return false
+      const parent = cardById.get(card.parentCardId)
+      return !parent || parent.id === card.id || parent.subjectId !== card.subjectId
     })
   ) {
     return false
+  }
+  for (const card of data.cards) {
+    const visited = new Set([card.id])
+    let parentId = card.parentCardId
+    while (parentId) {
+      if (visited.has(parentId)) return false
+      visited.add(parentId)
+      parentId = cardById.get(parentId)?.parentCardId
+    }
   }
   if (data.reviewStates.some((state) => !cardById.has(state.cardId))) return false
   if (

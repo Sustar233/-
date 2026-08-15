@@ -21,7 +21,7 @@ const isFocusedReview = computed(() =>
       reviewStore.activeFilter.tag,
   ),
 )
-const progressLabel = computed(() => (isFocusedReview.value ? '专项复习' : '今日复习'))
+const progressLabel = computed(() => (isFocusedReview.value ? '路径学习' : '今日复习'))
 
 const progress = computed(() =>
   reviewStore.total
@@ -103,7 +103,7 @@ async function goBack(): Promise<void> {
 
     <EmptyState
       v-else-if="reviewStore.finished"
-      :title="isFocusedReview ? '本次专项复习已完成' : '今天的复习已经完成'"
+      :title="isFocusedReview ? '本次路径学习已完成' : '今天的复习已经完成'"
       :description="reviewStore.total ? `完成了 ${reviewStore.total} 张知识卡` : '当前没有到期卡片或新卡。'"
     >
       <view class="finish-actions">
@@ -117,43 +117,144 @@ async function goBack(): Promise<void> {
     <view v-else-if="reviewStore.currentCard" class="card-stage">
       <view v-if="reviewStore.resumed" class="resume-notice">已恢复上次复习进度</view>
       <text class="breadcrumb">{{ breadcrumb }}</text>
-      <view class="review-card surface">
-        <text class="card-kicker">问题</text>
-        <text class="review-question">{{ reviewStore.currentCard.question }}</text>
 
-        <view v-if="reviewStore.revealed" class="answer-block">
-          <view class="divider" />
-          <text class="card-kicker">标准答案</text>
-          <text class="review-answer">{{ reviewStore.currentCard.answer }}</text>
-          <view v-if="reviewStore.currentCard.note" class="note-block">
-            <text class="note-label">备注</text>
-            <text class="note-copy">{{ reviewStore.currentCard.note }}</text>
-          </view>
+      <view class="phase-track" :class="{ 'review-only': !reviewStore.currentIsNew }">
+        <view class="phase-item" :class="{ active: reviewStore.learning, done: !reviewStore.learning }">
+          <text class="phase-number">1</text>
+          <text>理解</text>
+        </view>
+        <view class="phase-line" />
+        <view
+          class="phase-item"
+          :class="{ active: !reviewStore.learning && !reviewStore.revealed, done: reviewStore.revealed }"
+        >
+          <text class="phase-number">2</text>
+          <text>回忆</text>
+        </view>
+        <view class="phase-line" />
+        <view class="phase-item" :class="{ active: reviewStore.revealed }">
+          <text class="phase-number">3</text>
+          <text>校准</text>
         </view>
       </view>
 
-      <button
-        v-if="!reviewStore.revealed"
-        class="primary-button reveal-button"
-        @click="reviewStore.reveal"
-      >
-        显示答案
-      </button>
-      <view v-if="!reviewStore.revealed" class="session-actions">
-        <button class="text-button" @click="skipCard">稍后再答</button>
-        <button v-if="reviewStore.canUndo" class="text-button" @click="undoLastRating">
-          撤销上次评分
+      <template v-if="reviewStore.learning">
+        <view class="learning-notice surface">
+          <text class="learning-label">新知识 · 先学后背</text>
+          <text class="learning-copy">先弄清它从哪里来、与什么相关，再进入遮住答案的主动回忆。</text>
+        </view>
+
+        <view v-if="reviewStore.contextCards.length" class="context-panel surface">
+          <view class="context-heading">
+            <text class="context-title">
+              {{ reviewStore.currentCard.parentCardId ? '前置知识路径' : '章节上下文' }}
+            </text>
+            <text class="context-count">{{ reviewStore.contextCards.length }} 个节点</text>
+          </view>
+          <view
+            v-for="(contextCard, index) in reviewStore.contextCards"
+            :key="contextCard.id"
+            class="context-node"
+          >
+            <view class="node-rail">
+              <text class="node-dot">{{ index + 1 }}</text>
+              <view v-if="index < reviewStore.contextCards.length - 1" class="node-line" />
+            </view>
+            <view class="node-copy">
+              <text class="node-question">{{ contextCard.question }}</text>
+              <text class="node-answer">{{ contextCard.answer }}</text>
+            </view>
+          </view>
+        </view>
+
+        <view class="review-card learning-card surface">
+          <text class="card-kicker">当前知识</text>
+          <text class="review-question">{{ reviewStore.currentCard.question }}</text>
+          <view class="answer-block learning-answer">
+            <view class="divider" />
+            <text class="card-kicker">理解答案</text>
+            <text class="review-answer">{{ reviewStore.currentCard.answer }}</text>
+            <view v-if="reviewStore.currentCard.connection" class="connection-block">
+              <text class="connection-label">知识连接</text>
+              <text class="connection-copy">{{ reviewStore.currentCard.connection }}</text>
+            </view>
+            <view v-if="reviewStore.currentCard.note" class="note-block">
+              <text class="note-label">备注</text>
+              <text class="note-copy">{{ reviewStore.currentCard.note }}</text>
+            </view>
+          </view>
+        </view>
+
+        <button class="primary-button reveal-button" @click="reviewStore.beginRecall">
+          我已理解，开始回忆
         </button>
-      </view>
-      <ReviewButtons
-        v-else
-        :previews="reviewStore.previews"
-        :class="{ disabled: rating }"
-        @rate="rateCard"
-      />
-      <view v-if="reviewStore.revealed && reviewStore.canUndo" class="session-actions">
-        <button class="text-button" @click="undoLastRating">撤销上次评分</button>
-      </view>
+      </template>
+
+      <template v-else>
+        <view class="review-card surface">
+          <text class="card-kicker">问题</text>
+          <text class="review-question">{{ reviewStore.currentCard.question }}</text>
+
+          <view v-if="reviewStore.contextRevealed" class="inline-context">
+            <text class="inline-context-label">脉络提示</text>
+            <view
+              v-for="contextCard in reviewStore.contextCards"
+              :key="contextCard.id"
+              class="inline-context-item"
+            >
+              <text class="inline-context-question">{{ contextCard.question }}</text>
+              <text class="inline-context-answer">{{ contextCard.answer }}</text>
+            </view>
+          </view>
+
+          <view v-if="reviewStore.revealed" class="answer-block">
+            <view class="divider" />
+            <text class="card-kicker">标准答案</text>
+            <text class="review-answer">{{ reviewStore.currentCard.answer }}</text>
+            <view v-if="reviewStore.currentCard.connection" class="connection-block">
+              <text class="connection-label">知识连接</text>
+              <text class="connection-copy">{{ reviewStore.currentCard.connection }}</text>
+            </view>
+            <view v-if="reviewStore.currentCard.note" class="note-block">
+              <text class="note-label">备注</text>
+              <text class="note-copy">{{ reviewStore.currentCard.note }}</text>
+            </view>
+          </view>
+        </view>
+
+        <button
+          v-if="!reviewStore.revealed && reviewStore.contextCards.length && !reviewStore.contextRevealed"
+          class="secondary-button context-button"
+          @click="reviewStore.showContext"
+        >
+          想不起上文？查看脉络提示
+        </button>
+        <text v-if="!reviewStore.revealed && reviewStore.contextRevealed" class="hint-advice">
+          已使用提示；评分时请如实选择“重来”或“困难”。
+        </text>
+        <button
+          v-if="!reviewStore.revealed"
+          class="primary-button reveal-button"
+          @click="reviewStore.reveal"
+        >
+          显示答案
+        </button>
+        <view v-if="!reviewStore.revealed" class="session-actions">
+          <button class="text-button" @click="skipCard">稍后再答</button>
+          <button v-if="reviewStore.canUndo" class="text-button" @click="undoLastRating">
+            撤销上次评分
+          </button>
+        </view>
+        <ReviewButtons
+          v-else
+          :previews="reviewStore.previews"
+          :class="{ disabled: rating }"
+          @rate="rateCard"
+        />
+        <view v-if="reviewStore.revealed && reviewStore.canUndo" class="session-actions">
+          <button class="text-button" @click="undoLastRating">撤销上次评分</button>
+        </view>
+      </template>
     </view>
   </view>
 </template>
@@ -273,6 +374,173 @@ async function goBack(): Promise<void> {
   text-align: center;
 }
 
+.phase-track {
+  display: flex;
+  max-width: 600rpx;
+  margin: 0 auto 24rpx;
+  align-items: center;
+  justify-content: center;
+}
+
+.phase-item {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 8rpx;
+  color: var(--color-subtle);
+  font-size: 20rpx;
+}
+
+.phase-number {
+  display: flex;
+  width: 34rpx;
+  height: 34rpx;
+  align-items: center;
+  justify-content: center;
+  border: 1rpx solid rgba(120, 139, 156, 0.45);
+  border-radius: 50%;
+  font-size: 18rpx;
+}
+
+.phase-item.active {
+  color: var(--color-primary);
+  font-weight: 720;
+}
+
+.phase-item.active .phase-number {
+  border-color: var(--color-primary);
+  background: var(--color-primary-soft);
+}
+
+.phase-item.done {
+  color: var(--color-accent);
+}
+
+.phase-item.done .phase-number {
+  border-color: rgba(215, 173, 102, 0.7);
+  background: var(--color-accent-soft);
+}
+
+.phase-line {
+  width: 46rpx;
+  height: 1rpx;
+  margin: 0 12rpx;
+  background: var(--color-line);
+}
+
+.review-only .phase-item:first-child {
+  opacity: 0.62;
+}
+
+.learning-notice {
+  margin-bottom: 20rpx;
+  padding: 22rpx 24rpx;
+  border-left: 5rpx solid var(--color-primary);
+}
+
+.learning-label,
+.learning-copy {
+  display: block;
+}
+
+.learning-label {
+  color: var(--color-primary);
+  font-size: 23rpx;
+  font-weight: 750;
+}
+
+.learning-copy {
+  margin-top: 8rpx;
+  color: var(--color-muted);
+  font-size: 22rpx;
+  line-height: 1.65;
+}
+
+.context-panel {
+  margin-bottom: 20rpx;
+  padding: 26rpx 24rpx 18rpx;
+}
+
+.context-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 22rpx;
+}
+
+.context-title {
+  color: var(--color-accent);
+  font-size: 25rpx;
+  font-weight: 740;
+}
+
+.context-count {
+  color: var(--color-subtle);
+  font-size: 20rpx;
+}
+
+.context-node {
+  display: flex;
+  gap: 16rpx;
+}
+
+.node-rail {
+  display: flex;
+  width: 34rpx;
+  flex: 0 0 34rpx;
+  align-items: center;
+  flex-direction: column;
+}
+
+.node-dot {
+  display: flex;
+  width: 30rpx;
+  height: 30rpx;
+  flex: 0 0 30rpx;
+  align-items: center;
+  justify-content: center;
+  border: 1rpx solid rgba(215, 173, 102, 0.62);
+  border-radius: 50%;
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
+  font-size: 17rpx;
+}
+
+.node-line {
+  width: 1rpx;
+  min-height: 50rpx;
+  flex: 1;
+  background: rgba(215, 173, 102, 0.38);
+}
+
+.node-copy {
+  min-width: 0;
+  padding-bottom: 22rpx;
+}
+
+.node-question,
+.node-answer {
+  display: block;
+}
+
+.node-question {
+  color: var(--color-text);
+  font-size: 23rpx;
+  font-weight: 680;
+  line-height: 1.5;
+}
+
+.node-answer {
+  display: -webkit-box;
+  overflow: hidden;
+  margin-top: 6rpx;
+  color: var(--color-muted);
+  font-size: 21rpx;
+  line-height: 1.55;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
 .review-card {
   min-height: 570rpx;
   padding: 48rpx 38rpx;
@@ -280,6 +548,15 @@ async function goBack(): Promise<void> {
   background:
     radial-gradient(circle at 86% 12%, rgba(215, 173, 102, 0.12) 0, transparent 24%),
     linear-gradient(145deg, rgba(12, 39, 65, 0.98), rgba(7, 27, 48, 0.98));
+}
+
+.learning-card {
+  min-height: 0;
+  border-top-color: var(--color-primary);
+}
+
+.learning-answer {
+  margin-top: 34rpx;
 }
 
 .card-kicker {
@@ -294,6 +571,72 @@ async function goBack(): Promise<void> {
 .review-answer {
   display: block;
   white-space: pre-wrap;
+}
+
+.connection-block {
+  margin-top: 28rpx;
+  padding: 20rpx 22rpx;
+  border-left: 4rpx solid var(--color-primary);
+  border-radius: 16rpx;
+  background: var(--color-primary-soft);
+}
+
+.connection-label,
+.connection-copy {
+  display: block;
+}
+
+.connection-label {
+  color: var(--color-primary);
+  font-size: 21rpx;
+}
+
+.connection-copy {
+  margin-top: 8rpx;
+  color: #dce8e3;
+  font-size: 24rpx;
+  line-height: 1.65;
+}
+
+.inline-context {
+  margin-top: 32rpx;
+  padding: 22rpx;
+  border: 1rpx solid rgba(103, 216, 197, 0.28);
+  border-radius: 16rpx;
+  background: rgba(54, 143, 132, 0.1);
+}
+
+.inline-context-label {
+  display: block;
+  margin-bottom: 16rpx;
+  color: var(--color-primary);
+  font-size: 21rpx;
+  font-weight: 740;
+}
+
+.inline-context-item + .inline-context-item {
+  margin-top: 18rpx;
+  padding-top: 18rpx;
+  border-top: 1rpx solid rgba(103, 216, 197, 0.16);
+}
+
+.inline-context-question,
+.inline-context-answer {
+  display: block;
+}
+
+.inline-context-question {
+  color: var(--color-text);
+  font-size: 22rpx;
+  font-weight: 680;
+  line-height: 1.5;
+}
+
+.inline-context-answer {
+  margin-top: 7rpx;
+  color: var(--color-muted);
+  font-size: 21rpx;
+  line-height: 1.55;
 }
 
 .review-question {
@@ -350,6 +693,20 @@ async function goBack(): Promise<void> {
 .reveal-button {
   width: 100%;
   margin-top: 26rpx;
+}
+
+.context-button {
+  width: 100%;
+  margin-top: 22rpx;
+}
+
+.hint-advice {
+  display: block;
+  margin-top: 18rpx;
+  color: var(--color-accent);
+  font-size: 21rpx;
+  line-height: 1.55;
+  text-align: center;
 }
 
 .disabled {

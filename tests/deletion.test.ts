@@ -62,6 +62,23 @@ test('deleting a card removes its state and logs only', async () => {
   )
 })
 
+test('deleting a prerequisite keeps dependent cards and clears their broken link', async () => {
+  await seed()
+  const cards = readStored<KnowledgeCard[]>(STORAGE_KEYS.cards) ?? []
+  await setStorage(STORAGE_KEYS.cards, [
+    ...cards,
+    { ...baseCard, id: 'card_child', parentCardId: 'card_1' },
+  ])
+
+  await deleteCard('card_1')
+
+  const child = readStored<KnowledgeCard[]>(STORAGE_KEYS.cards)?.find(
+    (card) => card.id === 'card_child',
+  )
+  assert.ok(child)
+  assert.equal(child.parentCardId, undefined)
+})
+
 test('deleting a subject cascades chapters, cards, states and logs', async () => {
   await seed()
   await deleteSubject('subject_1')

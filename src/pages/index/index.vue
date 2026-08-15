@@ -132,14 +132,14 @@ function openStudy(): void {
       </view>
       <view class="hero-topline">
         <text class="hero-label">{{ isResuming ? '继续上次复习' : '今日待复习' }}</text>
-        <text class="hero-badge">{{ isResuming ? '进度已保存' : 'FSRS 智能排序' }}</text>
+        <text class="hero-badge">{{ isResuming ? '进度已保存' : '知识路径 · FSRS' }}</text>
       </view>
       <view class="hero-number-row">
         <text class="hero-number">{{ reviewCount }}</text>
         <text class="hero-unit">张</text>
       </view>
       <text class="hero-note">
-        {{ isResuming ? '从中断处继续，已完成的进度不会丢失' : reviewCount ? '到期卡片优先，新卡随后进入队列' : '今天的复习已经完成。' }}
+        {{ isResuming ? '从中断处继续，已完成的进度不会丢失' : reviewCount ? '到期卡片优先；新知识先理解上下文，再进入回忆' : '今天的复习已经完成。' }}
       </text>
       <button class="hero-button" :disabled="loading" @click="startReview">
         {{ loading ? '正在准备…' : isResuming ? '继续复习' : reviewCount ? '开始今日复习' : '今日已完成' }}
@@ -148,7 +148,7 @@ function openStudy(): void {
 
     <view class="section-heading">
       <text class="section-title">今天</text>
-      <text class="section-link" @click="openStudy">专项复习 ›</text>
+      <text class="section-link" @click="openStudy">路径学习 ›</text>
     </view>
     <view class="progress-panel surface">
       <view class="stat-grid">

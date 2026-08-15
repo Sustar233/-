@@ -1,11 +1,12 @@
 import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
-import { getCards } from '@/services/cardService'
+import { getCards, getKnowledgeContext } from '@/services/cardService'
 import {
   buildReviewQueue,
   clearReviewSession,
   commitReview,
   getReviewSession,
+  getReviewStates,
   previewCard,
   reviewFiltersEqual,
   saveReviewSession,
@@ -31,12 +32,29 @@ export const useReviewStore = defineStore('review', () => {
   const startedAt = ref(0)
   const lastCommit = ref<ReviewCommit>()
   const resumed = ref(false)
+  const learning = ref(false)
+  const contextRevealed = ref(false)
+  const contextCards = ref<KnowledgeCard[]>([])
+  const allCards = ref<KnowledgeCard[]>([])
+  const newCardIds = ref<string[]>([])
 
   const currentCard = computed(() => queue.value[currentIndex.value] ?? null)
   const completed = computed(() => currentIndex.value)
   const total = computed(() => queue.value.length)
   const finished = computed(() => !loading.value && currentIndex.value >= queue.value.length)
   const canUndo = computed(() => Boolean(lastCommit.value))
+  const currentIsNew = computed(() =>
+    currentCard.value ? newCardIds.value.includes(currentCard.value.id) : false,
+  )
+
+  function prepareCurrent(): void {
+    revealed.value = false
+    previews.value = []
+    contextRevealed.value = false
+    const card = currentCard.value
+    contextCards.value = card ? getKnowledgeContext(card, allCards.value) : []
+    learning.value = Boolean(card && newCardIds.value.includes(card.id))
+  }
 
   function sessionSnapshot(): ReviewSession {
     return {
@@ -57,13 +75,21 @@ export const useReviewStore = defineStore('review', () => {
     loading.value = true
     try {
       const now = Date.now()
-      const existing = allowResume ? await getReviewSession() : null
+      const [existing, cards, states] = await Promise.all([
+        allowResume ? getReviewSession() : Promise.resolve(null),
+        getCards(),
+        getReviewStates(),
+      ])
+      allCards.value = cards
+      const reviewedCardIds = new Set(states.map((state) => state.cardId))
+      newCardIds.value = cards
+        .filter((card) => !reviewedCardIds.has(card.id))
+        .map((card) => card.id)
       if (
         existing &&
         startOfDay(existing.startedAt) === startOfDay(now) &&
         reviewFiltersEqual(existing.filter, filter)
       ) {
-        const cards = await getCards()
         const cardById = new Map(cards.map((card) => [card.id, card]))
         const restoredQueue = existing.cardIds
           .map((id) => cardById.get(id))
@@ -74,8 +100,7 @@ export const useReviewStore = defineStore('review', () => {
           activeFilter.value = { ...existing.filter }
           startedAt.value = existing.startedAt
           lastCommit.value = existing.lastCommit
-          revealed.value = false
-          previews.value = []
+          prepareCurrent()
           resumed.value = currentIndex.value > 0 || currentIndex.value < queue.value.length
           return
         }
@@ -86,8 +111,7 @@ export const useReviewStore = defineStore('review', () => {
       activeFilter.value = { ...filter }
       startedAt.value = now
       lastCommit.value = undefined
-      revealed.value = false
-      previews.value = []
+      prepareCurrent()
       resumed.value = false
       await persist()
     } finally {
@@ -102,6 +126,15 @@ export const useReviewStore = defineStore('review', () => {
     resumed.value = false
   }
 
+  function beginRecall(): void {
+    learning.value = false
+    contextRevealed.value = false
+  }
+
+  function showContext(): void {
+    contextRevealed.value = true
+  }
+
   async function rate(rating: ReviewRating): Promise<void> {
     if (!currentCard.value) return
     const nextSession: ReviewSession = {
@@ -110,8 +143,7 @@ export const useReviewStore = defineStore('review', () => {
     }
     lastCommit.value = await commitReview(currentCard.value, rating, Date.now(), nextSession)
     currentIndex.value += 1
-    revealed.value = false
-    previews.value = []
+    prepareCurrent()
     resumed.value = false
   }
 
@@ -121,8 +153,7 @@ export const useReviewStore = defineStore('review', () => {
     const [skipped] = reordered.splice(currentIndex.value, 1)
     reordered.push(skipped)
     queue.value = reordered
-    revealed.value = false
-    previews.value = []
+    prepareCurrent()
     resumed.value = false
     await persist()
     return true
@@ -139,7 +170,9 @@ export const useReviewStore = defineStore('review', () => {
     await undoReview(commit, restoredSession)
     currentIndex.value = Math.max(0, currentIndex.value - 1)
     lastCommit.value = undefined
+    prepareCurrent()
     previews.value = await previewCard(commit.cardId)
+    learning.value = false
     revealed.value = true
     resumed.value = false
     return true
@@ -152,6 +185,9 @@ export const useReviewStore = defineStore('review', () => {
     lastCommit.value = undefined
     revealed.value = false
     previews.value = []
+    learning.value = false
+    contextRevealed.value = false
+    contextCards.value = []
   }
 
   return {
@@ -162,12 +198,18 @@ export const useReviewStore = defineStore('review', () => {
     loading,
     activeFilter,
     resumed,
+    learning,
+    contextRevealed,
+    contextCards,
     currentCard,
+    currentIsNew,
     completed,
     total,
     finished,
     canUndo,
     start,
+    beginRecall,
+    showContext,
     reveal,
     rate,
     skip,
