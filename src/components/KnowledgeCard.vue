@@ -43,11 +43,11 @@ defineEmits<{
 .knowledge-card {
   margin-bottom: 18rpx;
   padding: 28rpx;
-  border-left: 5rpx solid rgba(103, 216, 197, 0.58);
+  border-left: 4rpx solid #c9dcd2;
 }
 
 .suspended {
-  border-left-color: rgba(215, 173, 102, 0.58);
+  border-left-color: #d9c5b8;
   opacity: 0.72;
 }
 
@@ -102,7 +102,7 @@ defineEmits<{
   padding: 14rpx 16rpx;
   gap: 12rpx;
   border-left: 3rpx solid var(--color-primary);
-  border-radius: 10rpx;
+  border-radius: 8rpx;
   background: var(--color-primary-soft);
 }
 
@@ -126,9 +126,9 @@ defineEmits<{
 .tag {
   padding: 7rpx 13rpx;
   border-radius: 999rpx;
-  border: 1rpx solid rgba(103, 216, 197, 0.28);
-  background: rgba(53, 143, 130, 0.14);
-  color: #8ee0d0;
+  border: 1rpx solid #d8e2dc;
+  background: #f1f5f2;
+  color: #4f6d5c;
   font-size: 21rpx;
 }
 

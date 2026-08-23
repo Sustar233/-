@@ -3,16 +3,9 @@ import { computed, ref } from 'vue'
 import { onShow } from '@dcloudio/uni-app'
 import EmptyState from '@/components/EmptyState.vue'
 import StatCard from '@/components/StatCard.vue'
-import { getStatistics, type StatisticsSummary } from '@/services/statisticsService'
+import { createEmptyStatistics, getStatistics } from '@/services/statisticsService'
 
-const summary = ref<StatisticsSummary>({
-  todayReviews: 0,
-  todayNewCards: 0,
-  todayAgain: 0,
-  streakDays: 0,
-  last7Days: [],
-  weakCards: [],
-})
+const summary = ref(createEmptyStatistics())
 const loading = ref(false)
 
 const maximumDayCount = computed(() =>
@@ -99,36 +92,6 @@ function editWeakCard(cardId: string, subjectId: string): void {
 </template>
 
 <style scoped>
-.page-heading {
-  margin: 10rpx 2rpx 36rpx;
-}
-
-.eyebrow,
-.page-title,
-.page-subtitle {
-  display: block;
-}
-
-.eyebrow {
-  color: var(--color-accent);
-  font-size: 19rpx;
-  font-weight: 700;
-  letter-spacing: 3rpx;
-}
-
-.page-title {
-  margin-top: 7rpx;
-  font-size: 48rpx;
-  color: var(--color-text);
-  font-weight: 820;
-}
-
-.page-subtitle {
-  margin-top: 10rpx;
-  color: var(--color-muted);
-  font-size: 24rpx;
-}
-
 .stat-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -166,14 +129,12 @@ function editWeakCard(cardId: string, subjectId: string): void {
 
 .bar {
   width: 42rpx;
-  border-radius: 12rpx 12rpx 5rpx 5rpx;
-  background: linear-gradient(180deg, #73ddc9 0%, #1e716d 100%);
-  box-shadow: 0 0 14rpx rgba(103, 216, 197, 0.22);
+  border-radius: 8rpx 8rpx 3rpx 3rpx;
+  background: var(--color-primary);
 }
 
 .bar.empty {
-  background: rgba(158, 176, 191, 0.16);
-  box-shadow: none;
+  background: #eceeeb;
 }
 
 .bar-label {

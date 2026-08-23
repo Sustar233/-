@@ -1,1877 +1,2979 @@
 {
   "recalllab:subjects": [
     {
-      "id": "subject_operating_system_13180",
-      "name": "操作系统（13180）",
-      "description": "《操作系统（2023年版）》陈向群、孙卫真；前两章考纲知识卡",
-      "createdAt": 1785370000000,
-      "updatedAt": 1785370000000
+      "id": "preset_operating_system_subject_v2",
+      "name": "操作系统考纲知识点（默认）",
+      "description": "内置默认背记库，依据《操作系统考纲知识点总结》整理，覆盖8章核心概念、机制、算法与常考综合应用。",
+      "createdAt": 1787417600000,
+      "updatedAt": 1787417600000
     }
   ],
   "recalllab:chapters": [
     {
-      "id": "chapter_os_01_overview",
-      "subjectId": "subject_operating_system_13180",
-      "name": "第一章 操作系统概论",
-      "createdAt": 1785370000000,
-      "updatedAt": 1785370000000
+      "id": "preset_operating_system_chapter_01_overview",
+      "subjectId": "preset_operating_system_subject_v2",
+      "name": "01 操作系统概论",
+      "createdAt": 1787417600000,
+      "updatedAt": 1787417600000
     },
     {
-      "id": "chapter_os_02_environment",
-      "subjectId": "subject_operating_system_13180",
-      "name": "第二章 操作系统运行环境与运行机制",
-      "createdAt": 1785370000000,
-      "updatedAt": 1785370000000
+      "id": "preset_operating_system_chapter_02_environment",
+      "subjectId": "preset_operating_system_subject_v2",
+      "name": "02 运行环境与运行机制",
+      "createdAt": 1787417600001,
+      "updatedAt": 1787417600001
+    },
+    {
+      "id": "preset_operating_system_chapter_03_process_thread",
+      "subjectId": "preset_operating_system_subject_v2",
+      "name": "03 进程与线程模型",
+      "createdAt": 1787417600002,
+      "updatedAt": 1787417600002
+    },
+    {
+      "id": "preset_operating_system_chapter_04_scheduling",
+      "subjectId": "preset_operating_system_subject_v2",
+      "name": "04 进程与线程调度",
+      "createdAt": 1787417600003,
+      "updatedAt": 1787417600003
+    },
+    {
+      "id": "preset_operating_system_chapter_05_memory",
+      "subjectId": "preset_operating_system_subject_v2",
+      "name": "05 存储管理",
+      "createdAt": 1787417600004,
+      "updatedAt": 1787417600004
+    },
+    {
+      "id": "preset_operating_system_chapter_06_file_system",
+      "subjectId": "preset_operating_system_subject_v2",
+      "name": "06 文件系统",
+      "createdAt": 1787417600005,
+      "updatedAt": 1787417600005
+    },
+    {
+      "id": "preset_operating_system_chapter_07_device",
+      "subjectId": "preset_operating_system_subject_v2",
+      "name": "07 设备管理",
+      "createdAt": 1787417600006,
+      "updatedAt": 1787417600006
+    },
+    {
+      "id": "preset_operating_system_chapter_08_synchronization",
+      "subjectId": "preset_operating_system_subject_v2",
+      "name": "08 进程同步与死锁",
+      "createdAt": 1787417600007,
+      "updatedAt": 1787417600007
     }
   ],
   "recalllab:cards": [
     {
-      "id": "card_os_01001",
-      "subjectId": "subject_operating_system_13180",
-      "chapterId": "chapter_os_01_overview",
-      "question": "计算机系统由哪两个子系统构成？",
-      "answer": "由硬件系统和软件系统构成。硬件系统是计算机赖以工作的实体，软件系统保证计算机按用户要求协调工作。",
+      "id": "preset_operating_system_card_001",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_01_overview",
+      "question": "计算机系统由哪两大部分组成？",
+      "answer": "由硬件系统和软件系统组成。硬件包括CPU、内存、外存和输入输出设备；软件包括系统软件、支撑软件和应用软件。",
       "tags": [
-        "计算机系统",
-        "基本概念"
+        "系统组成",
+        "基础概念"
       ],
       "importance": 2,
       "status": "active",
-      "note": "考纲：计算机系统的组成；教材第26页（PDF第33页）",
-      "createdAt": 1785370000001,
-      "updatedAt": 1785370000001
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第1-5页",
+      "createdAt": 1787417600001,
+      "updatedAt": 1787417600001
     },
     {
-      "id": "card_os_01002",
-      "subjectId": "subject_operating_system_13180",
-      "chapterId": "chapter_os_01_overview",
-      "question": "计算机系统的硬件资源和软件资源分别包括什么？",
-      "answer": "硬件资源包括CPU、内存、外存和输入输出设备；软件资源包括各种程序和数据。",
+      "id": "preset_operating_system_card_002",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_01_overview",
+      "parentCardId": "preset_operating_system_card_001",
+      "connection": "沿“01 操作系统概论”的知识脉络继续学习。",
+      "question": "什么是操作系统？",
+      "answer": "操作系统是计算机系统中的系统软件和程序模块集合，负责组织管理软硬件资源、控制程序执行、组织工作流程，并向用户提供服务。",
       "tags": [
-        "计算机系统",
-        "资源"
-      ],
-      "importance": 2,
-      "status": "active",
-      "note": "教材第26页（PDF第33页）",
-      "createdAt": 1785370000002,
-      "updatedAt": 1785370000002
-    },
-    {
-      "id": "card_os_01003",
-      "subjectId": "subject_operating_system_13180",
-      "chapterId": "chapter_os_01_overview",
-      "question": "教材如何定义操作系统？",
-      "answer": "操作系统是计算机系统中的系统软件，是一组程序模块的集合；它有效组织和管理软硬件资源，合理组织工作流程，控制程序执行并向用户提供服务，使系统高效运行。",
-      "tags": [
-        "操作系统",
-        "定义"
+        "操作系统定义",
+        "基础概念"
       ],
       "importance": 3,
       "status": "active",
-      "note": "第一章重点；教材第27页（PDF第34页）",
-      "createdAt": 1785370000003,
-      "updatedAt": 1785370000003
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第1-5页",
+      "createdAt": 1787417600002,
+      "updatedAt": 1787417600002
     },
     {
-      "id": "card_os_01004",
-      "subjectId": "subject_operating_system_13180",
-      "chapterId": "chapter_os_01_overview",
-      "question": "操作系统在计算机系统中处于什么位置？",
-      "answer": "操作系统是最基本、最接近硬件的系统软件，位于计算机硬件和应用软件之间，也是用户与计算机硬件之间的接口。",
+      "id": "preset_operating_system_card_003",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_01_overview",
+      "parentCardId": "preset_operating_system_card_002",
+      "connection": "沿“01 操作系统概论”的知识脉络继续学习。",
+      "question": "研究操作系统作用与地位的四种观点是什么？",
+      "answer": "进程观点、资源管理观点、虚拟机观点和服务提供者观点。",
       "tags": [
-        "操作系统",
-        "地位"
+        "操作系统地位",
+        "四种观点"
       ],
       "importance": 3,
       "status": "active",
-      "note": "第一章重点；教材第34页（PDF第41页）",
-      "createdAt": 1785370000004,
-      "updatedAt": 1785370000004
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第1-5页",
+      "createdAt": 1787417600003,
+      "updatedAt": 1787417600003
     },
     {
-      "id": "card_os_01005",
-      "subjectId": "subject_operating_system_13180",
-      "chapterId": "chapter_os_01_overview",
-      "question": "操作系统的四个基本特征是什么？",
-      "answer": "并发性、共享性、虚拟性和异步性。",
-      "tags": [
-        "操作系统特征",
-        "总览"
-      ],
-      "importance": 3,
-      "status": "active",
-      "note": "考纲重点；教材第27—29页（PDF第34—36页）",
-      "createdAt": 1785370000005,
-      "updatedAt": 1785370000005
-    },
-    {
-      "id": "card_os_01006",
-      "subjectId": "subject_operating_system_13180",
-      "chapterId": "chapter_os_01_overview",
-      "question": "操作系统的并发性是指什么？",
-      "answer": "计算机系统中同时存在若干正在运行的程序，从宏观上看这些程序同时向前推进。",
-      "tags": [
-        "操作系统特征",
-        "并发"
-      ],
-      "importance": 3,
-      "status": "active",
-      "note": "教材第27—28页（PDF第34—35页）",
-      "createdAt": 1785370000006,
-      "updatedAt": 1785370000006
-    },
-    {
-      "id": "card_os_01007",
-      "subjectId": "subject_operating_system_13180",
-      "chapterId": "chapter_os_01_overview",
+      "id": "preset_operating_system_card_004",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_01_overview",
+      "parentCardId": "preset_operating_system_card_003",
+      "connection": "沿“01 操作系统概论”的知识脉络继续学习。",
       "question": "并发与并行的核心区别是什么？",
-      "answer": "并行指多个事件在同一时刻物理上同时发生；并发指多个事件在同一时间间隔内发生。并行一定并发，并发不一定并行。",
+      "answer": "并行是两个或多个事件在同一时刻发生，通常需要多处理器；并发是多个事件在同一时间间隔内交替推进，单处理器也能实现。",
       "tags": [
         "并发",
-        "并行",
-        "辨析"
+        "并行"
       ],
       "importance": 3,
       "status": "active",
-      "note": "易错点；教材第28页（PDF第35页）",
-      "createdAt": 1785370000007,
-      "updatedAt": 1785370000007
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第1-5页",
+      "createdAt": 1787417600004,
+      "updatedAt": 1787417600004
     },
     {
-      "id": "card_os_01008",
-      "subjectId": "subject_operating_system_13180",
-      "chapterId": "chapter_os_01_overview",
-      "question": "操作系统的共享性是指什么？",
-      "answer": "操作系统程序与多个用户程序在操作系统控制下共用系统中的各种资源。",
+      "id": "preset_operating_system_card_005",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_01_overview",
+      "parentCardId": "preset_operating_system_card_004",
+      "connection": "沿“01 操作系统概论”的知识脉络继续学习。",
+      "question": "操作系统的共享性包含哪两种形式？",
+      "answer": "互斥共享和同时共享。互斥共享资源在一段时间内只允许一个进程访问；同时共享资源允许多个进程交替或同时访问。",
       "tags": [
-        "操作系统特征",
-        "共享"
-      ],
-      "importance": 3,
-      "status": "active",
-      "note": "教材第28页（PDF第35页）",
-      "createdAt": 1785370000008,
-      "updatedAt": 1785370000008
-    },
-    {
-      "id": "card_os_01009",
-      "subjectId": "subject_operating_system_13180",
-      "chapterId": "chapter_os_01_overview",
-      "question": "资源共享的两种形式是什么？",
-      "answer": "互斥共享和同时共享。互斥共享资源在一段特定时间内只能由一个程序使用；同时共享资源可在同一时间段被多个程序访问。",
-      "tags": [
-        "共享",
+        "共享性",
         "临界资源"
       ],
       "importance": 3,
       "status": "active",
-      "note": "教材第28—29页（PDF第35—36页）",
-      "createdAt": 1785370000009,
-      "updatedAt": 1785370000009
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第1-5页",
+      "createdAt": 1787417600005,
+      "updatedAt": 1787417600005
     },
     {
-      "id": "card_os_01010",
-      "subjectId": "subject_operating_system_13180",
-      "chapterId": "chapter_os_01_overview",
+      "id": "preset_operating_system_card_006",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_01_overview",
+      "parentCardId": "preset_operating_system_card_005",
+      "connection": "沿“01 操作系统概论”的知识脉络继续学习。",
+      "question": "为什么说并发与共享互为存在条件？",
+      "answer": "系统只有允许多个程序并发运行，才产生资源共享需求；资源能被有效共享，多个程序才可能并发推进。",
+      "tags": [
+        "并发",
+        "共享"
+      ],
+      "importance": 3,
+      "status": "active",
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第1-5页",
+      "createdAt": 1787417600006,
+      "updatedAt": 1787417600006
+    },
+    {
+      "id": "preset_operating_system_card_007",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_01_overview",
+      "parentCardId": "preset_operating_system_card_006",
+      "connection": "沿“01 操作系统概论”的知识脉络继续学习。",
       "question": "操作系统的虚拟性是指什么？",
-      "answer": "虚拟性是一种管理技术：把物理上的一个实体变成逻辑上的多个对应物，或把物理上的多个实体变成逻辑上的一个对应物。",
+      "answer": "通过管理技术把一个物理实体变成多个逻辑对应物，例如虚拟CPU、虚拟内存和SPOOLing虚拟外设。",
       "tags": [
-        "操作系统特征",
-        "虚拟"
+        "虚拟性",
+        "操作系统特征"
       ],
       "importance": 3,
       "status": "active",
-      "note": "教材第29页（PDF第36页）",
-      "createdAt": 1785370000010,
-      "updatedAt": 1785370000010
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第1-5页",
+      "createdAt": 1787417600007,
+      "updatedAt": 1787417600007
     },
     {
-      "id": "card_os_01011",
-      "subjectId": "subject_operating_system_13180",
-      "chapterId": "chapter_os_01_overview",
+      "id": "preset_operating_system_card_008",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_01_overview",
+      "parentCardId": "preset_operating_system_card_007",
+      "connection": "沿“01 操作系统概论”的知识脉络继续学习。",
       "question": "操作系统的异步性是指什么？",
-      "answer": "在多道程序环境下，进程因资源有限而走走停停，以不可预知的速度推进，其执行顺序和执行时间不确定。",
+      "answer": "多道程序环境中的进程走走停停，以不可预知的速度推进，执行次序和完成时间具有不确定性。",
       "tags": [
-        "操作系统特征",
-        "异步"
+        "异步性",
+        "操作系统特征"
+      ],
+      "importance": 2,
+      "status": "active",
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第1-5页",
+      "createdAt": 1787417600008,
+      "updatedAt": 1787417600008
+    },
+    {
+      "id": "preset_operating_system_card_009",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_01_overview",
+      "parentCardId": "preset_operating_system_card_008",
+      "connection": "沿“01 操作系统概论”的知识脉络继续学习。",
+      "question": "操作系统的五大核心功能是什么？",
+      "answer": "处理器管理、存储管理、文件管理、设备管理和用户接口。",
+      "tags": [
+        "核心功能",
+        "操作系统概论"
       ],
       "importance": 3,
       "status": "active",
-      "note": "教材第29页（PDF第36页）",
-      "createdAt": 1785370000011,
-      "updatedAt": 1785370000011
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第1-5页",
+      "createdAt": 1787417600009,
+      "updatedAt": 1787417600009
     },
     {
-      "id": "card_os_01012",
-      "subjectId": "subject_operating_system_13180",
-      "chapterId": "chapter_os_01_overview",
-      "question": "从资源管理观点看，操作系统的五类主要功能是什么？",
-      "answer": "进程管理（处理器管理）、存储管理、文件管理、设备管理和用户接口。",
+      "id": "preset_operating_system_card_010",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_01_overview",
+      "parentCardId": "preset_operating_system_card_009",
+      "connection": "沿“01 操作系统概论”的知识脉络继续学习。",
+      "question": "手工操作和单道批处理系统各有什么主要问题？",
+      "answer": "手工操作由用户独占全机，人工装卸导致CPU利用率低；单道批处理虽能自动顺序运行作业，但CPU仍会等待慢速I/O。",
       "tags": [
-        "操作系统功能",
-        "资源管理"
-      ],
-      "importance": 3,
-      "status": "active",
-      "note": "教材第30—34页（PDF第37—41页）",
-      "createdAt": 1785370000012,
-      "updatedAt": 1785370000012
-    },
-    {
-      "id": "card_os_01013",
-      "subjectId": "subject_operating_system_13180",
-      "chapterId": "chapter_os_01_overview",
-      "question": "进程管理主要包括哪些内容？",
-      "answer": "进程控制、进程同步、进程间通信和进程调度。",
-      "tags": [
-        "操作系统功能",
-        "进程管理"
+        "发展历程",
+        "批处理"
       ],
       "importance": 2,
       "status": "active",
-      "note": "教材第31页（PDF第38页）",
-      "createdAt": 1785370000013,
-      "updatedAt": 1785370000013
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第1-5页",
+      "createdAt": 1787417600010,
+      "updatedAt": 1787417600010
     },
     {
-      "id": "card_os_01014",
-      "subjectId": "subject_operating_system_13180",
-      "chapterId": "chapter_os_01_overview",
-      "question": "存储管理的三项主要任务是什么？",
-      "answer": "①为多个程序分配和回收有限的内存空间；②使内存中的程序和数据彼此隔离、互不侵扰；③通过虚拟存储技术在逻辑上扩充内存。",
-      "tags": [
-        "操作系统功能",
-        "存储管理"
-      ],
-      "importance": 2,
-      "status": "active",
-      "note": "教材第32—33页（PDF第39—40页）",
-      "createdAt": 1785370000014,
-      "updatedAt": 1785370000014
-    },
-    {
-      "id": "card_os_01015",
-      "subjectId": "subject_operating_system_13180",
-      "chapterId": "chapter_os_01_overview",
-      "question": "文件管理的主要任务是什么？",
-      "answer": "有效支持文件的存储、检索和修改，解决文件的共享、保密和保护问题，使用户能方便、安全地访问文件。",
-      "tags": [
-        "操作系统功能",
-        "文件管理"
-      ],
-      "importance": 2,
-      "status": "active",
-      "note": "教材第33页（PDF第40页）",
-      "createdAt": 1785370000015,
-      "updatedAt": 1785370000015
-    },
-    {
-      "id": "card_os_01016",
-      "subjectId": "subject_operating_system_13180",
-      "chapterId": "chapter_os_01_overview",
-      "question": "操作系统的设备管理负责管理哪些对象？",
-      "answer": "负责除CPU和内存以外的所有输入、输出设备，包括设备的分配、启动和故障处理。",
-      "tags": [
-        "操作系统功能",
-        "设备管理"
-      ],
-      "importance": 2,
-      "status": "active",
-      "note": "教材第33—34页（PDF第40—41页）",
-      "createdAt": 1785370000016,
-      "updatedAt": 1785370000016
-    },
-    {
-      "id": "card_os_01017",
-      "subjectId": "subject_operating_system_13180",
-      "chapterId": "chapter_os_01_overview",
-      "question": "操作系统向用户提供哪两类接口？",
-      "answer": "命令接口和应用程序接口。命令接口供用户交互或控制作业；应用程序接口由系统调用构成，供应用程序访问系统资源和内核服务。",
-      "tags": [
-        "用户接口",
-        "API",
-        "系统调用"
-      ],
-      "importance": 2,
-      "status": "active",
-      "note": "教材第34页（PDF第41页）",
-      "createdAt": 1785370000017,
-      "updatedAt": 1785370000017
-    },
-    {
-      "id": "card_os_01018",
-      "subjectId": "subject_operating_system_13180",
-      "chapterId": "chapter_os_01_overview",
-      "question": "多道批处理系统中的“多道”是什么意思？",
-      "answer": "允许多个程序同时存在于内存中，由CPU以切换方式为它们服务，使多个程序并发执行。",
-      "tags": [
-        "批处理",
-        "多道程序"
-      ],
-      "importance": 3,
-      "status": "active",
-      "note": "教材第36页（PDF第43页）",
-      "createdAt": 1785370000018,
-      "updatedAt": 1785370000018
-    },
-    {
-      "id": "card_os_01019",
-      "subjectId": "subject_operating_system_13180",
-      "chapterId": "chapter_os_01_overview",
-      "question": "批处理操作系统的基本工作方式是什么？",
-      "answer": "操作员把一定数量的用户作业组成一批输入系统，系统形成连续、自动转接的作业流并依次自动执行，最后由操作员把结果交给用户。",
-      "tags": [
-        "批处理",
-        "工作方式"
-      ],
-      "importance": 2,
-      "status": "active",
-      "note": "教材第38页（PDF第45页）",
-      "createdAt": 1785370000019,
-      "updatedAt": 1785370000019
-    },
-    {
-      "id": "card_os_01020",
-      "subjectId": "subject_operating_system_13180",
-      "chapterId": "chapter_os_01_overview",
-      "question": "批处理操作系统追求的目标是什么？",
-      "answer": "提高系统资源利用率和作业吞吐率。作业吞吐率是单位时间内系统处理的作业个数。",
-      "tags": [
-        "批处理",
-        "吞吐率"
-      ],
-      "importance": 3,
-      "status": "active",
-      "note": "教材第39页（PDF第46页）",
-      "createdAt": 1785370000020,
-      "updatedAt": 1785370000020
-    },
-    {
-      "id": "card_os_01021",
-      "subjectId": "subject_operating_system_13180",
-      "chapterId": "chapter_os_01_overview",
-      "question": "批处理操作系统的主要优点和缺点是什么？",
-      "answer": "优点是作业流程自动化程度高、资源利用率高、作业吞吐量大；缺点是用户不能直接与计算机交互，不适合调试程序。",
-      "tags": [
-        "批处理",
-        "优缺点"
-      ],
-      "importance": 2,
-      "status": "active",
-      "note": "教材第39页（PDF第46页）",
-      "createdAt": 1785370000021,
-      "updatedAt": 1785370000021
-    },
-    {
-      "id": "card_os_01022",
-      "subjectId": "subject_operating_system_13180",
-      "chapterId": "chapter_os_01_overview",
-      "question": "SPOOLing技术的基本思想是什么？",
-      "answer": "以磁盘作为主机的直接输入输出设备，主机从磁盘选取作业并把结果写回磁盘；通道并行地在慢速外设与磁盘之间传送作业和结果。",
-      "tags": [
-        "批处理",
-        "SPOOLing",
-        "I/O"
-      ],
-      "importance": 3,
-      "status": "active",
-      "note": "教材第40页（PDF第47页）",
-      "createdAt": 1785370000022,
-      "updatedAt": 1785370000022
-    },
-    {
-      "id": "card_os_01023",
-      "subjectId": "subject_operating_system_13180",
-      "chapterId": "chapter_os_01_overview",
-      "question": "多道程序设计的基本思想是什么？",
-      "answer": "在内存中同时保持多个作业，通过合理调度让它们交替使用处理器和外设，使不同资源并行工作，从而提高资源利用率。",
+      "id": "preset_operating_system_card_011",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_01_overview",
+      "parentCardId": "preset_operating_system_card_010",
+      "connection": "沿“01 操作系统概论”的知识脉络继续学习。",
+      "question": "多道批处理系统为什么能提高资源利用率？",
+      "answer": "多个作业同时驻留内存，在一个作业等待I/O时让另一个作业使用CPU，使CPU与外设并行工作并提高吞吐量。",
       "tags": [
         "多道程序",
-        "调度"
+        "批处理"
       ],
       "importance": 3,
       "status": "active",
-      "note": "教材第41页（PDF第48页）",
-      "createdAt": 1785370000023,
-      "updatedAt": 1785370000023
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第1-5页",
+      "createdAt": 1787417600011,
+      "updatedAt": 1787417600011
     },
     {
-      "id": "card_os_01024",
-      "subjectId": "subject_operating_system_13180",
-      "chapterId": "chapter_os_01_overview",
-      "question": "分时操作系统如何为多个终端用户服务？",
-      "answer": "它把CPU时间划分为时间片，以时间片为单位轮流处理各终端用户的交互请求，并把结果返回终端。",
+      "id": "preset_operating_system_card_012",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_01_overview",
+      "parentCardId": "preset_operating_system_card_011",
+      "connection": "沿“01 操作系统概论”的知识脉络继续学习。",
+      "question": "批处理、分时和实时系统分别追求什么核心目标？",
+      "answer": "批处理追求高吞吐量和资源利用率；分时追求短响应时间和交互性；实时系统要求在规定时限内可靠完成处理。",
       "tags": [
-        "分时系统",
-        "时间片"
+        "系统分类",
+        "性能指标"
       ],
       "importance": 3,
       "status": "active",
-      "note": "教材第41页（PDF第48页）",
-      "createdAt": 1785370000024,
-      "updatedAt": 1785370000024
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第1-5页",
+      "createdAt": 1787417600012,
+      "updatedAt": 1787417600012
     },
     {
-      "id": "card_os_01025",
-      "subjectId": "subject_operating_system_13180",
-      "chapterId": "chapter_os_01_overview",
-      "question": "分时操作系统的四个特点是什么？",
-      "answer": "多路性、交互性、独占性和及时性。",
-      "tags": [
-        "分时系统",
-        "特点"
-      ],
-      "importance": 3,
-      "status": "active",
-      "note": "教材第41页（PDF第48页）",
-      "createdAt": 1785370000025,
-      "updatedAt": 1785370000025
-    },
-    {
-      "id": "card_os_01026",
-      "subjectId": "subject_operating_system_13180",
-      "chapterId": "chapter_os_01_overview",
-      "question": "分时系统中的响应时间如何定义？",
-      "answer": "从用户在终端发出命令，到系统给出回答所经历的时间。",
-      "tags": [
-        "分时系统",
-        "响应时间"
-      ],
-      "importance": 2,
-      "status": "active",
-      "note": "教材第41页（PDF第48页）",
-      "createdAt": 1785370000026,
-      "updatedAt": 1785370000026
-    },
-    {
-      "id": "card_os_01027",
-      "subjectId": "subject_operating_system_13180",
-      "chapterId": "chapter_os_01_overview",
-      "question": "通用操作系统如何结合分时处理与批处理？",
-      "answer": "采用“分时优先、批处理在后”的原则：前台处理需频繁交互、要求及时响应的分时作业，后台处理耗时较长且时效性要求不强的批作业。",
-      "tags": [
-        "通用操作系统",
-        "前台后台"
-      ],
-      "importance": 2,
-      "status": "active",
-      "note": "教材第41—42页（PDF第48—49页）",
-      "createdAt": 1785370000027,
-      "updatedAt": 1785370000027
-    },
-    {
-      "id": "card_os_01028",
-      "subjectId": "subject_operating_system_13180",
-      "chapterId": "chapter_os_01_overview",
-      "question": "什么是实时操作系统？",
-      "answer": "能在规定时间内及时响应并处理外部事件请求，同时控制实时设备和实时任务协调工作的操作系统。",
-      "tags": [
-        "实时系统",
-        "定义"
-      ],
-      "importance": 3,
-      "status": "active",
-      "note": "教材第42页（PDF第49页）",
-      "createdAt": 1785370000028,
-      "updatedAt": 1785370000028
-    },
-    {
-      "id": "card_os_01029",
-      "subjectId": "subject_operating_system_13180",
-      "chapterId": "chapter_os_01_overview",
-      "question": "硬实时系统与软实时系统的区别是什么？",
-      "answer": "硬实时系统必须满足极严格的响应和处理时限，违约可能造成严重后果；软实时系统允许一定范围的时限偏差，违约通常降低服务质量但不造成灾难。",
-      "tags": [
-        "实时系统",
-        "辨析"
-      ],
-      "importance": 3,
-      "status": "active",
-      "note": "教材第42页（PDF第49页）",
-      "createdAt": 1785370000029,
-      "updatedAt": 1785370000029
-    },
-    {
-      "id": "card_os_01030",
-      "subjectId": "subject_operating_system_13180",
-      "chapterId": "chapter_os_01_overview",
-      "question": "个人计算机操作系统的主要特点是什么？",
-      "answer": "在某一时间为单个用户服务，采用友好的图形界面，使用方便，用户无须具备专门知识。",
-      "tags": [
-        "操作系统分类",
-        "个人计算机"
-      ],
-      "importance": 1,
-      "status": "active",
-      "note": "教材第43页（PDF第50页）",
-      "createdAt": 1785370000030,
-      "updatedAt": 1785370000030
-    },
-    {
-      "id": "card_os_01031",
-      "subjectId": "subject_operating_system_13180",
-      "chapterId": "chapter_os_01_overview",
-      "question": "网络操作系统的目标是什么？",
-      "answer": "把网络中的计算机有机连接起来，实现相互通信和资源共享。",
-      "tags": [
-        "操作系统分类",
-        "网络操作系统"
-      ],
-      "importance": 2,
-      "status": "active",
-      "note": "教材第43页（PDF第50页）",
-      "createdAt": 1785370000031,
-      "updatedAt": 1785370000031
-    },
-    {
-      "id": "card_os_01032",
-      "subjectId": "subject_operating_system_13180",
-      "chapterId": "chapter_os_01_overview",
-      "question": "分布式操作系统的四个突出特征是什么？",
-      "answer": "统一的操作系统、资源深度共享、透明性和自治性。",
-      "tags": [
-        "操作系统分类",
-        "分布式系统"
-      ],
-      "importance": 3,
-      "status": "active",
-      "note": "教材第43页（PDF第50页）",
-      "createdAt": 1785370000032,
-      "updatedAt": 1785370000032
-    },
-    {
-      "id": "card_os_01033",
-      "subjectId": "subject_operating_system_13180",
-      "chapterId": "chapter_os_01_overview",
-      "question": "网络操作系统与分布式操作系统的本质区别是什么？",
-      "answer": "网络操作系统可构建在不同本机操作系统上，访问异地资源时通常需显式指出位置；分布式操作系统以单一操作系统统一管理调度全部资源，对用户屏蔽资源的物理位置。",
+      "id": "preset_operating_system_card_013",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_01_overview",
+      "parentCardId": "preset_operating_system_card_012",
+      "connection": "沿“01 操作系统概论”的知识脉络继续学习。",
+      "question": "网络操作系统与分布式操作系统的主要区别是什么？",
+      "answer": "网络操作系统中各主机保有独立OS，用户需显式指定资源位置；分布式OS统一管理各节点，向用户呈现位置透明的单一系统。",
       "tags": [
         "网络操作系统",
-        "分布式系统",
-        "辨析"
-      ],
-      "importance": 3,
-      "status": "active",
-      "note": "教材第44页（PDF第51页）",
-      "createdAt": 1785370000033,
-      "updatedAt": 1785370000033
-    },
-    {
-      "id": "card_os_01034",
-      "subjectId": "subject_operating_system_13180",
-      "chapterId": "chapter_os_01_overview",
-      "question": "嵌入式操作系统有哪些主要特点？",
-      "answer": "系统内核小、专业性强、系统精简、高实时性，并支持多任务调度与管理。",
-      "tags": [
-        "操作系统分类",
-        "嵌入式系统"
+        "分布式系统"
       ],
       "importance": 2,
       "status": "active",
-      "note": "教材第44页（PDF第51页）",
-      "createdAt": 1785370000034,
-      "updatedAt": 1785370000034
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第1-5页",
+      "createdAt": 1787417600013,
+      "updatedAt": 1787417600013
     },
     {
-      "id": "card_os_01035",
-      "subjectId": "subject_operating_system_13180",
-      "chapterId": "chapter_os_01_overview",
-      "question": "操作系统设计面临哪三项主要困难？",
-      "answer": "设计复杂程度高、正确性难以保证、研发周期长。",
+      "id": "preset_operating_system_card_014",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_01_overview",
+      "parentCardId": "preset_operating_system_card_013",
+      "connection": "沿“01 操作系统概论”的知识脉络继续学习。",
+      "question": "嵌入式操作系统的主要特点是什么？",
+      "answer": "内核小、专用性强、紧凑高效、实时性高并支持多任务，常用于智能硬件、工业控制和车载系统。",
       "tags": [
-        "操作系统设计",
-        "设计难点"
+        "嵌入式系统",
+        "系统分类"
       ],
       "importance": 2,
       "status": "active",
-      "note": "教材第45—46页（PDF第52—53页）",
-      "createdAt": 1785370000035,
-      "updatedAt": 1785370000035
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第1-5页",
+      "createdAt": 1787417600014,
+      "updatedAt": 1787417600014
     },
     {
-      "id": "card_os_01036",
-      "subjectId": "subject_operating_system_13180",
-      "chapterId": "chapter_os_01_overview",
-      "question": "操作系统的设计过程包括哪三个方面？",
-      "answer": "功能设计、算法设计和结构设计，三者互相渗透，不能截然分开。",
-      "tags": [
-        "操作系统设计",
-        "设计过程"
-      ],
-      "importance": 3,
-      "status": "active",
-      "note": "教材第46—47页（PDF第53—54页）",
-      "createdAt": 1785370000036,
-      "updatedAt": 1785370000036
-    },
-    {
-      "id": "card_os_01037",
-      "subjectId": "subject_operating_system_13180",
-      "chapterId": "chapter_os_01_overview",
-      "question": "高质量操作系统的主要设计目标是什么？",
+      "id": "preset_operating_system_card_015",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_01_overview",
+      "parentCardId": "preset_operating_system_card_014",
+      "connection": "沿“01 操作系统概论”的知识脉络继续学习。",
+      "question": "操作系统设计的主要目标是什么？",
       "answer": "可靠性、高效性、易维护性、可移植性和安全性。",
       "tags": [
-        "操作系统设计",
-        "设计目标"
+        "设计目标",
+        "体系结构"
       ],
       "importance": 3,
       "status": "active",
-      "note": "教材第47—48页（PDF第54—55页）",
-      "createdAt": 1785370000037,
-      "updatedAt": 1785370000037
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第1-5页",
+      "createdAt": 1787417600015,
+      "updatedAt": 1787417600015
     },
     {
-      "id": "card_os_01038",
-      "subjectId": "subject_operating_system_13180",
-      "chapterId": "chapter_os_01_overview",
-      "question": "操作系统可靠性包含哪两个方面？",
-      "answer": "正确性和健壮性。健壮性指系统在硬件故障或意外环境下仍能适当处理，避免严重损失。",
+      "id": "preset_operating_system_card_016",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_01_overview",
+      "parentCardId": "preset_operating_system_card_015",
+      "connection": "沿“01 操作系统概论”的知识脉络继续学习。",
+      "question": "整体式结构的思想和优缺点是什么？",
+      "answer": "各功能模块可自由调用并共享全局数据，接口直接、效率高；但模块牵连多、易循环调用、独立性差且难维护。",
       "tags": [
-        "操作系统设计",
-        "可靠性"
-      ],
-      "importance": 2,
-      "status": "active",
-      "note": "教材第47页（PDF第54页）",
-      "createdAt": 1785370000038,
-      "updatedAt": 1785370000038
-    },
-    {
-      "id": "card_os_01039",
-      "subjectId": "subject_operating_system_13180",
-      "chapterId": "chapter_os_01_overview",
-      "question": "如何提高操作系统的可移植性？",
-      "answer": "在设计时将与硬件相关的部分同其他部分相对独立，并把硬件相关部分置于底层；移植时主要修改底层。",
-      "tags": [
-        "操作系统设计",
-        "可移植性"
-      ],
-      "importance": 2,
-      "status": "active",
-      "note": "教材第48页（PDF第55页）",
-      "createdAt": 1785370000039,
-      "updatedAt": 1785370000039
-    },
-    {
-      "id": "card_os_01040",
-      "subjectId": "subject_operating_system_13180",
-      "chapterId": "chapter_os_01_overview",
-      "question": "操作系统结构研究的三个目标是什么？",
-      "answer": "系统模块化、模块标准化和通信规范化。",
-      "tags": [
-        "体系结构",
-        "结构设计"
-      ],
-      "importance": 2,
-      "status": "active",
-      "note": "教材第49页（PDF第56页）",
-      "createdAt": 1785370000040,
-      "updatedAt": 1785370000040
-    },
-    {
-      "id": "card_os_01041",
-      "subjectId": "subject_operating_system_13180",
-      "chapterId": "chapter_os_01_overview",
-      "question": "整体式操作系统结构的基本思想是什么？",
-      "answer": "把总体功能逐级分解成模块，直至基本模块，再通过接口把全部模块连接成一个整体；模块之间可直接调用。",
-      "tags": [
-        "体系结构",
-        "整体式结构"
-      ],
-      "importance": 3,
-      "status": "active",
-      "note": "教材第50页（PDF第57页）",
-      "createdAt": 1785370000041,
-      "updatedAt": 1785370000041
-    },
-    {
-      "id": "card_os_01042",
-      "subjectId": "subject_operating_system_13180",
-      "chapterId": "chapter_os_01_overview",
-      "question": "整体式结构的主要优点和缺点是什么？",
-      "answer": "优点是结构紧密、接口直接、效率较高；缺点是模块间调用随意、耦合强、结构不清晰，难以修改维护，并可能限制并发性。",
-      "tags": [
-        "体系结构",
         "整体式结构",
-        "优缺点"
+        "体系结构"
       ],
-      "importance": 3,
+      "importance": 2,
       "status": "active",
-      "note": "教材第50页（PDF第57页）",
-      "createdAt": 1785370000042,
-      "updatedAt": 1785370000042
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第1-5页",
+      "createdAt": 1787417600016,
+      "updatedAt": 1787417600016
     },
     {
-      "id": "card_os_01043",
-      "subjectId": "subject_operating_system_13180",
-      "chapterId": "chapter_os_01_overview",
-      "question": "层次式操作系统结构的基本规则是什么？",
-      "answer": "把功能模块按调用次序分层，各层之间只允许单向依赖或单向调用，通常由上层调用下层，从而避免循环调用。",
+      "id": "preset_operating_system_card_017",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_01_overview",
+      "parentCardId": "preset_operating_system_card_016",
+      "connection": "沿“01 操作系统概论”的知识脉络继续学习。",
+      "question": "层次式结构的思想和优缺点是什么？",
+      "answer": "系统自底向上分层，上层只依赖相邻下层；结构清晰、易调试维护，但层间通信增加开销，分层边界也难确定。",
       "tags": [
-        "体系结构",
-        "层次式结构"
-      ],
-      "importance": 3,
-      "status": "active",
-      "note": "教材第50—51页（PDF第57—58页）",
-      "createdAt": 1785370000043,
-      "updatedAt": 1785370000043
-    },
-    {
-      "id": "card_os_01044",
-      "subjectId": "subject_operating_system_13180",
-      "chapterId": "chapter_os_01_overview",
-      "question": "层次式结构有哪些主要优点？",
-      "answer": "结构和依赖关系清晰，可靠性较高，易于调试、修改、扩充、维护和保证正确性。",
-      "tags": [
-        "体系结构",
         "层次式结构",
-        "优点"
+        "体系结构"
       ],
       "importance": 2,
       "status": "active",
-      "note": "教材第51页（PDF第58页）",
-      "createdAt": 1785370000044,
-      "updatedAt": 1785370000044
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第1-5页",
+      "createdAt": 1787417600017,
+      "updatedAt": 1787417600017
     },
     {
-      "id": "card_os_01045",
-      "subjectId": "subject_operating_system_13180",
-      "chapterId": "chapter_os_01_overview",
-      "question": "客户/服务器（微内核）结构如何组织操作系统功能？",
-      "answer": "内核态中的微内核只保留基本机制；其他功能拆成用户态的独立服务进程。客户与服务器通过内核转发消息进行通信。",
+      "id": "preset_operating_system_card_018",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_01_overview",
+      "parentCardId": "preset_operating_system_card_017",
+      "connection": "沿“01 操作系统概论”的知识脉络继续学习。",
+      "question": "微内核结构如何以部分效率换取可靠性？",
+      "answer": "内核只保留调度、消息传递和低级中断等基本功能，其余服务移到用户空间；服务隔离提高可靠性和扩展性，但状态切换与消息复制会降低效率。",
       "tags": [
-        "体系结构",
         "微内核",
-        "客户服务器"
+        "客户服务器结构"
       ],
       "importance": 3,
       "status": "active",
-      "note": "教材第52页（PDF第59页）",
-      "createdAt": 1785370000045,
-      "updatedAt": 1785370000045
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第1-5页",
+      "createdAt": 1787417600018,
+      "updatedAt": 1787417600018
     },
     {
-      "id": "card_os_01046",
-      "subjectId": "subject_operating_system_13180",
-      "chapterId": "chapter_os_01_overview",
-      "question": "微内核结构的主要优点和缺点是什么？",
-      "answer": "优点是可靠、灵活、易维护并适合分布式处理；缺点是用户进程通信都要经过微内核，频繁通信时微内核可能成为性能瓶颈。",
-      "tags": [
-        "体系结构",
-        "微内核",
-        "优缺点"
-      ],
-      "importance": 3,
-      "status": "active",
-      "note": "教材第52—53页（PDF第59—60页）",
-      "createdAt": 1785370000046,
-      "updatedAt": 1785370000046
-    },
-    {
-      "id": "card_os_01047",
-      "subjectId": "subject_operating_system_13180",
-      "chapterId": "chapter_os_01_overview",
+      "id": "preset_operating_system_card_019",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_01_overview",
+      "parentCardId": "preset_operating_system_card_018",
+      "connection": "沿“01 操作系统概论”的知识脉络继续学习。",
       "question": "外核结构的核心思想是什么？",
-      "answer": "内核主要负责硬件资源的申请、释放和复用，把传统操作系统提供的抽象放在用户空间，使应用程序参与管理硬件资源。",
+      "answer": "外核只负责物理资源的安全分配、保护和复用，把传统抽象交给用户空间的库操作系统实现，以支持应用定制并减少通用抽象开销。",
       "tags": [
-        "体系结构",
-        "外核"
+        "外核",
+        "体系结构"
       ],
       "importance": 2,
       "status": "active",
-      "note": "教材第53页（PDF第60页）",
-      "createdAt": 1785370000047,
-      "updatedAt": 1785370000047
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第1-5页",
+      "createdAt": 1787417600019,
+      "updatedAt": 1787417600019
     },
     {
-      "id": "card_os_01048",
-      "subjectId": "subject_operating_system_13180",
-      "chapterId": "chapter_os_01_overview",
-      "question": "BIOS引导与UEFI引导在分区方案和运行模式上有何区别？",
-      "answer": "BIOS引导使用MBR分区方案，只能在16位实模式运行；UEFI引导使用GPT分区方案，可在32位或64位模式运行。",
+      "id": "preset_operating_system_card_020",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_01_overview",
+      "parentCardId": "preset_operating_system_card_019",
+      "connection": "沿“01 操作系统概论”的知识脉络继续学习。",
+      "question": "BIOS与UEFI有何区别，系统启动经历哪些阶段？",
+      "answer": "BIOS使用MBR并工作于16位实模式；UEFI支持GPT和32/64位模式，速度及安全性更高。启动依次经过加电自检、读取引导记录、加载内核和内核初始化。",
       "tags": [
-        "系统启动",
+        "系统引导",
         "BIOS",
         "UEFI"
       ],
-      "importance": 2,
+      "importance": 3,
       "status": "active",
-      "note": "教材第55页（PDF第62页）",
-      "createdAt": 1785370000048,
-      "updatedAt": 1785370000048
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第1-5页",
+      "createdAt": 1787417600020,
+      "updatedAt": 1787417600020
     },
     {
-      "id": "card_os_01049",
-      "subjectId": "subject_operating_system_13180",
-      "chapterId": "chapter_os_01_overview",
-      "question": "操作系统启动机制可概括为哪四个阶段？",
-      "answer": "BIOS自检、系统引导、启动内核、初始化系统。",
+      "id": "preset_operating_system_card_021",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_02_environment",
+      "question": "计算机系统从底层到上层如何划分？",
+      "answer": "底层是CPU、内存、外存、I/O设备、时钟和中断机构等硬件；上层软件分为系统软件、支撑软件和应用软件，操作系统紧邻硬件。",
       "tags": [
-        "系统启动",
-        "启动过程"
+        "系统层次",
+        "硬件软件"
+      ],
+      "importance": 2,
+      "status": "active",
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第5-9页",
+      "createdAt": 1787417600021,
+      "updatedAt": 1787417600021
+    },
+    {
+      "id": "preset_operating_system_card_022",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_02_environment",
+      "parentCardId": "preset_operating_system_card_021",
+      "connection": "沿“02 运行环境与运行机制”的知识脉络继续学习。",
+      "question": "CPU的基本组成是什么？",
+      "answer": "运算器、控制器、高速缓存Cache和一系列寄存器。",
+      "tags": [
+        "CPU",
+        "硬件基础"
+      ],
+      "importance": 2,
+      "status": "active",
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第5-9页",
+      "createdAt": 1787417600022,
+      "updatedAt": 1787417600022
+    },
+    {
+      "id": "preset_operating_system_card_023",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_02_environment",
+      "parentCardId": "preset_operating_system_card_022",
+      "connection": "沿“02 运行环境与运行机制”的知识脉络继续学习。",
+      "question": "PC、IR和PSW分别保存什么？",
+      "answer": "PC保存下一条待取指令的地址；IR保存最近取出且正在执行的指令；PSW保存运行模式、状态码、条件码和中断屏蔽位等处理器状态。",
+      "tags": [
+        "寄存器",
+        "PSW"
       ],
       "importance": 3,
       "status": "active",
-      "note": "教材第55页（PDF第62页）",
-      "createdAt": 1785370000049,
-      "updatedAt": 1785370000049
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第5-9页",
+      "createdAt": 1787417600023,
+      "updatedAt": 1787417600023
     },
     {
-      "id": "card_os_02001",
-      "subjectId": "subject_operating_system_13180",
-      "chapterId": "chapter_os_02_environment",
-      "question": "从操作系统运行环境看，硬件系统中最重要的组成有哪些？",
-      "answer": "中央处理器、存储系统、中断机制、I/O技术和时钟。",
-      "tags": [
-        "运行环境",
-        "硬件系统"
-      ],
-      "importance": 2,
-      "status": "active",
-      "note": "教材第59页（PDF第66页）",
-      "createdAt": 1785370000050,
-      "updatedAt": 1785370000050
-    },
-    {
-      "id": "card_os_02002",
-      "subjectId": "subject_operating_system_13180",
-      "chapterId": "chapter_os_02_environment",
-      "question": "计算机的软件系统可分为哪三个层次？",
-      "answer": "系统软件、支撑软件和应用软件；操作系统位于软件系统的最下层并邻接硬件。",
-      "tags": [
-        "层次结构",
-        "软件系统"
-      ],
-      "importance": 2,
-      "status": "active",
-      "note": "教材第59页（PDF第66页）",
-      "createdAt": 1785370000051,
-      "updatedAt": 1785370000051
-    },
-    {
-      "id": "card_os_02003",
-      "subjectId": "subject_operating_system_13180",
-      "chapterId": "chapter_os_02_environment",
-      "question": "CPU通常由哪些部分构成？",
-      "answer": "运算器、控制器、一系列寄存器和高速缓存。",
-      "tags": [
-        "CPU",
-        "组成"
-      ],
-      "importance": 3,
-      "status": "active",
-      "note": "教材第60页（PDF第67页）",
-      "createdAt": 1785370000052,
-      "updatedAt": 1785370000052
-    },
-    {
-      "id": "card_os_02004",
-      "subjectId": "subject_operating_system_13180",
-      "chapterId": "chapter_os_02_environment",
-      "question": "处理器中的两类寄存器是什么？",
-      "answer": "用户可见寄存器，以及控制和状态寄存器。前者供程序使用，后者用于控制处理器操作，通常由特权操作系统代码使用。",
-      "tags": [
-        "CPU",
-        "寄存器"
-      ],
-      "importance": 2,
-      "status": "active",
-      "note": "教材第60页（PDF第67页）",
-      "createdAt": 1785370000053,
-      "updatedAt": 1785370000053
-    },
-    {
-      "id": "card_os_02005",
-      "subjectId": "subject_operating_system_13180",
-      "chapterId": "chapter_os_02_environment",
-      "question": "程序计数器PC和指令寄存器IR分别保存什么？",
-      "answer": "PC记录下一条将要取出的指令地址；IR保存最近取出的指令。",
-      "tags": [
-        "CPU",
-        "PC",
-        "IR"
-      ],
-      "importance": 3,
-      "status": "active",
-      "note": "教材第60页（PDF第67页）",
-      "createdAt": 1785370000054,
-      "updatedAt": 1785370000054
-    },
-    {
-      "id": "card_os_02006",
-      "subjectId": "subject_operating_system_13180",
-      "chapterId": "chapter_os_02_environment",
-      "question": "一个基本指令周期包括哪两个步骤？",
-      "answer": "取指和执行：处理器从存储器取出指令并更新PC，然后解释并执行IR中的指令。",
-      "tags": [
-        "CPU",
-        "指令周期"
-      ],
-      "importance": 2,
-      "status": "active",
-      "note": "教材第60页（PDF第67页）",
-      "createdAt": 1785370000055,
-      "updatedAt": 1785370000055
-    },
-    {
-      "id": "card_os_02007",
-      "subjectId": "subject_operating_system_13180",
-      "chapterId": "chapter_os_02_environment",
-      "question": "什么是特权指令？为什么不能允许用户程序随意执行？",
-      "answer": "特权指令是只能由操作系统使用的指令。若用户程序可随意设置处理器状态、启动设备、屏蔽中断或清内存，可能破坏系统控制并使系统混乱。",
+      "id": "preset_operating_system_card_024",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_02_environment",
+      "parentCardId": "preset_operating_system_card_023",
+      "connection": "沿“02 运行环境与运行机制”的知识脉络继续学习。",
+      "question": "什么是特权指令？用户程序执行它会怎样？",
+      "answer": "特权指令只允许内核执行，如设置时钟、修改PSW和启动I/O。用户程序尝试执行时，硬件会阻止并触发非法指令异常。",
       "tags": [
         "特权指令",
-        "CPU状态"
+        "内核态"
       ],
       "importance": 3,
       "status": "active",
-      "note": "第二章难点；教材第61页（PDF第68页）",
-      "createdAt": 1785370000056,
-      "updatedAt": 1785370000056
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第5-9页",
+      "createdAt": 1787417600024,
+      "updatedAt": 1787417600024
     },
     {
-      "id": "card_os_02008",
-      "subjectId": "subject_operating_system_13180",
-      "chapterId": "chapter_os_02_environment",
-      "question": "处理器处于内核态时具有什么权限？",
-      "answer": "可执行全部指令，包括特权指令；可使用所有资源，并有改变处理器状态的能力。",
+      "id": "preset_operating_system_card_025",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_02_environment",
+      "parentCardId": "preset_operating_system_card_024",
+      "connection": "沿“02 运行环境与运行机制”的知识脉络继续学习。",
+      "question": "内核态与用户态有什么区别？",
+      "answer": "内核态能执行全部指令并访问所有硬件资源；用户态只能执行非特权指令，并仅能访问分配给自己的用户空间。",
       "tags": [
         "内核态",
-        "CPU状态"
+        "用户态"
       ],
       "importance": 3,
       "status": "active",
-      "note": "教材第62页（PDF第69页）",
-      "createdAt": 1785370000057,
-      "updatedAt": 1785370000057
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第5-9页",
+      "createdAt": 1787417600025,
+      "updatedAt": 1787417600025
     },
     {
-      "id": "card_os_02009",
-      "subjectId": "subject_operating_system_13180",
-      "chapterId": "chapter_os_02_environment",
-      "question": "处理器处于用户态时具有什么权限限制？",
-      "answer": "只能执行非特权指令，不能直接使用特权指令。",
-      "tags": [
-        "用户态",
-        "CPU状态"
-      ],
-      "importance": 3,
-      "status": "active",
-      "note": "教材第62页（PDF第69页）",
-      "createdAt": 1785370000058,
-      "updatedAt": 1785370000058
-    },
-    {
-      "id": "card_os_02010",
-      "subjectId": "subject_operating_system_13180",
-      "chapterId": "chapter_os_02_environment",
-      "question": "CPU从用户态转换到内核态的唯一途径是什么？",
-      "answer": "中断。中断响应时装入新的中断向量，其中PSW的CPU状态位标记为内核态。",
-      "tags": [
-        "状态转换",
-        "中断",
-        "PSW"
-      ],
-      "importance": 3,
-      "status": "active",
-      "note": "第二章重点；教材第62页（PDF第69页）",
-      "createdAt": 1785370000059,
-      "updatedAt": 1785370000059
-    },
-    {
-      "id": "card_os_02011",
-      "subjectId": "subject_operating_system_13180",
-      "chapterId": "chapter_os_02_environment",
-      "question": "CPU如何从内核态转换到用户态？",
-      "answer": "操作系统在内核态执行设置PSW的特权指令，修改程序状态字后转入用户程序执行。",
+      "id": "preset_operating_system_card_026",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_02_environment",
+      "parentCardId": "preset_operating_system_card_025",
+      "connection": "沿“02 运行环境与运行机制”的知识脉络继续学习。",
+      "question": "处理器如何在用户态与内核态之间转换？",
+      "answer": "用户态只能通过中断、异常或系统调用进入内核态；返回用户态则由内核执行修改PSW的特权指令，如中断返回指令。",
       "tags": [
         "状态转换",
         "PSW"
       ],
       "importance": 3,
       "status": "active",
-      "note": "教材第62页（PDF第69页）",
-      "createdAt": 1785370000060,
-      "updatedAt": 1785370000060
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第5-9页",
+      "createdAt": 1787417600026,
+      "updatedAt": 1787417600026
     },
     {
-      "id": "card_os_02012",
-      "subjectId": "subject_operating_system_13180",
-      "chapterId": "chapter_os_02_environment",
-      "question": "用户态程序取到特权指令时，系统如何处理？",
-      "answer": "CPU拒绝执行并形成“非法操作”事件，中断机制把该事件交给操作系统处理，由操作系统报告非法指令。",
+      "id": "preset_operating_system_card_027",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_02_environment",
+      "parentCardId": "preset_operating_system_card_026",
+      "connection": "沿“02 运行环境与运行机制”的知识脉络继续学习。",
+      "question": "存储层次结构与程序局部性原理是什么？",
+      "answer": "存储层次通常为寄存器、Cache、内存、磁盘、磁带或光盘。时间局部性指刚访问内容可能很快再访问；空间局部性指邻近地址可能很快被访问。",
       "tags": [
-        "特权指令",
-        "系统保护"
-      ],
-      "importance": 3,
-      "status": "active",
-      "note": "教材第63页（PDF第70页）",
-      "createdAt": 1785370000061,
-      "updatedAt": 1785370000061
-    },
-    {
-      "id": "card_os_02013",
-      "subjectId": "subject_operating_system_13180",
-      "chapterId": "chapter_os_02_environment",
-      "question": "程序状态字PSW通常包含哪些状态代码？",
-      "answer": "CPU工作状态代码、反映指令结果的条件码和中断屏蔽码。",
-      "tags": [
-        "PSW",
-        "寄存器"
-      ],
-      "importance": 3,
-      "status": "active",
-      "note": "教材第63页（PDF第70页）",
-      "createdAt": 1785370000062,
-      "updatedAt": 1785370000062
-    },
-    {
-      "id": "card_os_02014",
-      "subjectId": "subject_operating_system_13180",
-      "chapterId": "chapter_os_02_environment",
-      "question": "RAM与ROM的核心区别是什么？",
-      "answer": "RAM可在任意地址写入、读出并重写数据；ROM通常只能读取，不能用普通方法随意写入。",
-      "tags": [
-        "存储系统",
-        "RAM",
-        "ROM"
-      ],
-      "importance": 2,
-      "status": "active",
-      "note": "教材第64页（PDF第71页）",
-      "createdAt": 1785370000063,
-      "updatedAt": 1785370000063
-    },
-    {
-      "id": "card_os_02015",
-      "subjectId": "subject_operating_system_13180",
-      "chapterId": "chapter_os_02_environment",
-      "question": "存储器分块管理中的物理页是什么？",
-      "answer": "为简化存储器分配和管理而划分的固定大小存储块，是分配内存空间的最小单位；其大小随机器而异。",
-      "tags": [
-        "存储系统",
-        "物理页"
-      ],
-      "importance": 2,
-      "status": "active",
-      "note": "教材第64页（PDF第71页）",
-      "createdAt": 1785370000064,
-      "updatedAt": 1785370000064
-    },
-    {
-      "id": "card_os_02016",
-      "subjectId": "subject_operating_system_13180",
-      "chapterId": "chapter_os_02_environment",
-      "question": "设计存储系统时主要权衡哪三个因素？",
-      "answer": "容量、速度和成本。通常速度越快，每比特价格越高、容量越小；速度越慢，价格越低、容量越大。",
-      "tags": [
-        "存储系统",
-        "层次结构"
-      ],
-      "importance": 2,
-      "status": "active",
-      "note": "教材第64—65页（PDF第71—72页）",
-      "createdAt": 1785370000065,
-      "updatedAt": 1785370000065
-    },
-    {
-      "id": "card_os_02017",
-      "subjectId": "subject_operating_system_13180",
-      "chapterId": "chapter_os_02_environment",
-      "question": "从处理器向外，教材列出的存储层次顺序是什么？",
-      "answer": "寄存器、高速缓存、内存、磁盘、磁带机和光盘。沿层次向下，容量增大、每比特价格降低、速度变慢、访问频率降低。",
-      "tags": [
-        "存储系统",
-        "层次结构"
-      ],
-      "importance": 2,
-      "status": "active",
-      "note": "教材第65页（PDF第72页）",
-      "createdAt": 1785370000066,
-      "updatedAt": 1785370000066
-    },
-    {
-      "id": "card_os_02018",
-      "subjectId": "subject_operating_system_13180",
-      "chapterId": "chapter_os_02_environment",
-      "question": "程序的存储访问局部性原理是什么？",
-      "answer": "程序在较短时间内会反复访问一个相对稳定的局部代码和数据集合；一段时间后，这个局部集合才会改变。",
-      "tags": [
-        "存储系统",
+        "存储层次",
         "局部性"
       ],
       "importance": 3,
       "status": "active",
-      "note": "教材第65页（PDF第72页）",
-      "createdAt": 1785370000067,
-      "updatedAt": 1785370000067
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第5-9页",
+      "createdAt": 1787417600027,
+      "updatedAt": 1787417600027
     },
     {
-      "id": "card_os_02019",
-      "subjectId": "subject_operating_system_13180",
-      "chapterId": "chapter_os_02_environment",
-      "question": "界限寄存器如何实现存储保护？",
-      "answer": "CPU用上下限寄存器或基址与限长寄存器描述作业合法内存区；每次访存时硬件比较地址，越界则产生存储保护中断。",
+      "id": "preset_operating_system_card_028",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_02_environment",
+      "parentCardId": "preset_operating_system_card_027",
+      "connection": "沿“02 运行环境与运行机制”的知识脉络继续学习。",
+      "question": "界地址寄存器法和存储保护键法如何保护内存？",
+      "answer": "界地址法在每次访存时检查地址是否越界；保护键法比较内存块的保护键与进程PSW中的钥匙，不匹配时拒绝访问。",
       "tags": [
         "存储保护",
         "界限寄存器"
       ],
-      "importance": 3,
-      "status": "active",
-      "note": "教材第66页（PDF第73页）",
-      "createdAt": 1785370000068,
-      "updatedAt": 1785370000068
-    },
-    {
-      "id": "card_os_02020",
-      "subjectId": "subject_operating_system_13180",
-      "chapterId": "chapter_os_02_environment",
-      "question": "存储保护键如何实现存储保护？",
-      "answer": "每个存储块带有保护键，作业获得唯一键号；CPU访存时比较内存块的键与PSW中的作业键，匹配才允许访问。",
-      "tags": [
-        "存储保护",
-        "保护键"
-      ],
       "importance": 2,
       "status": "active",
-      "note": "教材第67页（PDF第74页）",
-      "createdAt": 1785370000069,
-      "updatedAt": 1785370000069
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第5-9页",
+      "createdAt": 1787417600028,
+      "updatedAt": 1787417600028
     },
     {
-      "id": "card_os_02021",
-      "subjectId": "subject_operating_system_13180",
-      "chapterId": "chapter_os_02_environment",
-      "question": "什么是中断？",
-      "answer": "中断是CPU对系统中或系统外发生的异步事件的响应：暂停当前程序，转去处理事件，处理后再返回中断点继续执行。",
+      "id": "preset_operating_system_card_029",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_02_environment",
+      "parentCardId": "preset_operating_system_card_028",
+      "connection": "沿“02 运行环境与运行机制”的知识脉络继续学习。",
+      "question": "外中断与内中断有什么区别？",
+      "answer": "外中断来自CPU外部且与当前指令无关，是异步的；内中断由正在执行的指令引发，是同步的，例如除零、非法指令和缺页异常。",
       "tags": [
         "中断",
-        "定义"
+        "异常"
       ],
       "importance": 3,
       "status": "active",
-      "note": "第二章重点；教材第67页（PDF第74页）",
-      "createdAt": 1785370000070,
-      "updatedAt": 1785370000070
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第5-9页",
+      "createdAt": 1787417600029,
+      "updatedAt": 1787417600029
     },
     {
-      "id": "card_os_02022",
-      "subjectId": "subject_operating_system_13180",
-      "chapterId": "chapter_os_02_environment",
-      "question": "中断源、中断请求和中断断点分别是什么？",
-      "answer": "中断源是引起中断的事件；中断请求是中断源发给处理器的请求信号；中断断点是中断发生时当前程序暂停的位置。",
-      "tags": [
-        "中断",
-        "术语"
-      ],
-      "importance": 2,
-      "status": "active",
-      "note": "教材第67页（PDF第74页）",
-      "createdAt": 1785370000071,
-      "updatedAt": 1785370000071
-    },
-    {
-      "id": "card_os_02023",
-      "subjectId": "subject_operating_system_13180",
-      "chapterId": "chapter_os_02_environment",
-      "question": "中断向量和中断向量表分别是什么？",
-      "answer": "中断向量是定位某类中断处理程序所需的信息，主要包含PSW和PC值；中断向量表是中断处理程序入口地址的映射表，每项对应一种中断向量。",
-      "tags": [
-        "中断",
-        "中断向量"
-      ],
-      "importance": 3,
-      "status": "active",
-      "note": "教材第68页（PDF第75页）",
-      "createdAt": 1785370000072,
-      "updatedAt": 1785370000072
-    },
-    {
-      "id": "card_os_02024",
-      "subjectId": "subject_operating_system_13180",
-      "chapterId": "chapter_os_02_environment",
-      "question": "中断技术的两项主要作用是什么？",
-      "answer": "①避免CPU持续查询和等待外设，提高处理器利用率；②使实时性要求高的设备请求得到及时处理，提高系统实时能力。",
-      "tags": [
-        "中断",
-        "作用"
-      ],
-      "importance": 3,
-      "status": "active",
-      "note": "教材第68页（PDF第75页）",
-      "createdAt": 1785370000073,
-      "updatedAt": 1785370000073
-    },
-    {
-      "id": "card_os_02025",
-      "subjectId": "subject_operating_system_13180",
-      "chapterId": "chapter_os_02_environment",
-      "question": "强迫性中断与自愿性中断的区别是什么？",
-      "answer": "强迫性中断不是当前程序期望发生的，随机性较强；自愿性中断由程序有意安排，通常由访管指令引起，用于请求操作系统服务。",
+      "id": "preset_operating_system_card_030",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_02_environment",
+      "parentCardId": "preset_operating_system_card_029",
+      "connection": "沿“02 运行环境与运行机制”的知识脉络继续学习。",
+      "question": "强迫性中断与自愿性中断如何区分？",
+      "answer": "强迫性中断不是程序主动安排的，如故障、时钟到期和缺页；自愿性中断由程序执行访管指令主动发起，用于请求系统服务。",
       "tags": [
         "中断分类",
-        "辨析"
-      ],
-      "importance": 3,
-      "status": "active",
-      "note": "教材第68页（PDF第75页）",
-      "createdAt": 1785370000074,
-      "updatedAt": 1785370000074
-    },
-    {
-      "id": "card_os_02026",
-      "subjectId": "subject_operating_system_13180",
-      "chapterId": "chapter_os_02_environment",
-      "question": "强迫性中断包括哪些类型？",
-      "answer": "程序性中断、时钟中断、I/O中断、控制台中断和硬件故障中断。",
-      "tags": [
-        "中断分类",
-        "强迫性中断"
-      ],
-      "importance": 3,
-      "status": "active",
-      "note": "教材第68页（PDF第75页）",
-      "createdAt": 1785370000075,
-      "updatedAt": 1785370000075
-    },
-    {
-      "id": "card_os_02027",
-      "subjectId": "subject_operating_system_13180",
-      "chapterId": "chapter_os_02_environment",
-      "question": "异步中断与同步异常的区别是什么？",
-      "answer": "异步中断通常由当前程序之外的外部事件触发，时间和位置不可预测；同步异常由当前程序的编码和逻辑触发，发生位置可以预测。",
-      "tags": [
-        "中断",
-        "异常",
-        "辨析"
-      ],
-      "importance": 3,
-      "status": "active",
-      "note": "教材第68—69页（PDF第75—76页）",
-      "createdAt": 1785370000076,
-      "updatedAt": 1785370000076
-    },
-    {
-      "id": "card_os_02028",
-      "subjectId": "subject_operating_system_13180",
-      "chapterId": "chapter_os_02_environment",
-      "question": "中断系统由哪两部分组成，各自负责什么？",
-      "answer": "硬件中断装置负责捕获、响应中断并把控制权交给处理程序；中断处理程序根据事件性质执行具体处理。前者提供机制，后者实现策略。",
-      "tags": [
-        "中断系统",
-        "硬件软件协同"
-      ],
-      "importance": 3,
-      "status": "active",
-      "note": "教材第69页（PDF第76页）",
-      "createdAt": 1785370000077,
-      "updatedAt": 1785370000077
-    },
-    {
-      "id": "card_os_02029",
-      "subjectId": "subject_operating_system_13180",
-      "chapterId": "chapter_os_02_environment",
-      "question": "CPU通常在什么时候检查并响应中断请求？",
-      "answer": "在每条指令执行周期的最后时刻扫描中断寄存器，即通常在完成当前指令后响应中断。",
-      "tags": [
-        "中断响应",
-        "时机"
-      ],
-      "importance": 3,
-      "status": "active",
-      "note": "教材第69—70页（PDF第76—77页）",
-      "createdAt": 1785370000078,
-      "updatedAt": 1785370000078
-    },
-    {
-      "id": "card_os_02030",
-      "subjectId": "subject_operating_system_13180",
-      "chapterId": "chapter_os_02_environment",
-      "question": "中断响应阶段需要完成哪些关键工作？",
-      "answer": "①接收中断信号；②把中断点的PSW、PC等现场压入系统堆栈；③取得中断向量并查到处理程序入口；④把PC置为入口地址；⑤转入中断处理程序。",
-      "tags": [
-        "中断响应",
-        "处理过程"
-      ],
-      "importance": 3,
-      "status": "active",
-      "note": "考纲领会；教材第69—70页（PDF第76—77页）",
-      "createdAt": 1785370000079,
-      "updatedAt": 1785370000079
-    },
-    {
-      "id": "card_os_02031",
-      "subjectId": "subject_operating_system_13180",
-      "chapterId": "chapter_os_02_environment",
-      "question": "一次完整中断处理结束时，系统如何返回原程序？",
-      "answer": "中断处理程序执行中断返回指令，处理器从系统堆栈恢复原程序上下文和处理器状态，恢复PSW与PC，再从中断点继续执行。",
-      "tags": [
-        "中断处理",
-        "中断返回"
-      ],
-      "importance": 3,
-      "status": "active",
-      "note": "教材第71页（PDF第78页）",
-      "createdAt": 1785370000080,
-      "updatedAt": 1785370000080
-    },
-    {
-      "id": "card_os_02032",
-      "subjectId": "subject_operating_system_13180",
-      "chapterId": "chapter_os_02_environment",
-      "question": "时钟中断处理程序通常承担哪些工作？",
-      "answer": "维护软件时钟和时间片、必要时激活调度程序、定时激活系统任务，并支持系统心跳等实时处理。",
-      "tags": [
-        "中断处理",
-        "时钟中断"
+        "系统调用"
       ],
       "importance": 2,
       "status": "active",
-      "note": "教材第72页（PDF第79页）",
-      "createdAt": 1785370000081,
-      "updatedAt": 1785370000081
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第5-9页",
+      "createdAt": 1787417600030,
+      "updatedAt": 1787417600030
     },
     {
-      "id": "card_os_02033",
-      "subjectId": "subject_operating_system_13180",
-      "chapterId": "chapter_os_02_environment",
-      "question": "多级中断系统为什么要设置中断优先级？",
-      "answer": "用于按中断的紧急程度和重要性决定处理次序；多个请求同时出现时，CPU优先响应高于当前程序级别的最高优先级中断。",
+      "id": "preset_operating_system_card_031",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_02_environment",
+      "parentCardId": "preset_operating_system_card_030",
+      "connection": "沿“02 运行环境与运行机制”的知识脉络继续学习。",
+      "question": "硬件中断响应阶段完成哪些工作？",
+      "answer": "在指令周期末扫描中断、把PSW和PC压栈保护断点、按中断号查询中断向量表，再设置PC和内核态PSW进入服务程序。",
       "tags": [
-        "中断优先级",
-        "多级中断"
+        "中断响应",
+        "硬件"
       ],
       "importance": 3,
       "status": "active",
-      "note": "教材第73页（PDF第80页）",
-      "createdAt": 1785370000082,
-      "updatedAt": 1785370000082
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第5-9页",
+      "createdAt": 1787417600031,
+      "updatedAt": 1787417600031
     },
     {
-      "id": "card_os_02034",
-      "subjectId": "subject_operating_system_13180",
-      "chapterId": "chapter_os_02_environment",
-      "question": "同一优先级的多个中断同时到达时，可采用哪两种处理办法？",
-      "answer": "固定优先级法，或按表格依次响应的轮转法。",
+      "id": "preset_operating_system_card_032",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_02_environment",
+      "parentCardId": "preset_operating_system_card_031",
+      "connection": "沿“02 运行环境与运行机制”的知识脉络继续学习。",
+      "question": "软件中断处理程序完成哪些工作？",
+      "answer": "保存通用寄存器、执行具体服务、恢复寄存器，再执行中断返回指令，由硬件弹出原PSW和PC继续被中断程序。",
+      "tags": [
+        "中断处理",
+        "软件"
+      ],
+      "importance": 3,
+      "status": "active",
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第5-9页",
+      "createdAt": 1787417600032,
+      "updatedAt": 1787417600032
+    },
+    {
+      "id": "preset_operating_system_card_033",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_02_environment",
+      "parentCardId": "preset_operating_system_card_032",
+      "connection": "沿“02 运行环境与运行机制”的知识脉络继续学习。",
+      "question": "中断优先级、屏蔽和嵌套分别解决什么问题？",
+      "answer": "优先级决定多个中断的紧迫顺序；屏蔽位使CPU暂不响应某类可屏蔽中断；嵌套允许高优先级中断暂停低优先级服务程序。",
       "tags": [
         "中断优先级",
-        "轮转"
+        "中断嵌套"
       ],
       "importance": 2,
       "status": "active",
-      "note": "教材第73页（PDF第80页）",
-      "createdAt": 1785370000083,
-      "updatedAt": 1785370000083
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第5-9页",
+      "createdAt": 1787417600033,
+      "updatedAt": 1787417600033
     },
     {
-      "id": "card_os_02035",
-      "subjectId": "subject_operating_system_13180",
-      "chapterId": "chapter_os_02_environment",
-      "question": "什么是中断屏蔽？",
-      "answer": "通过PSW中的中断屏蔽位，允许或禁止CPU响应某些类别的中断；不可屏蔽中断不受该设置影响。",
+      "id": "preset_operating_system_card_034",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_02_environment",
+      "parentCardId": "preset_operating_system_card_033",
+      "connection": "沿“02 运行环境与运行机制”的知识脉络继续学习。",
+      "question": "程序控制I/O方式为什么效率低？",
+      "answer": "CPU不断轮询设备状态并忙等待，数据传输期间CPU与设备串行工作，大量处理器时间被浪费。",
       "tags": [
-        "中断屏蔽",
-        "PSW"
+        "I/O控制",
+        "轮询"
       ],
-      "importance": 3,
+      "importance": 2,
       "status": "active",
-      "note": "教材第74页（PDF第81页）",
-      "createdAt": 1785370000084,
-      "updatedAt": 1785370000084
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第5-9页",
+      "createdAt": 1787417600034,
+      "updatedAt": 1787417600034
     },
     {
-      "id": "card_os_02036",
-      "subjectId": "subject_operating_system_13180",
-      "chapterId": "chapter_os_02_environment",
-      "question": "什么是中断嵌套？",
-      "answer": "允许高优先级中断打断低优先级中断的处理过程，从而形成多层中断处理。",
+      "id": "preset_operating_system_card_035",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_02_environment",
+      "parentCardId": "preset_operating_system_card_034",
+      "connection": "沿“02 运行环境与运行机制”的知识脉络继续学习。",
+      "question": "中断控制I/O方式的优点和局限是什么？",
+      "answer": "CPU发出命令后可执行其他任务，设备就绪时再中断通知，实现部分并行；但每个字或字节都要中断，数据量大时开销很高。",
       "tags": [
-        "中断嵌套",
-        "中断优先级"
+        "I/O控制",
+        "中断方式"
       ],
-      "importance": 3,
+      "importance": 2,
       "status": "active",
-      "note": "教材第74页（PDF第81页）",
-      "createdAt": 1785370000085,
-      "updatedAt": 1785370000085
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第5-9页",
+      "createdAt": 1787417600035,
+      "updatedAt": 1787417600035
     },
     {
-      "id": "card_os_02037",
-      "subjectId": "subject_operating_system_13180",
-      "chapterId": "chapter_os_02_environment",
-      "question": "中断嵌套为什么使用系统堆栈保存现场？",
-      "answer": "因为现场的恢复次序与保存次序相反，符合后进先出的堆栈特性；系统堆栈位于系统空间，可防止现场被破坏。",
+      "id": "preset_operating_system_card_036",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_02_environment",
+      "parentCardId": "preset_operating_system_card_035",
+      "connection": "沿“02 运行环境与运行机制”的知识脉络继续学习。",
+      "question": "DMA方式如何减少CPU负担？",
+      "answer": "DMA控制器直接在设备和内存之间传送整块数据，CPU只在开始时设置参数、结束时处理一次中断。",
       "tags": [
-        "中断嵌套",
-        "系统堆栈"
-      ],
-      "importance": 3,
-      "status": "active",
-      "note": "教材第75页（PDF第82页）",
-      "createdAt": 1785370000086,
-      "updatedAt": 1785370000086
-    },
-    {
-      "id": "card_os_02038",
-      "subjectId": "subject_operating_system_13180",
-      "chapterId": "chapter_os_02_environment",
-      "question": "通道是什么，它怎样提高I/O效率？",
-      "answer": "通道是独立于CPU、专门负责I/O数据传输的处理单元，也称I/O处理机；它代替CPU控制外设，使CPU与外设能够并行工作。",
-      "tags": [
-        "I/O",
-        "通道"
-      ],
-      "importance": 3,
-      "status": "active",
-      "note": "教材第76页（PDF第83页）",
-      "createdAt": 1785370000087,
-      "updatedAt": 1785370000087
-    },
-    {
-      "id": "card_os_02039",
-      "subjectId": "subject_operating_system_13180",
-      "chapterId": "chapter_os_02_environment",
-      "question": "通道控制一次I/O操作的基本过程是什么？",
-      "answer": "CPU执行启动I/O指令并把外设控制权交给通道；通道独立控制设备及其与内存的数据传输；完成后设备产生I/O中断，由操作系统处理。",
-      "tags": [
-        "I/O",
-        "通道",
-        "工作过程"
-      ],
-      "importance": 3,
-      "status": "active",
-      "note": "教材第76页（PDF第83页）",
-      "createdAt": 1785370000088,
-      "updatedAt": 1785370000088
-    },
-    {
-      "id": "card_os_02040",
-      "subjectId": "subject_operating_system_13180",
-      "chapterId": "chapter_os_02_environment",
-      "question": "DMA技术的基本工作方式是什么？",
-      "answer": "CPU向DMA控制器给出设备地址、内存地址、数据长度和读写方向后继续执行其他工作；DMA控制器自动完成内存与I/O单元间的成块传送，结束时中断CPU。",
-      "tags": [
-        "I/O",
-        "DMA"
-      ],
-      "importance": 3,
-      "status": "active",
-      "note": "教材第76—77页（PDF第83—84页）",
-      "createdAt": 1785370000089,
-      "updatedAt": 1785370000089
-    },
-    {
-      "id": "card_os_02041",
-      "subjectId": "subject_operating_system_13180",
-      "chapterId": "chapter_os_02_environment",
-      "question": "DMA与CPU为什么不是完全并行的？",
-      "answer": "DMA传送和CPU访问内存都可能使用系统总线，二者会发生总线竞争；DMA占用总线时CPU需短暂等待。",
-      "tags": [
-        "I/O",
         "DMA",
-        "总线竞争"
-      ],
-      "importance": 2,
-      "status": "active",
-      "note": "教材第77页（PDF第84页）",
-      "createdAt": 1785370000090,
-      "updatedAt": 1785370000090
-    },
-    {
-      "id": "card_os_02042",
-      "subjectId": "subject_operating_system_13180",
-      "chapterId": "chapter_os_02_environment",
-      "question": "缓冲技术的根本作用是什么？",
-      "answer": "用专门存储区域暂存数据，缓解CPU与设备或不同设备之间的数据处理、传输速度不匹配问题。",
-      "tags": [
-        "I/O",
-        "缓冲技术"
+        "I/O控制"
       ],
       "importance": 3,
       "status": "active",
-      "note": "教材第77页（PDF第84页）",
-      "createdAt": 1785370000091,
-      "updatedAt": 1785370000091
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第5-9页",
+      "createdAt": 1787417600036,
+      "updatedAt": 1787417600036
     },
     {
-      "id": "card_os_02043",
-      "subjectId": "subject_operating_system_13180",
-      "chapterId": "chapter_os_02_environment",
-      "question": "为什么多缓冲区通常比单缓冲区更能提高设备利用率？",
-      "answer": "单缓冲时，设备装满缓冲区后必须等待CPU取完数据；多缓冲可让设备向一个缓冲区传输的同时，CPU处理另一个缓冲区的数据。",
+      "id": "preset_operating_system_card_037",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_02_environment",
+      "parentCardId": "preset_operating_system_card_036",
+      "connection": "沿“02 运行环境与运行机制”的知识脉络继续学习。",
+      "question": "通道控制方式的核心特点是什么？",
+      "answer": "通道是具有通道指令和程序的专用I/O处理机，CPU启动后由通道独立完成复杂I/O序列，实现CPU、通道和设备并行。",
       "tags": [
-        "I/O",
-        "缓冲技术",
-        "多缓冲"
-      ],
-      "importance": 2,
-      "status": "active",
-      "note": "教材第77页（PDF第84页）",
-      "createdAt": 1785370000092,
-      "updatedAt": 1785370000092
-    },
-    {
-      "id": "card_os_02044",
-      "subjectId": "subject_operating_system_13180",
-      "chapterId": "chapter_os_02_environment",
-      "question": "时钟对操作系统有哪些主要作用？",
-      "answer": "防止作业陷入死循环、支持时间片轮转、为实时设备提供时间信号、定时唤醒事件、记录设备使用和事件时间，并提供绝对日期时间。",
-      "tags": [
-        "时钟",
-        "作用"
-      ],
-      "importance": 2,
-      "status": "active",
-      "note": "教材第78—79页（PDF第85—86页）",
-      "createdAt": 1785370000093,
-      "updatedAt": 1785370000093
-    },
-    {
-      "id": "card_os_02045",
-      "subjectId": "subject_operating_system_13180",
-      "chapterId": "chapter_os_02_environment",
-      "question": "硬件时钟和软件时钟分别如何实现？",
-      "answer": "硬件时钟由晶体振荡器产生固定频率脉冲并更新时钟寄存器；软件时钟用内存单元模拟时钟寄存器，通过程序按脉冲计数更新。",
-      "tags": [
-        "时钟",
-        "硬件时钟",
-        "软件时钟"
-      ],
-      "importance": 2,
-      "status": "active",
-      "note": "教材第79页（PDF第86页）",
-      "createdAt": 1785370000094,
-      "updatedAt": 1785370000094
-    },
-    {
-      "id": "card_os_02046",
-      "subjectId": "subject_operating_system_13180",
-      "chapterId": "chapter_os_02_environment",
-      "question": "绝对时钟与相对时钟有什么区别？",
-      "answer": "绝对时钟持续运行，提供年、月、日、时、分、秒等基准时间；相对时钟只计算从某初值开始的时间间隔，到期时触发时钟中断。",
-      "tags": [
-        "时钟",
-        "绝对时钟",
-        "相对时钟"
-      ],
-      "importance": 2,
-      "status": "active",
-      "note": "教材第79页（PDF第86页）",
-      "createdAt": 1785370000095,
-      "updatedAt": 1785370000095
-    },
-    {
-      "id": "card_os_02047",
-      "subjectId": "subject_operating_system_13180",
-      "chapterId": "chapter_os_02_environment",
-      "question": "什么是系统调用？",
-      "answer": "系统调用是用户程序调用操作系统所提供子功能的一种特殊过程调用，通常由特殊机器指令实现，并使处理器由用户态陷入内核态。",
-      "tags": [
-        "系统调用",
-        "定义"
+        "通道",
+        "I/O控制"
       ],
       "importance": 3,
       "status": "active",
-      "note": "第二章重点；教材第79—80页（PDF第86—87页）",
-      "createdAt": 1785370000096,
-      "updatedAt": 1785370000096
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第5-9页",
+      "createdAt": 1787417600037,
+      "updatedAt": 1787417600037
     },
     {
-      "id": "card_os_02048",
-      "subjectId": "subject_operating_system_13180",
-      "chapterId": "chapter_os_02_environment",
-      "question": "为什么系统调用也称为广义指令？",
-      "answer": "它以操作系统的软件子程序扩充机器指令功能，使用户能请求硬件机器指令之外的系统服务；与硬件直接实现的机器指令性质不同。",
+      "id": "preset_operating_system_card_038",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_02_environment",
+      "parentCardId": "preset_operating_system_card_037",
+      "connection": "沿“02 运行环境与运行机制”的知识脉络继续学习。",
+      "question": "缓冲技术和系统时钟各有什么作用？",
+      "answer": "缓冲区缓和CPU与外设速度不匹配、减少中断并协调I/O；时钟维护时间、驱动时间片轮转、定时任务和实时控制。",
       "tags": [
-        "系统调用",
-        "广义指令"
+        "缓冲",
+        "时钟"
       ],
       "importance": 2,
       "status": "active",
-      "note": "教材第80页（PDF第87页）",
-      "createdAt": 1785370000097,
-      "updatedAt": 1785370000097
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第5-9页",
+      "createdAt": 1787417600038,
+      "updatedAt": 1787417600038
     },
     {
-      "id": "card_os_02049",
-      "subjectId": "subject_operating_system_13180",
-      "chapterId": "chapter_os_02_environment",
-      "question": "通用操作系统的系统调用通常分为哪些类别？",
-      "answer": "进程控制、文件操作、进程通信、设备管理和信息维护。",
+      "id": "preset_operating_system_card_039",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_02_environment",
+      "parentCardId": "preset_operating_system_card_038",
+      "connection": "沿“02 运行环境与运行机制”的知识脉络继续学习。",
+      "question": "系统调用与一般过程调用的核心区别是什么？",
+      "answer": "一般过程调用通常不改变特权状态并以普通跳转完成；系统调用通过陷阱进入内核态，返回前还可能触发调度，不一定立即回到原进程。",
       "tags": [
         "系统调用",
-        "分类"
-      ],
-      "importance": 2,
-      "status": "active",
-      "note": "教材第80页（PDF第87页）",
-      "createdAt": 1785370000098,
-      "updatedAt": 1785370000098
-    },
-    {
-      "id": "card_os_02050",
-      "subjectId": "subject_operating_system_13180",
-      "chapterId": "chapter_os_02_environment",
-      "question": "系统调用与一般过程调用在运行状态上有什么区别？",
-      "answer": "一般过程调用的调用者和被调用者处于相同状态；系统调用的调用程序运行在用户态，被调用的操作系统程序运行在内核态。",
-      "tags": [
-        "系统调用",
-        "过程调用",
-        "辨析"
+        "过程调用"
       ],
       "importance": 3,
       "status": "active",
-      "note": "教材第80—81页（PDF第87—88页）",
-      "createdAt": 1785370000099,
-      "updatedAt": 1785370000099
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第5-9页",
+      "createdAt": 1787417600039,
+      "updatedAt": 1787417600039
     },
     {
-      "id": "card_os_02051",
-      "subjectId": "subject_operating_system_13180",
-      "chapterId": "chapter_os_02_environment",
-      "question": "系统调用与一般过程调用在控制转移方式上有什么区别？",
-      "answer": "一般过程调用可直接转向被调用过程；系统调用不能从用户程序直接跳到内核程序，必须通过软中断或陷入机制切换到内核态，再由内核分派。",
+      "id": "preset_operating_system_card_040",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_02_environment",
+      "parentCardId": "preset_operating_system_card_039",
+      "connection": "沿“02 运行环境与运行机制”的知识脉络继续学习。",
+      "question": "一次系统调用的完整流程是什么？",
+      "answer": "用户准备参数和调用号，执行访管指令；硬件保存PSW和PC并切入内核态；内核按调用号分发服务，写回结果、检查调度，恢复现场后返回用户态。",
       "tags": [
-        "系统调用",
-        "过程调用",
+        "系统调用流程",
         "状态转换"
       ],
       "importance": 3,
       "status": "active",
-      "note": "教材第81页（PDF第88页）",
-      "createdAt": 1785370000100,
-      "updatedAt": 1785370000100
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第5-9页",
+      "createdAt": 1787417600040,
+      "updatedAt": 1787417600040
     },
     {
-      "id": "card_os_02052",
-      "subjectId": "subject_operating_system_13180",
-      "chapterId": "chapter_os_02_environment",
-      "question": "抢占式调度系统中，系统调用结束后一定立即返回原调用进程吗？",
-      "answer": "不一定。系统会比较就绪进程优先级；原调用进程仍为最高优先级才继续执行，否则重新调度，并把调用进程放入就绪队列。",
+      "id": "preset_operating_system_card_041",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_03_process_thread",
+      "question": "程序顺序执行和并发执行各有什么特征？",
+      "answer": "顺序执行具有顺序性、封闭性和可再现性；并发执行具有间断性、失去封闭性和不可再现性。",
       "tags": [
-        "系统调用",
-        "返回",
-        "调度"
+        "程序执行",
+        "并发"
+      ],
+      "importance": 3,
+      "status": "active",
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第9-13页",
+      "createdAt": 1787417600041,
+      "updatedAt": 1787417600041
+    },
+    {
+      "id": "preset_operating_system_card_042",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_03_process_thread",
+      "parentCardId": "preset_operating_system_card_041",
+      "connection": "沿“03 进程与线程模型”的知识脉络继续学习。",
+      "question": "什么是进程？",
+      "answer": "进程是具有独立功能的程序在某个数据集合上的一次动态执行过程，是操作系统资源分配和调度的独立单位。",
+      "tags": [
+        "进程定义",
+        "进程模型"
+      ],
+      "importance": 3,
+      "status": "active",
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第9-13页",
+      "createdAt": 1787417600042,
+      "updatedAt": 1787417600042
+    },
+    {
+      "id": "preset_operating_system_card_043",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_03_process_thread",
+      "parentCardId": "preset_operating_system_card_042",
+      "connection": "沿“03 进程与线程模型”的知识脉络继续学习。",
+      "question": "进程实体由什么组成？进程与程序有何区别？",
+      "answer": "进程实体由程序段、数据段和PCB组成。程序是外存中的静态指令集合；进程是有生命周期、会占用资源的动态执行过程。",
+      "tags": [
+        "进程组成",
+        "程序"
+      ],
+      "importance": 3,
+      "status": "active",
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第9-13页",
+      "createdAt": 1787417600043,
+      "updatedAt": 1787417600043
+    },
+    {
+      "id": "preset_operating_system_card_044",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_03_process_thread",
+      "parentCardId": "preset_operating_system_card_043",
+      "connection": "沿“03 进程与线程模型”的知识脉络继续学习。",
+      "question": "进程的四大特征是什么？",
+      "answer": "动态性、并发性、独立性和异步性，其中动态性是最基本特征。",
+      "tags": [
+        "进程特征",
+        "进程模型"
+      ],
+      "importance": 3,
+      "status": "active",
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第9-13页",
+      "createdAt": 1787417600044,
+      "updatedAt": 1787417600044
+    },
+    {
+      "id": "preset_operating_system_card_045",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_03_process_thread",
+      "parentCardId": "preset_operating_system_card_044",
+      "connection": "沿“03 进程与线程模型”的知识脉络继续学习。",
+      "question": "进程的运行态、就绪态和阻塞态分别是什么？",
+      "answer": "运行态正在占用CPU；就绪态已具备除CPU外的运行条件；阻塞态因等待事件或资源而暂停。",
+      "tags": [
+        "进程状态",
+        "三态模型"
+      ],
+      "importance": 3,
+      "status": "active",
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第9-13页",
+      "createdAt": 1787417600045,
+      "updatedAt": 1787417600045
+    },
+    {
+      "id": "preset_operating_system_card_046",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_03_process_thread",
+      "parentCardId": "preset_operating_system_card_045",
+      "connection": "沿“03 进程与线程模型”的知识脉络继续学习。",
+      "question": "进程三种基本状态如何转换？",
+      "answer": "调度使就绪转运行；时间片到或被抢占使运行转就绪；等待事件使运行转阻塞；事件完成使阻塞转就绪。阻塞不能直接转运行。",
+      "tags": [
+        "状态转换",
+        "进程调度"
+      ],
+      "importance": 3,
+      "status": "active",
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第9-13页",
+      "createdAt": 1787417600046,
+      "updatedAt": 1787417600046
+    },
+    {
+      "id": "preset_operating_system_card_047",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_03_process_thread",
+      "parentCardId": "preset_operating_system_card_046",
+      "connection": "沿“03 进程与线程模型”的知识脉络继续学习。",
+      "question": "为什么引入挂起状态？挂起状态有哪两种？",
+      "answer": "内存紧张时把暂时不能运行的进程换到外存以释放内存；挂起状态分为就绪挂起和阻塞挂起。",
+      "tags": [
+        "挂起",
+        "七状态模型"
       ],
       "importance": 2,
       "status": "active",
-      "note": "易错点；教材第81页（PDF第88页）",
-      "createdAt": 1785370000101,
-      "updatedAt": 1785370000101
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第9-13页",
+      "createdAt": 1787417600047,
+      "updatedAt": 1787417600047
     },
     {
-      "id": "card_os_02053",
-      "subjectId": "subject_operating_system_13180",
-      "chapterId": "chapter_os_02_environment",
-      "question": "一次系统调用的完整处理过程是什么？",
-      "answer": "①用户程序设置系统调用号和参数并执行访管/陷入指令；②硬件保存现场并切换到内核态；③陷入处理机构按功能号查询入口表；④执行相应内核子程序；⑤保存返回结果、恢复现场；⑥返回用户态继续执行，或按调度结果运行其他进程。",
+      "id": "preset_operating_system_card_048",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_03_process_thread",
+      "parentCardId": "preset_operating_system_card_047",
+      "connection": "沿“03 进程与线程模型”的知识脉络继续学习。",
+      "question": "PCB的地位和主要内容是什么？",
+      "answer": "PCB是进程存在的唯一标志，包含标识符、处理器现场、调度信息以及程序数据地址、资源清单和队列指针等控制信息。",
       "tags": [
-        "系统调用",
-        "处理过程",
-        "综合应用"
+        "PCB",
+        "进程管理"
       ],
       "importance": 3,
       "status": "active",
-      "note": "考纲综合应用；教材第81—82页（PDF第88—89页）",
-      "createdAt": 1785370000102,
-      "updatedAt": 1785370000102
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第9-13页",
+      "createdAt": 1787417600048,
+      "updatedAt": 1787417600048
     },
     {
-      "id": "card_os_02054",
-      "subjectId": "subject_operating_system_13180",
-      "chapterId": "chapter_os_02_environment",
-      "question": "系统调用号在系统调用处理中起什么作用？",
-      "answer": "它标识用户请求的具体系统服务；陷入处理程序用系统调用号查询系统调用入口地址表，找到并执行对应的内核子程序。",
+      "id": "preset_operating_system_card_049",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_03_process_thread",
+      "parentCardId": "preset_operating_system_card_048",
+      "connection": "沿“03 进程与线程模型”的知识脉络继续学习。",
+      "question": "PCB有哪三种常见组织方式？",
+      "answer": "线性表、链接队列和索引表。链接方式常把同状态PCB组成就绪或阻塞队列。",
       "tags": [
-        "系统调用",
-        "系统调用号",
-        "分派"
+        "PCB组织",
+        "数据结构"
+      ],
+      "importance": 2,
+      "status": "active",
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第9-13页",
+      "createdAt": 1787417600049,
+      "updatedAt": 1787417600049
+    },
+    {
+      "id": "preset_operating_system_card_050",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_03_process_thread",
+      "parentCardId": "preset_operating_system_card_049",
+      "connection": "沿“03 进程与线程模型”的知识脉络继续学习。",
+      "question": "什么是原语，如何保证其原子性？",
+      "answer": "原语是完成特定功能且执行过程不可分割的指令序列，通常在内核态通过关中断和开中断保证原子执行。",
+      "tags": [
+        "原语",
+        "原子操作"
       ],
       "importance": 3,
       "status": "active",
-      "note": "教材第81页（PDF第88页）",
-      "createdAt": 1785370000103,
-      "updatedAt": 1785370000103
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第9-13页",
+      "createdAt": 1787417600050,
+      "updatedAt": 1787417600050
     },
     {
-      "id": "card_os_02055",
-      "subjectId": "subject_operating_system_13180",
-      "chapterId": "chapter_os_02_environment",
-      "question": "系统调用参数常用哪些方式传递？",
-      "answer": "可由陷入指令直接携带、通过通用寄存器传递，或通过内存中的专用堆栈区传递；参数较多时通常使用专用堆栈。",
+      "id": "preset_operating_system_card_051",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_03_process_thread",
+      "parentCardId": "preset_operating_system_card_050",
+      "connection": "沿“03 进程与线程模型”的知识脉络继续学习。",
+      "question": "创建原语和撤销原语分别执行哪些步骤？",
+      "answer": "创建时申请空白PCB、分配资源、初始化并插入就绪队列；撤销时终止子进程、释放全部资源、移出队列并归还PCB。",
       "tags": [
-        "系统调用",
-        "参数传递"
+        "进程控制",
+        "创建撤销"
+      ],
+      "importance": 2,
+      "status": "active",
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第9-13页",
+      "createdAt": 1787417600051,
+      "updatedAt": 1787417600051
+    },
+    {
+      "id": "preset_operating_system_card_052",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_03_process_thread",
+      "parentCardId": "preset_operating_system_card_051",
+      "connection": "沿“03 进程与线程模型”的知识脉络继续学习。",
+      "question": "阻塞原语和唤醒原语分别做什么？",
+      "answer": "阻塞原语保存现场、置阻塞态、加入阻塞队列并调度；唤醒原语把进程移出阻塞队列、置就绪态并加入就绪队列。",
+      "tags": [
+        "进程控制",
+        "阻塞唤醒"
       ],
       "importance": 3,
       "status": "active",
-      "note": "教材第82页（PDF第89页）",
-      "createdAt": 1785370000104,
-      "updatedAt": 1785370000104
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第9-13页",
+      "createdAt": 1787417600052,
+      "updatedAt": 1787417600052
+    },
+    {
+      "id": "preset_operating_system_card_053",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_03_process_thread",
+      "parentCardId": "preset_operating_system_card_052",
+      "connection": "沿“03 进程与线程模型”的知识脉络继续学习。",
+      "question": "fork()的返回值如何区分父进程和子进程？",
+      "answer": "fork创建几乎相同的子进程；在父进程中返回子进程PID，在子进程中返回0，失败返回-1。",
+      "tags": [
+        "fork",
+        "Linux进程"
+      ],
+      "importance": 3,
+      "status": "active",
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第9-13页",
+      "createdAt": 1787417600053,
+      "updatedAt": 1787417600053
+    },
+    {
+      "id": "preset_operating_system_card_054",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_03_process_thread",
+      "parentCardId": "preset_operating_system_card_053",
+      "connection": "沿“03 进程与线程模型”的知识脉络继续学习。",
+      "question": "exec、exit和wait系列调用分别有什么作用？",
+      "answer": "exec用新程序替换当前地址空间；exit终止进程并传递退出状态；wait或waitpid等待并回收子进程，避免僵尸进程。",
+      "tags": [
+        "进程系统调用",
+        "Linux"
+      ],
+      "importance": 3,
+      "status": "active",
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第9-13页",
+      "createdAt": 1787417600054,
+      "updatedAt": 1787417600054
+    },
+    {
+      "id": "preset_operating_system_card_055",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_03_process_thread",
+      "parentCardId": "preset_operating_system_card_054",
+      "connection": "沿“03 进程与线程模型”的知识脉络继续学习。",
+      "question": "为什么引入线程？",
+      "answer": "传统进程的创建、销毁和切换开销较大。线程把资源拥有与独立调度分开：进程负责拥有资源，线程成为独立调度单位。",
+      "tags": [
+        "线程",
+        "引入动机"
+      ],
+      "importance": 3,
+      "status": "active",
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第9-13页",
+      "createdAt": 1787417600055,
+      "updatedAt": 1787417600055
+    },
+    {
+      "id": "preset_operating_system_card_056",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_03_process_thread",
+      "parentCardId": "preset_operating_system_card_055",
+      "connection": "沿“03 进程与线程模型”的知识脉络继续学习。",
+      "question": "同一进程中的线程哪些内容私有，哪些内容共享？",
+      "answer": "线程私有TID、PC、寄存器和栈；共享进程代码、全局数据、打开文件、信号量和网络套接字等资源。",
+      "tags": [
+        "线程资源",
+        "共享"
+      ],
+      "importance": 3,
+      "status": "active",
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第9-13页",
+      "createdAt": 1787417600056,
+      "updatedAt": 1787417600056
+    },
+    {
+      "id": "preset_operating_system_card_057",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_03_process_thread",
+      "parentCardId": "preset_operating_system_card_056",
+      "connection": "沿“03 进程与线程模型”的知识脉络继续学习。",
+      "question": "进程与线程在资源、切换和通信上有何区别？",
+      "answer": "进程是资源拥有单位且切换开销大，通信需IPC；线程只保留少量运行资源，切换快，同进程线程可直接共享地址空间。",
+      "tags": [
+        "进程线程对比",
+        "调度单位"
+      ],
+      "importance": 3,
+      "status": "active",
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第9-13页",
+      "createdAt": 1787417600057,
+      "updatedAt": 1787417600057
+    },
+    {
+      "id": "preset_operating_system_card_058",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_03_process_thread",
+      "parentCardId": "preset_operating_system_card_057",
+      "connection": "沿“03 进程与线程模型”的知识脉络继续学习。",
+      "question": "用户级线程的机制、优点和缺点是什么？",
+      "answer": "由用户线程库管理，切换无需入内核，速度快；但一个线程的阻塞调用会阻塞整个进程，且不能利用多核并行。",
+      "tags": [
+        "用户级线程",
+        "线程实现"
+      ],
+      "importance": 2,
+      "status": "active",
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第9-13页",
+      "createdAt": 1787417600058,
+      "updatedAt": 1787417600058
+    },
+    {
+      "id": "preset_operating_system_card_059",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_03_process_thread",
+      "parentCardId": "preset_operating_system_card_058",
+      "connection": "沿“03 进程与线程模型”的知识脉络继续学习。",
+      "question": "内核级线程与混合线程模型各有什么特点？",
+      "answer": "内核级线程由内核管理，可多核并行且单线程阻塞不影响其他线程，但切换开销较大；混合模型把多个用户线程映射到多个内核线程。",
+      "tags": [
+        "内核级线程",
+        "混合模型"
+      ],
+      "importance": 3,
+      "status": "active",
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第9-13页",
+      "createdAt": 1787417600059,
+      "updatedAt": 1787417600059
+    },
+    {
+      "id": "preset_operating_system_card_060",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_03_process_thread",
+      "parentCardId": "preset_operating_system_card_059",
+      "connection": "沿“03 进程与线程模型”的知识脉络继续学习。",
+      "question": "Pthreads常用API与协程的特点是什么？",
+      "answer": "pthread_create创建线程，pthread_exit结束线程，pthread_join等待回收，pthread_yield让出CPU。协程是更轻量的用户态协作式执行单元，适合高并发I/O。",
+      "tags": [
+        "Pthreads",
+        "协程"
+      ],
+      "importance": 2,
+      "status": "active",
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第9-13页",
+      "createdAt": 1787417600060,
+      "updatedAt": 1787417600060
+    },
+    {
+      "id": "preset_operating_system_card_061",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_04_scheduling",
+      "question": "进程调度的主要功能和触发时机是什么？",
+      "answer": "调度记录进程状态、从就绪队列选择进程、切换CPU现场。它可在进程终止、阻塞、中断异常、抢占或阻塞进程被唤醒时触发。",
+      "tags": [
+        "进程调度",
+        "触发时机"
+      ],
+      "importance": 3,
+      "status": "active",
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第13-16页",
+      "createdAt": 1787417600061,
+      "updatedAt": 1787417600061
+    },
+    {
+      "id": "preset_operating_system_card_062",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_04_scheduling",
+      "parentCardId": "preset_operating_system_card_061",
+      "connection": "沿“04 进程与线程调度”的知识脉络继续学习。",
+      "question": "非抢占调度与抢占调度有什么区别？",
+      "answer": "非抢占方式让进程运行到完成或主动阻塞；抢占方式可因时间片到或更高优先级进程就绪而强制收回CPU。",
+      "tags": [
+        "抢占",
+        "调度机制"
+      ],
+      "importance": 3,
+      "status": "active",
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第13-16页",
+      "createdAt": 1787417600062,
+      "updatedAt": 1787417600062
+    },
+    {
+      "id": "preset_operating_system_card_063",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_04_scheduling",
+      "parentCardId": "preset_operating_system_card_062",
+      "connection": "沿“04 进程与线程调度”的知识脉络继续学习。",
+      "question": "高级、中级和低级调度分别负责什么？",
+      "answer": "高级调度决定哪些外存作业进入内存；中级调度负责进程挂起与换入；低级调度从就绪队列选择进程或线程使用CPU。",
+      "tags": [
+        "三级调度",
+        "调度层次"
+      ],
+      "importance": 3,
+      "status": "active",
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第13-16页",
+      "createdAt": 1787417600063,
+      "updatedAt": 1787417600063
+    },
+    {
+      "id": "preset_operating_system_card_064",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_04_scheduling",
+      "parentCardId": "preset_operating_system_card_063",
+      "connection": "沿“04 进程与线程调度”的知识脉络继续学习。",
+      "question": "调度算法常用的性能评价指标有哪些？",
+      "answer": "CPU利用率、系统吞吐量、周转时间、平均周转时间、带权周转时间、平均带权周转时间和响应时间。",
+      "tags": [
+        "性能指标",
+        "调度算法"
+      ],
+      "importance": 3,
+      "status": "active",
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第13-16页",
+      "createdAt": 1787417600064,
+      "updatedAt": 1787417600064
+    },
+    {
+      "id": "preset_operating_system_card_065",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_04_scheduling",
+      "parentCardId": "preset_operating_system_card_064",
+      "connection": "沿“04 进程与线程调度”的知识脉络继续学习。",
+      "question": "FCFS调度的思想和优缺点是什么？",
+      "answer": "按到达就绪队列的先后次序非抢占调度，算法简单且有利于长作业，但短作业等待久、平均周转时间较长。",
+      "tags": [
+        "FCFS",
+        "调度算法"
+      ],
+      "importance": 2,
+      "status": "active",
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第13-16页",
+      "createdAt": 1787417600065,
+      "updatedAt": 1787417600065
+    },
+    {
+      "id": "preset_operating_system_card_066",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_04_scheduling",
+      "parentCardId": "preset_operating_system_card_065",
+      "connection": "沿“04 进程与线程调度”的知识脉络继续学习。",
+      "question": "SJF调度的思想和局限是什么？",
+      "answer": "优先运行估计服务时间最短的作业，理论上平均周转时间最短；但难准确预知运行时间，长作业还可能饥饿。",
+      "tags": [
+        "SJF",
+        "调度算法"
+      ],
+      "importance": 3,
+      "status": "active",
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第13-16页",
+      "createdAt": 1787417600066,
+      "updatedAt": 1787417600066
+    },
+    {
+      "id": "preset_operating_system_card_067",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_04_scheduling",
+      "parentCardId": "preset_operating_system_card_066",
+      "connection": "沿“04 进程与线程调度”的知识脉络继续学习。",
+      "question": "SRTF与SJF有什么关系？",
+      "answer": "SRTF是SJF的抢占版本。新进程到达时，如果其服务时间小于当前进程的剩余时间，就立即抢占CPU。",
+      "tags": [
+        "SRTF",
+        "抢占调度"
+      ],
+      "importance": 2,
+      "status": "active",
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第13-16页",
+      "createdAt": 1787417600067,
+      "updatedAt": 1787417600067
+    },
+    {
+      "id": "preset_operating_system_card_068",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_04_scheduling",
+      "parentCardId": "preset_operating_system_card_067",
+      "connection": "沿“04 进程与线程调度”的知识脉络继续学习。",
+      "question": "时间片轮转算法如何工作？",
+      "answer": "就绪进程按FCFS排队，每个进程最多运行一个时间片；时间片用完由时钟中断收回CPU，未完成进程进入队尾。",
+      "tags": [
+        "RR",
+        "时间片轮转"
+      ],
+      "importance": 3,
+      "status": "active",
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第13-16页",
+      "createdAt": 1787417600068,
+      "updatedAt": 1787417600068
+    },
+    {
+      "id": "preset_operating_system_card_069",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_04_scheduling",
+      "parentCardId": "preset_operating_system_card_068",
+      "connection": "沿“04 进程与线程调度”的知识脉络继续学习。",
+      "question": "时间片过大或过小分别有什么影响？",
+      "answer": "过大会使RR退化为FCFS；过小会导致上下文切换过于频繁。通常应略大于一次典型交互所需时间。",
+      "tags": [
+        "时间片",
+        "RR"
+      ],
+      "importance": 3,
+      "status": "active",
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第13-16页",
+      "createdAt": 1787417600069,
+      "updatedAt": 1787417600069
+    },
+    {
+      "id": "preset_operating_system_card_070",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_04_scheduling",
+      "parentCardId": "preset_operating_system_card_069",
+      "connection": "沿“04 进程与线程调度”的知识脉络继续学习。",
+      "question": "静态优先级、动态优先级和老化技术分别是什么？",
+      "answer": "静态优先级创建时确定且不变；动态优先级随CPU占用或等待时间调整；老化逐步提高长期等待进程的优先级以避免饥饿。",
+      "tags": [
+        "优先级调度",
+        "老化"
+      ],
+      "importance": 3,
+      "status": "active",
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第13-16页",
+      "createdAt": 1787417600070,
+      "updatedAt": 1787417600070
+    },
+    {
+      "id": "preset_operating_system_card_071",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_04_scheduling",
+      "parentCardId": "preset_operating_system_card_070",
+      "connection": "沿“04 进程与线程调度”的知识脉络继续学习。",
+      "question": "多级反馈队列如何调度进程？",
+      "answer": "设置多个优先级递减、时间片递增的队列；新进程进入最高队列，未完成则逐级下降，高优先级队列可抢占低级队列。",
+      "tags": [
+        "MFQ",
+        "多级反馈队列"
+      ],
+      "importance": 3,
+      "status": "active",
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第13-16页",
+      "createdAt": 1787417600071,
+      "updatedAt": 1787417600071
+    },
+    {
+      "id": "preset_operating_system_card_072",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_04_scheduling",
+      "parentCardId": "preset_operating_system_card_071",
+      "connection": "沿“04 进程与线程调度”的知识脉络继续学习。",
+      "question": "彩票调度与公平共享调度分别如何实现公平？",
+      "answer": "彩票调度按进程彩票份额随机分配CPU概率；公平共享调度按用户分组，确保不同用户按比例分享CPU。",
+      "tags": [
+        "彩票调度",
+        "公平共享"
+      ],
+      "importance": 2,
+      "status": "active",
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第13-16页",
+      "createdAt": 1787417600072,
+      "updatedAt": 1787417600072
+    },
+    {
+      "id": "preset_operating_system_card_073",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_04_scheduling",
+      "parentCardId": "preset_operating_system_card_072",
+      "connection": "沿“04 进程与线程调度”的知识脉络继续学习。",
+      "question": "Linux的SCHED_FIFO、SCHED_RR和SCHED_OTHER分别是什么？",
+      "answer": "SCHED_FIFO是实时先进先出策略，SCHED_RR是实时轮转策略，SCHED_OTHER是用nice值动态调整优先级的普通分时策略。",
+      "tags": [
+        "Linux调度",
+        "实时调度"
+      ],
+      "importance": 2,
+      "status": "active",
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第13-16页",
+      "createdAt": 1787417600073,
+      "updatedAt": 1787417600073
+    },
+    {
+      "id": "preset_operating_system_card_074",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_04_scheduling",
+      "parentCardId": "preset_operating_system_card_073",
+      "connection": "沿“04 进程与线程调度”的知识脉络继续学习。",
+      "question": "Windows线程调度机制有什么特点？",
+      "answer": "采用抢占式动态多级优先级，共32级；16-31为实时固定级，1-15为动态级，可因I/O和前台交互提升优先级。",
+      "tags": [
+        "Windows调度",
+        "优先级"
+      ],
+      "importance": 2,
+      "status": "active",
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第13-16页",
+      "createdAt": 1787417600074,
+      "updatedAt": 1787417600074
+    },
+    {
+      "id": "preset_operating_system_card_075",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_04_scheduling",
+      "parentCardId": "preset_operating_system_card_074",
+      "connection": "沿“04 进程与线程调度”的知识脉络继续学习。",
+      "question": "处理器亲和性有什么作用？",
+      "answer": "尽量让线程继续在同一CPU上运行，从而复用该CPU缓存中的数据，提高Cache命中率并减少迁移开销。",
+      "tags": [
+        "处理器亲和性",
+        "多处理器"
+      ],
+      "importance": 2,
+      "status": "active",
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第13-16页",
+      "createdAt": 1787417600075,
+      "updatedAt": 1787417600075
+    },
+    {
+      "id": "preset_operating_system_card_076",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_04_scheduling",
+      "parentCardId": "preset_operating_system_card_075",
+      "connection": "沿“04 进程与线程调度”的知识脉络继续学习。",
+      "question": "负载共享如何进行多处理器调度？",
+      "answer": "多个CPU共享一个全局就绪队列，各CPU空闲时从队列取任务，结构简单并能自动平衡负载。",
+      "tags": [
+        "负载共享",
+        "多处理器"
+      ],
+      "importance": 2,
+      "status": "active",
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第13-16页",
+      "createdAt": 1787417600076,
+      "updatedAt": 1787417600076
+    },
+    {
+      "id": "preset_operating_system_card_077",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_04_scheduling",
+      "parentCardId": "preset_operating_system_card_076",
+      "connection": "沿“04 进程与线程调度”的知识脉络继续学习。",
+      "question": "群调度与专用处理器分配分别适用于什么场景？",
+      "answer": "群调度把一组协作线程同时放到多个CPU运行以减少同步等待；专用分配在程序执行期间为其独占若干处理器。",
+      "tags": [
+        "群调度",
+        "专用处理器"
+      ],
+      "importance": 2,
+      "status": "active",
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第13-16页",
+      "createdAt": 1787417600077,
+      "updatedAt": 1787417600077
+    },
+    {
+      "id": "preset_operating_system_card_078",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_04_scheduling",
+      "parentCardId": "preset_operating_system_card_077",
+      "connection": "沿“04 进程与线程调度”的知识脉络继续学习。",
+      "question": "EDF实时调度的优先级规则是什么？",
+      "answer": "EDF采用动态优先级，绝对截止时间越早的任务优先级越高。",
+      "tags": [
+        "EDF",
+        "实时调度"
+      ],
+      "importance": 3,
+      "status": "active",
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第13-16页",
+      "createdAt": 1787417600078,
+      "updatedAt": 1787417600078
+    },
+    {
+      "id": "preset_operating_system_card_079",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_04_scheduling",
+      "parentCardId": "preset_operating_system_card_078",
+      "connection": "沿“04 进程与线程调度”的知识脉络继续学习。",
+      "question": "RMS实时调度的优先级规则是什么？",
+      "answer": "RMS采用静态优先级，周期越短、请求速率越高的周期任务优先级越高。",
+      "tags": [
+        "RMS",
+        "实时调度"
+      ],
+      "importance": 3,
+      "status": "active",
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第13-16页",
+      "createdAt": 1787417600079,
+      "updatedAt": 1787417600079
+    },
+    {
+      "id": "preset_operating_system_card_080",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_04_scheduling",
+      "parentCardId": "preset_operating_system_card_079",
+      "connection": "沿“04 进程与线程调度”的知识脉络继续学习。",
+      "question": "什么是优先级反转，如何解决？",
+      "answer": "高优先级任务等待低优先级任务持有的资源，而低优先级任务又被中优先级任务抢占。可用优先级继承或优先级天花板协议解决。",
+      "tags": [
+        "优先级反转",
+        "实时调度"
+      ],
+      "importance": 3,
+      "status": "active",
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第13-16页",
+      "createdAt": 1787417600080,
+      "updatedAt": 1787417600080
+    },
+    {
+      "id": "preset_operating_system_card_081",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_05_memory",
+      "question": "存储管理的主要任务是什么？",
+      "answer": "内存分配与回收、逻辑地址到物理地址的转换、存储保护，以及借助外存实现虚拟存储扩充。",
+      "tags": [
+        "存储管理",
+        "核心任务"
+      ],
+      "importance": 3,
+      "status": "active",
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第16-20页",
+      "createdAt": 1787417600081,
+      "updatedAt": 1787417600081
+    },
+    {
+      "id": "preset_operating_system_card_082",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_05_memory",
+      "parentCardId": "preset_operating_system_card_081",
+      "connection": "沿“05 存储管理”的知识脉络继续学习。",
+      "question": "名空间、逻辑地址和物理地址分别是什么？",
+      "answer": "名空间是源程序中的变量名、函数名和标号；逻辑地址是编译后以0为基准的相对地址；物理地址是内存单元的实际硬件地址。",
+      "tags": [
+        "地址空间",
+        "逻辑地址"
+      ],
+      "importance": 3,
+      "status": "active",
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第16-20页",
+      "createdAt": 1787417600082,
+      "updatedAt": 1787417600082
+    },
+    {
+      "id": "preset_operating_system_card_083",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_05_memory",
+      "parentCardId": "preset_operating_system_card_082",
+      "connection": "沿“05 存储管理”的知识脉络继续学习。",
+      "question": "静态重定位与动态重定位有什么区别？",
+      "answer": "静态重定位在装入时一次完成，程序运行中不能移动且要求连续空间；动态重定位在每次访存时完成，依赖基址和限长寄存器，允许程序移动。",
+      "tags": [
+        "重定位",
+        "地址转换"
+      ],
+      "importance": 3,
+      "status": "active",
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第16-20页",
+      "createdAt": 1787417600083,
+      "updatedAt": 1787417600083
+    },
+    {
+      "id": "preset_operating_system_card_084",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_05_memory",
+      "parentCardId": "preset_operating_system_card_083",
+      "connection": "沿“05 存储管理”的知识脉络继续学习。",
+      "question": "固定分区与可变分区分别如何分配内存？",
+      "answer": "固定分区预先把内存划成若干固定区域；可变分区在进程装入时按实际大小动态建立连续区域。",
+      "tags": [
+        "分区管理",
+        "连续分配"
+      ],
+      "importance": 2,
+      "status": "active",
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第16-20页",
+      "createdAt": 1787417600084,
+      "updatedAt": 1787417600084
+    },
+    {
+      "id": "preset_operating_system_card_085",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_05_memory",
+      "parentCardId": "preset_operating_system_card_084",
+      "connection": "沿“05 存储管理”的知识脉络继续学习。",
+      "question": "内部碎片、外部碎片和紧凑技术分别是什么？",
+      "answer": "内部碎片是已分配分区内部未用空间；外部碎片是分区之间零散空闲块；紧凑通过移动已分配区合并外部碎片。",
+      "tags": [
+        "内存碎片",
+        "紧凑"
+      ],
+      "importance": 3,
+      "status": "active",
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第16-20页",
+      "createdAt": 1787417600085,
+      "updatedAt": 1787417600085
+    },
+    {
+      "id": "preset_operating_system_card_086",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_05_memory",
+      "parentCardId": "preset_operating_system_card_085",
+      "connection": "沿“05 存储管理”的知识脉络继续学习。",
+      "question": "首次适应算法如何分配空闲区？",
+      "answer": "从空闲链表头开始，选择第一个足够大的空闲块。查找快并保留高地址大块，但低地址容易产生小碎片。",
+      "tags": [
+        "首次适应",
+        "分区算法"
+      ],
+      "importance": 2,
+      "status": "active",
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第16-20页",
+      "createdAt": 1787417600086,
+      "updatedAt": 1787417600086
+    },
+    {
+      "id": "preset_operating_system_card_087",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_05_memory",
+      "parentCardId": "preset_operating_system_card_086",
+      "connection": "沿“05 存储管理”的知识脉络继续学习。",
+      "question": "循环首次适应算法与首次适应有何区别？",
+      "answer": "它从上次查找结束处继续循环搜索，使空闲区分布更均匀，但可能破坏高地址的大空闲块。",
+      "tags": [
+        "循环首次适应",
+        "分区算法"
+      ],
+      "importance": 2,
+      "status": "active",
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第16-20页",
+      "createdAt": 1787417600087,
+      "updatedAt": 1787417600087
+    },
+    {
+      "id": "preset_operating_system_card_088",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_05_memory",
+      "parentCardId": "preset_operating_system_card_087",
+      "connection": "沿“05 存储管理”的知识脉络继续学习。",
+      "question": "最佳适应与最坏适应算法如何选择空闲块？",
+      "answer": "最佳适应选能满足需求的最小块，易产生微小碎片；最坏适应选最大块，剩余块较大，但会较快耗尽大空闲区。",
+      "tags": [
+        "最佳适应",
+        "最坏适应"
+      ],
+      "importance": 3,
+      "status": "active",
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第16-20页",
+      "createdAt": 1787417600088,
+      "updatedAt": 1787417600088
+    },
+    {
+      "id": "preset_operating_system_card_089",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_05_memory",
+      "parentCardId": "preset_operating_system_card_088",
+      "connection": "沿“05 存储管理”的知识脉络继续学习。",
+      "question": "覆盖技术与交换技术有什么区别？",
+      "answer": "覆盖由程序员安排互斥执行的程序段共用内存，对用户不透明；交换由OS把整个暂不可运行进程换出和换入，对应用透明。",
+      "tags": [
+        "覆盖",
+        "交换"
+      ],
+      "importance": 3,
+      "status": "active",
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第16-20页",
+      "createdAt": 1787417600089,
+      "updatedAt": 1787417600089
+    },
+    {
+      "id": "preset_operating_system_card_090",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_05_memory",
+      "parentCardId": "preset_operating_system_card_089",
+      "connection": "沿“05 存储管理”的知识脉络继续学习。",
+      "question": "什么是虚拟存储器，它有什么特征？",
+      "answer": "基于局部性并借助外存，为进程提供大于物理内存的逻辑空间；具有多次性、对换性和虚拟性。",
+      "tags": [
+        "虚拟存储",
+        "局部性"
+      ],
+      "importance": 3,
+      "status": "active",
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第16-20页",
+      "createdAt": 1787417600090,
+      "updatedAt": 1787417600090
+    },
+    {
+      "id": "preset_operating_system_card_091",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_05_memory",
+      "parentCardId": "preset_operating_system_card_090",
+      "connection": "沿“05 存储管理”的知识脉络继续学习。",
+      "question": "页式存储如何划分逻辑空间和物理内存？",
+      "answer": "把进程逻辑空间划为固定大小的页，把物理内存划为同样大小的页框，通过页表将页号映射到页框号。",
+      "tags": [
+        "分页",
+        "页框"
+      ],
+      "importance": 3,
+      "status": "active",
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第16-20页",
+      "createdAt": 1787417600091,
+      "updatedAt": 1787417600091
+    },
+    {
+      "id": "preset_operating_system_card_092",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_05_memory",
+      "parentCardId": "preset_operating_system_card_091",
+      "connection": "沿“05 存储管理”的知识脉络继续学习。",
+      "question": "页表项通常包含哪些字段？",
+      "answer": "页框号、有效位、修改或脏位、访问或引用位，以及读写执行保护位。",
+      "tags": [
+        "页表项",
+        "PTE"
+      ],
+      "importance": 3,
+      "status": "active",
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第16-20页",
+      "createdAt": 1787417600092,
+      "updatedAt": 1787417600092
+    },
+    {
+      "id": "preset_operating_system_card_093",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_05_memory",
+      "parentCardId": "preset_operating_system_card_092",
+      "connection": "沿“05 存储管理”的知识脉络继续学习。",
+      "question": "TLB参与地址转换的流程是什么？",
+      "answer": "把逻辑地址拆为页号和页内偏移，先查TLB；命中直接取得页框号，未命中再查内存页表；物理地址为页框号乘块长加偏移。",
+      "tags": [
+        "TLB",
+        "地址转换"
+      ],
+      "importance": 3,
+      "status": "active",
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第16-20页",
+      "createdAt": 1787417600093,
+      "updatedAt": 1787417600093
+    },
+    {
+      "id": "preset_operating_system_card_094",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_05_memory",
+      "parentCardId": "preset_operating_system_card_093",
+      "connection": "沿“05 存储管理”的知识脉络继续学习。",
+      "question": "含TLB的有效访存时间如何计算？",
+      "answer": "若TLB时间为t、内存时间为m、命中率为a，则EAT=a(t+m)+(1-a)(t+2m)。",
+      "tags": [
+        "EAT",
+        "TLB"
+      ],
+      "importance": 3,
+      "status": "active",
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第16-20页",
+      "createdAt": 1787417600094,
+      "updatedAt": 1787417600094
+    },
+    {
+      "id": "preset_operating_system_card_095",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_05_memory",
+      "parentCardId": "preset_operating_system_card_094",
+      "connection": "沿“05 存储管理”的知识脉络继续学习。",
+      "question": "缺页异常的处理流程是什么？",
+      "answer": "保护现场、定位外存页面、取得空闲页框或置换牺牲页、必要时写回脏页、读入所需页、更新页表和TLB，最后重新执行缺页指令。",
+      "tags": [
+        "缺页异常",
+        "页面调入"
+      ],
+      "importance": 3,
+      "status": "active",
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第16-20页",
+      "createdAt": 1787417600095,
+      "updatedAt": 1787417600095
+    },
+    {
+      "id": "preset_operating_system_card_096",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_05_memory",
+      "parentCardId": "preset_operating_system_card_095",
+      "connection": "沿“05 存储管理”的知识脉络继续学习。",
+      "question": "OPT页面置换算法的规则和用途是什么？",
+      "answer": "淘汰未来最长时间不再使用或永不使用的页。它无法实际预知未来，但缺页率最低，可作为评价其他算法的理论基准。",
+      "tags": [
+        "OPT",
+        "页面置换"
+      ],
+      "importance": 2,
+      "status": "active",
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第16-20页",
+      "createdAt": 1787417600096,
+      "updatedAt": 1787417600096
+    },
+    {
+      "id": "preset_operating_system_card_097",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_05_memory",
+      "parentCardId": "preset_operating_system_card_096",
+      "connection": "沿“05 存储管理”的知识脉络继续学习。",
+      "question": "FIFO置换为什么会出现Belady异常？",
+      "answer": "FIFO只按进入内存的先后淘汰最老页面，不考虑使用情况；增加页框后页面集合不具包含关系，缺页次数可能反而增加。",
+      "tags": [
+        "FIFO",
+        "Belady异常"
+      ],
+      "importance": 3,
+      "status": "active",
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第16-20页",
+      "createdAt": 1787417600097,
+      "updatedAt": 1787417600097
+    },
+    {
+      "id": "preset_operating_system_card_098",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_05_memory",
+      "parentCardId": "preset_operating_system_card_097",
+      "connection": "沿“05 存储管理”的知识脉络继续学习。",
+      "question": "LRU页面置换的规则和特点是什么？",
+      "answer": "淘汰最近一段时间最久未使用的页面，性能接近OPT且不产生Belady异常，但需堆栈或计数器等硬件支持，开销较大。",
+      "tags": [
+        "LRU",
+        "页面置换"
+      ],
+      "importance": 3,
+      "status": "active",
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第16-20页",
+      "createdAt": 1787417600098,
+      "updatedAt": 1787417600098
+    },
+    {
+      "id": "preset_operating_system_card_099",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_05_memory",
+      "parentCardId": "preset_operating_system_card_098",
+      "connection": "沿“05 存储管理”的知识脉络继续学习。",
+      "question": "Clock置换算法如何给页面第二次机会？",
+      "answer": "循环检查访问位R；R为0时淘汰，R为1时将其清0并继续扫描。它在性能和实现开销之间折中，实际系统常用。",
+      "tags": [
+        "Clock",
+        "页面置换"
+      ],
+      "importance": 3,
+      "status": "active",
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第16-20页",
+      "createdAt": 1787417600099,
+      "updatedAt": 1787417600099
+    },
+    {
+      "id": "preset_operating_system_card_100",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_05_memory",
+      "parentCardId": "preset_operating_system_card_099",
+      "connection": "沿“05 存储管理”的知识脉络继续学习。",
+      "question": "什么是颠簸，工作集如何预防它？",
+      "answer": "页框太少会导致页面频繁换入换出，使CPU大多时间等待缺页I/O。工作集是窗口期内访问的页面集合，应至少分配其工作集大小的页框。",
+      "tags": [
+        "颠簸",
+        "工作集"
+      ],
+      "importance": 3,
+      "status": "active",
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第16-20页",
+      "createdAt": 1787417600100,
+      "updatedAt": 1787417600100
+    },
+    {
+      "id": "preset_operating_system_card_101",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_06_file_system",
+      "question": "什么是文件和文件系统？",
+      "answer": "文件是外部介质上有符号名的相关信息有序集合；文件系统是负责组织、管理和存取文件的软件机构、数据结构及规则。",
+      "tags": [
+        "文件",
+        "文件系统"
+      ],
+      "importance": 3,
+      "status": "active",
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第20-23页",
+      "createdAt": 1787417600101,
+      "updatedAt": 1787417600101
+    },
+    {
+      "id": "preset_operating_system_card_102",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_06_file_system",
+      "parentCardId": "preset_operating_system_card_101",
+      "connection": "沿“06 文件系统”的知识脉络继续学习。",
+      "question": "文件管理的任务、存取方式和常见分类是什么？",
+      "answer": "任务包括外存管理、按名存取、检索、共享保护和操作接口；存取分顺序与直接存取；可按用途、组织形式和保护级别分类。",
+      "tags": [
+        "文件管理",
+        "存取方式"
+      ],
+      "importance": 2,
+      "status": "active",
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第20-23页",
+      "createdAt": 1787417600102,
+      "updatedAt": 1787417600102
+    },
+    {
+      "id": "preset_operating_system_card_103",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_06_file_system",
+      "parentCardId": "preset_operating_system_card_102",
+      "connection": "沿“06 文件系统”的知识脉络继续学习。",
+      "question": "流式文件与记录式文件有什么区别？",
+      "answer": "流式文件是无结构的连续字节流；记录式文件由若干逻辑记录组成，记录可以定长或变长。",
+      "tags": [
+        "逻辑结构",
+        "流式文件"
+      ],
+      "importance": 3,
+      "status": "active",
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第20-23页",
+      "createdAt": 1787417600103,
+      "updatedAt": 1787417600103
+    },
+    {
+      "id": "preset_operating_system_card_104",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_06_file_system",
+      "parentCardId": "preset_operating_system_card_103",
+      "connection": "沿“06 文件系统”的知识脉络继续学习。",
+      "question": "文件连续分配的优缺点是什么？",
+      "answer": "逻辑块连续存放，顺序和随机访问都快；但会产生外部碎片、难以动态增长，并需预先知道文件大小。",
+      "tags": [
+        "连续分配",
+        "物理结构"
+      ],
+      "importance": 3,
+      "status": "active",
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第20-23页",
+      "createdAt": 1787417600104,
+      "updatedAt": 1787417600104
+    },
+    {
+      "id": "preset_operating_system_card_105",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_06_file_system",
+      "parentCardId": "preset_operating_system_card_104",
+      "connection": "沿“06 文件系统”的知识脉络继续学习。",
+      "question": "隐式链接分配的优缺点是什么？",
+      "answer": "每个盘块保存下一块指针，无外部碎片且易扩展；但只适合顺序访问，指针损坏会丢失后续数据。",
+      "tags": [
+        "链接分配",
+        "物理结构"
+      ],
+      "importance": 2,
+      "status": "active",
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第20-23页",
+      "createdAt": 1787417600105,
+      "updatedAt": 1787417600105
+    },
+    {
+      "id": "preset_operating_system_card_106",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_06_file_system",
+      "parentCardId": "preset_operating_system_card_105",
+      "connection": "沿“06 文件系统”的知识脉络继续学习。",
+      "question": "显式链接分配FAT如何工作？",
+      "answer": "把各盘块的后继指针集中到内存中的文件分配表FAT，能支持随机访问且减少访盘，但FAT常驻内存会占用空间。",
+      "tags": [
+        "FAT",
+        "显式链接"
+      ],
+      "importance": 3,
+      "status": "active",
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第20-23页",
+      "createdAt": 1787417600106,
+      "updatedAt": 1787417600106
+    },
+    {
+      "id": "preset_operating_system_card_107",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_06_file_system",
+      "parentCardId": "preset_operating_system_card_106",
+      "connection": "沿“06 文件系统”的知识脉络继续学习。",
+      "question": "索引分配的优缺点是什么？",
+      "answer": "为文件建立索引表，将逻辑块映射到物理块；支持快速随机访问、易扩展且无外部碎片，但增加索引空间和额外访盘开销。",
+      "tags": [
+        "索引分配",
+        "物理结构"
+      ],
+      "importance": 3,
+      "status": "active",
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第20-23页",
+      "createdAt": 1787417600107,
+      "updatedAt": 1787417600107
+    },
+    {
+      "id": "preset_operating_system_card_108",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_06_file_system",
+      "parentCardId": "preset_operating_system_card_107",
+      "connection": "沿“06 文件系统”的知识脉络继续学习。",
+      "question": "UNIX inode的三级索引结构是什么？",
+      "answer": "常见结构含10个直接地址项、1个一级间接项、1个二级间接项和1个三级间接项，共13个地址项。",
+      "tags": [
+        "inode",
+        "三级索引"
+      ],
+      "importance": 3,
+      "status": "active",
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第20-23页",
+      "createdAt": 1787417600108,
+      "updatedAt": 1787417600108
+    },
+    {
+      "id": "preset_operating_system_card_109",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_06_file_system",
+      "parentCardId": "preset_operating_system_card_108",
+      "connection": "沿“06 文件系统”的知识脉络继续学习。",
+      "question": "UNIX混合索引支持的最大数据块数如何计算？",
+      "answer": "若盘块大小为B、块号占S字节，每个索引块可存N=B/S个地址，最大数据块数为10+N+N²+N³。",
+      "tags": [
+        "索引计算",
+        "文件容量"
+      ],
+      "importance": 3,
+      "status": "active",
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第20-23页",
+      "createdAt": 1787417600109,
+      "updatedAt": 1787417600109
+    },
+    {
+      "id": "preset_operating_system_card_110",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_06_file_system",
+      "parentCardId": "preset_operating_system_card_109",
+      "connection": "沿“06 文件系统”的知识脉络继续学习。",
+      "question": "FCB与树形目录中的路径概念是什么？",
+      "answer": "FCB保存文件名、位置、长度、权限和时间等，FCB集合构成目录；绝对路径从根开始，相对路径以当前工作目录为基准。",
+      "tags": [
+        "FCB",
+        "目录"
+      ],
+      "importance": 3,
+      "status": "active",
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第20-23页",
+      "createdAt": 1787417600110,
+      "updatedAt": 1787417600110
+    },
+    {
+      "id": "preset_operating_system_card_111",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_06_file_system",
+      "parentCardId": "preset_operating_system_card_110",
+      "connection": "沿“06 文件系统”的知识脉络继续学习。",
+      "question": "目录项分解法为什么能减少访盘？",
+      "answer": "把文件名和inode号保留为很小的符号目录项，其余属性放入inode，使一个盘块容纳更多目录项，从而减少目录检索I/O。",
+      "tags": [
+        "目录项分解",
+        "inode"
+      ],
+      "importance": 3,
+      "status": "active",
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第20-23页",
+      "createdAt": 1787417600111,
+      "updatedAt": 1787417600111
+    },
+    {
+      "id": "preset_operating_system_card_112",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_06_file_system",
+      "parentCardId": "preset_operating_system_card_111",
+      "connection": "沿“06 文件系统”的知识脉络继续学习。",
+      "question": "UNIX目录和FAT目录如何实现？",
+      "answer": "UNIX把目录也视为文件，内容为inode号和文件名；FAT使用固定目录项保存首簇等信息，后续块链由FAT表维护。",
+      "tags": [
+        "目录实现",
+        "UNIX",
+        "FAT"
+      ],
+      "importance": 2,
+      "status": "active",
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第20-23页",
+      "createdAt": 1787417600112,
+      "updatedAt": 1787417600112
+    },
+    {
+      "id": "preset_operating_system_card_113",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_06_file_system",
+      "parentCardId": "preset_operating_system_card_112",
+      "connection": "沿“06 文件系统”的知识脉络继续学习。",
+      "question": "空闲块表法和空闲块链表法如何管理磁盘空闲空间？",
+      "answer": "空闲块表记录连续空闲区的起始块号和块数；空闲块链表用指针把空闲块或空闲盘区连接起来。",
+      "tags": [
+        "空闲空间",
+        "磁盘管理"
+      ],
+      "importance": 2,
+      "status": "active",
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第20-23页",
+      "createdAt": 1787417600113,
+      "updatedAt": 1787417600113
+    },
+    {
+      "id": "preset_operating_system_card_114",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_06_file_system",
+      "parentCardId": "preset_operating_system_card_113",
+      "connection": "沿“06 文件系统”的知识脉络继续学习。",
+      "question": "位示图如何表示和换算空闲盘块？",
+      "answer": "每一位表示一个盘块状态，通常0为空闲、1为已分配。字长n、行i列j对应块号b=i×n+j，反算i=⌊b/n⌋、j=b mod n。",
+      "tags": [
+        "位示图",
+        "盘块计算"
+      ],
+      "importance": 3,
+      "status": "active",
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第20-23页",
+      "createdAt": 1787417600114,
+      "updatedAt": 1787417600114
+    },
+    {
+      "id": "preset_operating_system_card_115",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_06_file_system",
+      "parentCardId": "preset_operating_system_card_114",
+      "connection": "沿“06 文件系统”的知识脉络继续学习。",
+      "question": "UNIX成组链接法如何工作？",
+      "answer": "空闲块按固定数量分组，每组首块保存下一组块号；超级块在内存记录当前栈顶组，从而兼具链表省内存和批量分配高效的优点。",
+      "tags": [
+        "成组链接",
+        "UNIX"
+      ],
+      "importance": 3,
+      "status": "active",
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第20-23页",
+      "createdAt": 1787417600115,
+      "updatedAt": 1787417600115
+    },
+    {
+      "id": "preset_operating_system_card_116",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_06_file_system",
+      "parentCardId": "preset_operating_system_card_115",
+      "connection": "沿“06 文件系统”的知识脉络继续学习。",
+      "question": "系统打开文件表和进程打开文件表分别保存什么？",
+      "answer": "系统表全局保存共享计数、文件物理位置和inode指针；进程表保存当前读写偏移、访问权限及指向系统表项的指针。",
+      "tags": [
+        "打开文件表",
+        "文件访问"
+      ],
+      "importance": 3,
+      "status": "active",
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第20-23页",
+      "createdAt": 1787417600116,
+      "updatedAt": 1787417600116
+    },
+    {
+      "id": "preset_operating_system_card_117",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_06_file_system",
+      "parentCardId": "preset_operating_system_card_116",
+      "connection": "沿“06 文件系统”的知识脉络继续学习。",
+      "question": "磁盘高速缓存如何提升文件系统性能？",
+      "answer": "在内存缓存频繁访问的数据块，利用局部性减少实际磁盘I/O次数。",
+      "tags": [
+        "磁盘缓存",
+        "性能"
+      ],
+      "importance": 2,
+      "status": "active",
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第20-23页",
+      "createdAt": 1787417600117,
+      "updatedAt": 1787417600117
+    },
+    {
+      "id": "preset_operating_system_card_118",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_06_file_system",
+      "parentCardId": "preset_operating_system_card_117",
+      "connection": "沿“06 文件系统”的知识脉络继续学习。",
+      "question": "RAID 0、RAID 1和RAID 5有什么区别？",
+      "answer": "RAID 0条带化、速度快但无冗余；RAID 1镜像、可靠但利用率约50%；RAID 5用分布式奇偶校验兼顾性能、容错和利用率。",
+      "tags": [
+        "RAID",
+        "磁盘阵列"
+      ],
+      "importance": 3,
+      "status": "active",
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第20-23页",
+      "createdAt": 1787417600118,
+      "updatedAt": 1787417600118
+    },
+    {
+      "id": "preset_operating_system_card_119",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_06_file_system",
+      "parentCardId": "preset_operating_system_card_118",
+      "connection": "沿“06 文件系统”的知识脉络继续学习。",
+      "question": "硬链接和软链接有什么区别？",
+      "answer": "硬链接让多个目录项指向同一inode，引用计数为0才删除数据；软链接是保存目标路径的独立文件，原文件删除后链接失效。",
+      "tags": [
+        "硬链接",
+        "软链接"
+      ],
+      "importance": 3,
+      "status": "active",
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第20-23页",
+      "createdAt": 1787417600119,
+      "updatedAt": 1787417600119
+    },
+    {
+      "id": "preset_operating_system_card_120",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_06_file_system",
+      "parentCardId": "preset_operating_system_card_119",
+      "connection": "沿“06 文件系统”的知识脉络继续学习。",
+      "question": "UNIX的9位文件权限如何表示？",
+      "answer": "按所有者、同组用户和其他用户分三组，每组用读r=4、写w=2、执行x=1表示，例如755代表rwxr-xr-x。",
+      "tags": [
+        "文件权限",
+        "UNIX"
+      ],
+      "importance": 3,
+      "status": "active",
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第20-23页",
+      "createdAt": 1787417600120,
+      "updatedAt": 1787417600120
+    },
+    {
+      "id": "preset_operating_system_card_121",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_07_device",
+      "question": "设备管理的主要任务和I/O设备分类维度是什么？",
+      "answer": "任务是实现设备独立性、提高利用率、合理分配回收并保证安全。设备可按速率、数据组织形式和共享属性分类。",
+      "tags": [
+        "设备管理",
+        "设备分类"
+      ],
+      "importance": 2,
+      "status": "active",
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第23-27页",
+      "createdAt": 1787417600121,
+      "updatedAt": 1787417600121
+    },
+    {
+      "id": "preset_operating_system_card_122",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_07_device",
+      "parentCardId": "preset_operating_system_card_121",
+      "connection": "沿“07 设备管理”的知识脉络继续学习。",
+      "question": "块设备与字符设备有什么区别？",
+      "answer": "块设备按数据块组织，速度较高且可寻址，支持随机访问，如磁盘；字符设备按字符组织，通常较慢且不可寻址，如键盘和打印机。",
+      "tags": [
+        "块设备",
+        "字符设备"
+      ],
+      "importance": 3,
+      "status": "active",
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第23-27页",
+      "createdAt": 1787417600122,
+      "updatedAt": 1787417600122
+    },
+    {
+      "id": "preset_operating_system_card_123",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_07_device",
+      "parentCardId": "preset_operating_system_card_122",
+      "connection": "沿“07 设备管理”的知识脉络继续学习。",
+      "question": "I/O软件从上到下分为哪些层次？",
+      "answer": "用户层I/O软件、设备独立性软件、设备驱动程序、中断处理程序，最底层连接设备控制器和实际设备。",
+      "tags": [
+        "I/O软件",
+        "软件层次"
+      ],
+      "importance": 3,
+      "status": "active",
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第23-27页",
+      "createdAt": 1787417600123,
+      "updatedAt": 1787417600123
+    },
+    {
+      "id": "preset_operating_system_card_124",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_07_device",
+      "parentCardId": "preset_operating_system_card_123",
+      "connection": "沿“07 设备管理”的知识脉络继续学习。",
+      "question": "什么是设备独立性，如何实现？",
+      "answer": "应用只使用逻辑设备名而不依赖实际物理设备；系统通过逻辑设备表LUT把逻辑设备映射到物理设备及驱动程序。",
+      "tags": [
+        "设备独立性",
+        "LUT"
+      ],
+      "importance": 3,
+      "status": "active",
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第23-27页",
+      "createdAt": 1787417600124,
+      "updatedAt": 1787417600124
+    },
+    {
+      "id": "preset_operating_system_card_125",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_07_device",
+      "parentCardId": "preset_operating_system_card_124",
+      "connection": "沿“07 设备管理”的知识脉络继续学习。",
+      "question": "程序直接控制I/O方式有什么特点？",
+      "answer": "CPU以字或字节为单位不断轮询设备状态并参与传送，CPU与设备完全串行，处理器资源浪费严重。",
+      "tags": [
+        "程序控制I/O",
+        "轮询"
+      ],
+      "importance": 2,
+      "status": "active",
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第23-27页",
+      "createdAt": 1787417600125,
+      "updatedAt": 1787417600125
+    },
+    {
+      "id": "preset_operating_system_card_126",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_07_device",
+      "parentCardId": "preset_operating_system_card_125",
+      "connection": "沿“07 设备管理”的知识脉络继续学习。",
+      "question": "中断控制I/O方式有什么特点？",
+      "answer": "设备每完成一个字或字节就中断CPU，允许CPU和设备部分并行，但高速大批量传输会产生大量中断开销。",
+      "tags": [
+        "中断I/O",
+        "设备控制"
+      ],
+      "importance": 2,
+      "status": "active",
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第23-27页",
+      "createdAt": 1787417600126,
+      "updatedAt": 1787417600126
+    },
+    {
+      "id": "preset_operating_system_card_127",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_07_device",
+      "parentCardId": "preset_operating_system_card_126",
+      "connection": "沿“07 设备管理”的知识脉络继续学习。",
+      "question": "DMA控制方式有什么特点？",
+      "answer": "DMAC在设备和内存间传送连续数据块，CPU只负责开始初始化和整块结束后的中断处理，显著降低CPU开销。",
+      "tags": [
+        "DMA",
+        "设备控制"
+      ],
+      "importance": 3,
+      "status": "active",
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第23-27页",
+      "createdAt": 1787417600127,
+      "updatedAt": 1787417600127
+    },
+    {
+      "id": "preset_operating_system_card_128",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_07_device",
+      "parentCardId": "preset_operating_system_card_127",
+      "connection": "沿“07 设备管理”的知识脉络继续学习。",
+      "question": "通道控制方式有什么特点？",
+      "answer": "通道执行通道程序并可处理多组数据块，CPU只在整个程序完成后介入，使CPU、通道和设备充分并行。",
+      "tags": [
+        "通道",
+        "设备控制"
+      ],
+      "importance": 3,
+      "status": "active",
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第23-27页",
+      "createdAt": 1787417600128,
+      "updatedAt": 1787417600128
+    },
+    {
+      "id": "preset_operating_system_card_129",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_07_device",
+      "parentCardId": "preset_operating_system_card_128",
+      "connection": "沿“07 设备管理”的知识脉络继续学习。",
+      "question": "SDT和DCT分别记录什么？",
+      "answer": "系统设备表SDT是全局总表，记录所有设备类型、数量和DCT指针；每台设备有一张DCT，记录状态、等待队列和控制器指针。",
+      "tags": [
+        "SDT",
+        "DCT"
+      ],
+      "importance": 3,
+      "status": "active",
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第23-27页",
+      "createdAt": 1787417600129,
+      "updatedAt": 1787417600129
+    },
+    {
+      "id": "preset_operating_system_card_130",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_07_device",
+      "parentCardId": "preset_operating_system_card_129",
+      "connection": "沿“07 设备管理”的知识脉络继续学习。",
+      "question": "COCT和CHCT分别记录什么？",
+      "answer": "每个设备控制器有COCT，记录控制器状态、等待队列和通道指针；每个通道有CHCT，记录通道状态和等待队列。",
+      "tags": [
+        "COCT",
+        "CHCT"
+      ],
+      "importance": 2,
+      "status": "active",
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第23-27页",
+      "createdAt": 1787417600130,
+      "updatedAt": 1787417600130
+    },
+    {
+      "id": "preset_operating_system_card_131",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_07_device",
+      "parentCardId": "preset_operating_system_card_130",
+      "connection": "沿“07 设备管理”的知识脉络继续学习。",
+      "question": "安全设备分配与不安全分配有什么区别？",
+      "answer": "安全方式使进程发出I/O后阻塞，同一时刻只持有一台设备，不会死锁但并发低；不安全方式允许继续运行和多设备申请，效率高但可能死锁。",
+      "tags": [
+        "设备分配",
+        "死锁"
+      ],
+      "importance": 3,
+      "status": "active",
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第23-27页",
+      "createdAt": 1787417600131,
+      "updatedAt": 1787417600131
+    },
+    {
+      "id": "preset_operating_system_card_132",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_07_device",
+      "parentCardId": "preset_operating_system_card_131",
+      "connection": "沿“07 设备管理”的知识脉络继续学习。",
+      "question": "磁盘总存取时间由哪三部分构成？",
+      "answer": "寻道时间、旋转延迟时间和数据传输时间，即T存取=Ts+Tr+Tt，其中寻道通常耗时最长。",
+      "tags": [
+        "磁盘",
+        "存取时间"
+      ],
+      "importance": 3,
+      "status": "active",
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第23-27页",
+      "createdAt": 1787417600132,
+      "updatedAt": 1787417600132
+    },
+    {
+      "id": "preset_operating_system_card_133",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_07_device",
+      "parentCardId": "preset_operating_system_card_132",
+      "connection": "沿“07 设备管理”的知识脉络继续学习。",
+      "question": "磁盘FCFS调度的特点是什么？",
+      "answer": "按请求到达顺序访问磁道，公平且简单，但磁头可能来回长距离移动，平均寻道距离较大。",
+      "tags": [
+        "磁盘调度",
+        "FCFS"
+      ],
+      "importance": 2,
+      "status": "active",
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第23-27页",
+      "createdAt": 1787417600133,
+      "updatedAt": 1787417600133
+    },
+    {
+      "id": "preset_operating_system_card_134",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_07_device",
+      "parentCardId": "preset_operating_system_card_133",
+      "connection": "沿“07 设备管理”的知识脉络继续学习。",
+      "question": "SSTF磁盘调度的特点是什么？",
+      "answer": "每次选择离当前磁头最近的请求，平均寻道时间较短，但远端请求可能长期得不到服务而饥饿。",
+      "tags": [
+        "磁盘调度",
+        "SSTF"
+      ],
+      "importance": 3,
+      "status": "active",
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第23-27页",
+      "createdAt": 1787417600134,
+      "updatedAt": 1787417600134
+    },
+    {
+      "id": "preset_operating_system_card_135",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_07_device",
+      "parentCardId": "preset_operating_system_card_134",
+      "connection": "沿“07 设备管理”的知识脉络继续学习。",
+      "question": "SCAN磁盘调度如何工作？",
+      "answer": "磁头沿当前方向依次服务请求，抵达该方向边缘后再反向扫描，像电梯一样往返，能避免饥饿且性能较好。",
+      "tags": [
+        "磁盘调度",
+        "SCAN"
+      ],
+      "importance": 3,
+      "status": "active",
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第23-27页",
+      "createdAt": 1787417600135,
+      "updatedAt": 1787417600135
+    },
+    {
+      "id": "preset_operating_system_card_136",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_07_device",
+      "parentCardId": "preset_operating_system_card_135",
+      "connection": "沿“07 设备管理”的知识脉络继续学习。",
+      "question": "C-SCAN与SCAN有什么区别？",
+      "answer": "C-SCAN只沿一个方向服务，到达边缘后快速返回另一端且返回途中不服务，使不同磁道的响应时间更均匀。",
+      "tags": [
+        "磁盘调度",
+        "C-SCAN"
+      ],
+      "importance": 3,
+      "status": "active",
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第23-27页",
+      "createdAt": 1787417600136,
+      "updatedAt": 1787417600136
+    },
+    {
+      "id": "preset_operating_system_card_137",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_07_device",
+      "parentCardId": "preset_operating_system_card_136",
+      "connection": "沿“07 设备管理”的知识脉络继续学习。",
+      "question": "扇区错位交错编排为什么能减少旋转等待？",
+      "answer": "连续扇区若物理紧邻，处理完一个扇区时可能已错过下一个；错位编号让处理结束时目标扇区恰好转到磁头下。",
+      "tags": [
+        "扇区编排",
+        "旋转优化"
+      ],
+      "importance": 2,
+      "status": "active",
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第23-27页",
+      "createdAt": 1787417600137,
+      "updatedAt": 1787417600137
+    },
+    {
+      "id": "preset_operating_system_card_138",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_07_device",
+      "parentCardId": "preset_operating_system_card_137",
+      "connection": "沿“07 设备管理”的知识脉络继续学习。",
+      "question": "为什么引入缓冲技术？",
+      "answer": "为缓和CPU与设备速度不匹配、减少中断频率、转换不同数据粒度，并提高CPU与I/O设备的并行度。",
+      "tags": [
+        "缓冲技术",
+        "I/O性能"
+      ],
+      "importance": 3,
+      "status": "active",
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第23-27页",
+      "createdAt": 1787417600138,
+      "updatedAt": 1787417600138
+    },
+    {
+      "id": "preset_operating_system_card_139",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_07_device",
+      "parentCardId": "preset_operating_system_card_138",
+      "connection": "沿“07 设备管理”的知识脉络继续学习。",
+      "question": "单缓冲、双缓冲、循环缓冲和缓冲池有什么区别？",
+      "answer": "单/双缓冲设置一两个固定区；循环缓冲把多个区连成环；缓冲池由系统统一管理空闲、输入、输出队列和多类工作缓冲区。",
+      "tags": [
+        "缓冲组织",
+        "缓冲池"
+      ],
+      "importance": 2,
+      "status": "active",
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第23-27页",
+      "createdAt": 1787417600139,
+      "updatedAt": 1787417600139
+    },
+    {
+      "id": "preset_operating_system_card_140",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_07_device",
+      "parentCardId": "preset_operating_system_card_139",
+      "connection": "沿“07 设备管理”的知识脉络继续学习。",
+      "question": "SPOOLing的组成、作用和优势是什么？",
+      "answer": "由输入输出井、内存缓冲区、输入输出进程和井管理程序组成；用磁盘模拟慢速独占外设，提高I/O速度并把独占设备变为共享虚拟设备。",
+      "tags": [
+        "SPOOLing",
+        "虚拟设备"
+      ],
+      "importance": 3,
+      "status": "active",
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第23-27页",
+      "createdAt": 1787417600140,
+      "updatedAt": 1787417600140
+    },
+    {
+      "id": "preset_operating_system_card_141",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_08_synchronization",
+      "question": "什么是临界资源和临界区？",
+      "answer": "临界资源是一段时间内只允许一个进程访问的物理或逻辑资源；临界区是进程中访问该资源的代码段。",
+      "tags": [
+        "临界资源",
+        "临界区"
+      ],
+      "importance": 3,
+      "status": "active",
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第27-31页",
+      "createdAt": 1787417600141,
+      "updatedAt": 1787417600141
+    },
+    {
+      "id": "preset_operating_system_card_142",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_08_synchronization",
+      "parentCardId": "preset_operating_system_card_141",
+      "connection": "沿“08 进程同步与死锁”的知识脉络继续学习。",
+      "question": "访问临界区必须遵守哪四条准则？",
+      "answer": "空闲让进、忙则等待、有限等待和让权等待。",
+      "tags": [
+        "临界区准则",
+        "互斥"
+      ],
+      "importance": 3,
+      "status": "active",
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第27-31页",
+      "createdAt": 1787417600142,
+      "updatedAt": 1787417600142
+    },
+    {
+      "id": "preset_operating_system_card_143",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_08_synchronization",
+      "parentCardId": "preset_operating_system_card_142",
+      "connection": "沿“08 进程同步与死锁”的知识脉络继续学习。",
+      "question": "记录型信号量由什么组成，count的值表示什么？",
+      "answer": "由整型count和等待队列组成。count≥0表示可用资源数；count<0时绝对值表示等待该资源的阻塞进程数。",
+      "tags": [
+        "信号量",
+        "同步"
+      ],
+      "importance": 3,
+      "status": "active",
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第27-31页",
+      "createdAt": 1787417600143,
+      "updatedAt": 1787417600143
+    },
+    {
+      "id": "preset_operating_system_card_144",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_08_synchronization",
+      "parentCardId": "preset_operating_system_card_143",
+      "connection": "沿“08 进程同步与死锁”的知识脉络继续学习。",
+      "question": "P原语和V原语分别如何操作信号量？",
+      "answer": "P先令count减1，若小于0则阻塞当前进程；V先令count加1，若小于等于0则唤醒等待队列中的一个进程。",
+      "tags": [
+        "P操作",
+        "V操作"
+      ],
+      "importance": 3,
+      "status": "active",
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第27-31页",
+      "createdAt": 1787417600144,
+      "updatedAt": 1787417600144
+    },
+    {
+      "id": "preset_operating_system_card_145",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_08_synchronization",
+      "parentCardId": "preset_operating_system_card_144",
+      "connection": "沿“08 进程同步与死锁”的知识脉络继续学习。",
+      "question": "生产者-消费者问题需要设置哪些信号量？",
+      "answer": "mutex=1保证互斥访问缓冲区；empty=N表示空缓冲区数；full=0表示满缓冲区数。",
+      "tags": [
+        "生产者消费者",
+        "信号量设置"
+      ],
+      "importance": 3,
+      "status": "active",
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第27-31页",
+      "createdAt": 1787417600145,
+      "updatedAt": 1787417600145
+    },
+    {
+      "id": "preset_operating_system_card_146",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_08_synchronization",
+      "parentCardId": "preset_operating_system_card_145",
+      "connection": "沿“08 进程同步与死锁”的知识脉络继续学习。",
+      "question": "生产者-消费者问题中，为什么必须先执行同步P再执行互斥P？",
+      "answer": "若先锁mutex再等待empty或full，缓冲区满或空时进程会带锁阻塞，使另一方无法进入缓冲区改变条件，从而死锁。",
+      "tags": [
+        "P操作顺序",
+        "死锁"
+      ],
+      "importance": 3,
+      "status": "active",
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第27-31页",
+      "createdAt": 1787417600146,
+      "updatedAt": 1787417600146
+    },
+    {
+      "id": "preset_operating_system_card_147",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_08_synchronization",
+      "parentCardId": "preset_operating_system_card_146",
+      "connection": "沿“08 进程同步与死锁”的知识脉络继续学习。",
+      "question": "生产者与消费者的P、V操作顺序是什么？",
+      "answer": "生产者P(empty)、P(mutex)、放入数据、V(mutex)、V(full)；消费者P(full)、P(mutex)、取出数据、V(mutex)、V(empty)。",
+      "tags": [
+        "生产者消费者",
+        "PV原语"
+      ],
+      "importance": 3,
+      "status": "active",
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第27-31页",
+      "createdAt": 1787417600147,
+      "updatedAt": 1787417600147
+    },
+    {
+      "id": "preset_operating_system_card_148",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_08_synchronization",
+      "parentCardId": "preset_operating_system_card_147",
+      "connection": "沿“08 进程同步与死锁”的知识脉络继续学习。",
+      "question": "读者-写者问题的访问规则和信号量如何设置？",
+      "answer": "多个读者可同时读，写者必须独占且与读者互斥。write=1控制文件访问，mutex=1保护read_count，read_count初值为0。",
+      "tags": [
+        "读者写者",
+        "同步问题"
+      ],
+      "importance": 3,
+      "status": "active",
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第27-31页",
+      "createdAt": 1787417600148,
+      "updatedAt": 1787417600148
+    },
+    {
+      "id": "preset_operating_system_card_149",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_08_synchronization",
+      "parentCardId": "preset_operating_system_card_148",
+      "connection": "沿“08 进程同步与死锁”的知识脉络继续学习。",
+      "question": "读者优先算法中第一个和最后一个读者分别做什么？",
+      "answer": "第一个读者对write执行P以阻止写者；最后一个离开的读者对write执行V以允许写者。read_count的增减由mutex保护。",
+      "tags": [
+        "读者优先",
+        "读者写者"
+      ],
+      "importance": 3,
+      "status": "active",
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第27-31页",
+      "createdAt": 1787417600149,
+      "updatedAt": 1787417600149
+    },
+    {
+      "id": "preset_operating_system_card_150",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_08_synchronization",
+      "parentCardId": "preset_operating_system_card_149",
+      "connection": "沿“08 进程同步与死锁”的知识脉络继续学习。",
+      "question": "哲学家就餐问题为什么会死锁？",
+      "answer": "若所有哲学家都先拿起同一侧筷子，每人都持有一根并等待另一根，形成循环等待。",
+      "tags": [
+        "哲学家就餐",
+        "死锁"
+      ],
+      "importance": 3,
+      "status": "active",
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第27-31页",
+      "createdAt": 1787417600150,
+      "updatedAt": 1787417600150
+    },
+    {
+      "id": "preset_operating_system_card_151",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_08_synchronization",
+      "parentCardId": "preset_operating_system_card_150",
+      "connection": "沿“08 进程同步与死锁”的知识脉络继续学习。",
+      "question": "哲学家就餐问题有哪些常见防死锁方法？",
+      "answer": "最多允许4人同时请求；仅在两根筷子都可用时原子取得；或规定奇偶哲学家用相反顺序拿筷子。",
+      "tags": [
+        "哲学家就餐",
+        "死锁预防"
+      ],
+      "importance": 3,
+      "status": "active",
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第27-31页",
+      "createdAt": 1787417600151,
+      "updatedAt": 1787417600151
+    },
+    {
+      "id": "preset_operating_system_card_152",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_08_synchronization",
+      "parentCardId": "preset_operating_system_card_151",
+      "connection": "沿“08 进程同步与死锁”的知识脉络继续学习。",
+      "question": "什么是死锁，产生死锁的根本原因是什么？",
+      "answer": "多个进程竞争资源并互相等待对方释放资源，若无外力就无法推进。根本原因是资源不足和进程请求释放次序不当。",
+      "tags": [
+        "死锁定义",
+        "资源竞争"
+      ],
+      "importance": 3,
+      "status": "active",
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第27-31页",
+      "createdAt": 1787417600152,
+      "updatedAt": 1787417600152
+    },
+    {
+      "id": "preset_operating_system_card_153",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_08_synchronization",
+      "parentCardId": "preset_operating_system_card_152",
+      "connection": "沿“08 进程同步与死锁”的知识脉络继续学习。",
+      "question": "死锁产生的四个必要条件是什么？",
+      "answer": "互斥、请求并保持、不剥夺和环路等待，四者必须同时成立。",
+      "tags": [
+        "死锁条件",
+        "必背"
+      ],
+      "importance": 3,
+      "status": "active",
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第27-31页",
+      "createdAt": 1787417600153,
+      "updatedAt": 1787417600153
+    },
+    {
+      "id": "preset_operating_system_card_154",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_08_synchronization",
+      "parentCardId": "preset_operating_system_card_153",
+      "connection": "沿“08 进程同步与死锁”的知识脉络继续学习。",
+      "question": "处理死锁的四种策略是什么？",
+      "answer": "死锁预防、死锁避免、死锁检测与解除，以及忽略死锁的鸵鸟算法。",
+      "tags": [
+        "死锁处理",
+        "策略"
+      ],
+      "importance": 3,
+      "status": "active",
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第27-31页",
+      "createdAt": 1787417600154,
+      "updatedAt": 1787417600154
+    },
+    {
+      "id": "preset_operating_system_card_155",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_08_synchronization",
+      "parentCardId": "preset_operating_system_card_154",
+      "connection": "沿“08 进程同步与死锁”的知识脉络继续学习。",
+      "question": "如何通过破坏请求并保持条件预防死锁？",
+      "answer": "采用静态预先分配，进程运行前一次申请全部资源，不能全部满足就不投入运行。",
+      "tags": [
+        "死锁预防",
+        "静态分配"
+      ],
+      "importance": 2,
+      "status": "active",
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第27-31页",
+      "createdAt": 1787417600155,
+      "updatedAt": 1787417600155
+    },
+    {
+      "id": "preset_operating_system_card_156",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_08_synchronization",
+      "parentCardId": "preset_operating_system_card_155",
+      "connection": "沿“08 进程同步与死锁”的知识脉络继续学习。",
+      "question": "如何通过破坏不剥夺或环路等待条件预防死锁？",
+      "answer": "申请新资源失败时释放已占资源可破坏不剥夺；给资源线性编号并要求按递增次序申请可破坏环路等待。",
+      "tags": [
+        "死锁预防",
+        "资源有序分配"
+      ],
+      "importance": 3,
+      "status": "active",
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第27-31页",
+      "createdAt": 1787417600156,
+      "updatedAt": 1787417600156
+    },
+    {
+      "id": "preset_operating_system_card_157",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_08_synchronization",
+      "parentCardId": "preset_operating_system_card_156",
+      "connection": "沿“08 进程同步与死锁”的知识脉络继续学习。",
+      "question": "银行家算法需要维护哪些核心数据结构？",
+      "answer": "可利用资源向量Available、最大需求矩阵Max、已分配矩阵Allocation，以及Need=Max-Allocation需求矩阵。",
+      "tags": [
+        "银行家算法",
+        "数据结构"
+      ],
+      "importance": 3,
+      "status": "active",
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第27-31页",
+      "createdAt": 1787417600157,
+      "updatedAt": 1787417600157
+    },
+    {
+      "id": "preset_operating_system_card_158",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_08_synchronization",
+      "parentCardId": "preset_operating_system_card_157",
+      "connection": "沿“08 进程同步与死锁”的知识脉络继续学习。",
+      "question": "银行家安全性算法如何寻找安全序列？",
+      "answer": "令Work=Available、Finish=false；反复找Need≤Work的未完成进程，假设其完成并令Work加上Allocation；全部完成则存在安全序列。",
+      "tags": [
+        "安全性算法",
+        "银行家算法"
+      ],
+      "importance": 3,
+      "status": "active",
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第27-31页",
+      "createdAt": 1787417600158,
+      "updatedAt": 1787417600158
+    },
+    {
+      "id": "preset_operating_system_card_159",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_08_synchronization",
+      "parentCardId": "preset_operating_system_card_158",
+      "connection": "沿“08 进程同步与死锁”的知识脉络继续学习。",
+      "question": "资源分配图如何表示资源关系，死锁定理是什么？",
+      "answer": "请求边P→R表示进程请求资源，分配边R→P表示资源已分配。若图不能通过反复消去可完成进程而完全化简，则系统处于死锁状态。",
+      "tags": [
+        "资源分配图",
+        "死锁定理"
+      ],
+      "importance": 3,
+      "status": "active",
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第27-31页",
+      "createdAt": 1787417600159,
+      "updatedAt": 1787417600159
+    },
+    {
+      "id": "preset_operating_system_card_160",
+      "subjectId": "preset_operating_system_subject_v2",
+      "chapterId": "preset_operating_system_chapter_08_synchronization",
+      "parentCardId": "preset_operating_system_card_159",
+      "connection": "沿“08 进程同步与死锁”的知识脉络继续学习。",
+      "question": "缓冲区已满时，生产者若先P(mutex)再P(empty)会发生什么？",
+      "answer": "生产者先持有互斥锁，再因empty=0阻塞；消费者虽能申请full，却无法取得mutex腾出缓冲区，双方相互等待而死锁。",
+      "tags": [
+        "生产者消费者",
+        "死锁分析"
+      ],
+      "importance": 3,
+      "status": "active",
+      "note": "默认知识库｜《操作系统考纲知识点总结》｜PDF第27-31页",
+      "createdAt": 1787417600160,
+      "updatedAt": 1787417600160
     }
   ],
   "recalllab:reviewStates": [
     {
-      "cardId": "card_os_01002",
-      "dueAt": 1786550771455,
+      "cardId": "preset_operating_system_card_001",
+      "dueAt": 1787496495915,
       "fsrsData": {
-        "due": "2026-08-12T16:06:11.455Z",
-        "stability": 11.6874828,
-        "difficulty": 1,
-        "elapsed_days": 1,
-        "scheduled_days": 12,
-        "reps": 2,
-        "lapses": 0,
-        "learning_steps": 0,
-        "state": 2,
-        "last_review": "2026-07-31T16:06:11.455Z"
-      },
-      "lastReviewAt": 1785513971455
-    },
-    {
-      "cardId": "card_os_01005",
-      "dueAt": 1786376510274,
-      "fsrsData": {
-        "due": "2026-08-10T15:41:50.274Z",
-        "stability": 6.29586948,
-        "difficulty": 5.18509795,
-        "elapsed_days": 5,
-        "scheduled_days": 6,
-        "reps": 3,
-        "lapses": 0,
-        "learning_steps": 0,
-        "state": 2,
-        "last_review": "2026-08-04T15:41:50.274Z"
-      },
-      "lastReviewAt": 1785858110274
-    },
-    {
-      "cardId": "card_os_01004",
-      "dueAt": 1786981341115,
-      "fsrsData": {
-        "due": "2026-08-17T15:42:21.115Z",
-        "stability": 16.30049692,
-        "difficulty": 4.743334,
-        "elapsed_days": 4,
-        "scheduled_days": 13,
-        "reps": 3,
-        "lapses": 0,
-        "learning_steps": 0,
-        "state": 2,
-        "last_review": "2026-08-04T15:42:21.115Z"
-      },
-      "lastReviewAt": 1785858141115
-    },
-    {
-      "cardId": "card_os_01003",
-      "dueAt": 1788535143045,
-      "fsrsData": {
-        "due": "2026-09-04T15:19:03.045Z",
-        "stability": 24.5956687,
-        "difficulty": 4.743334,
-        "elapsed_days": 9,
-        "scheduled_days": 26,
-        "reps": 3,
-        "lapses": 0,
-        "learning_steps": 0,
-        "state": 2,
-        "last_review": "2026-08-09T15:19:03.045Z"
-      },
-      "lastReviewAt": 1786288743045
-    },
-    {
-      "cardId": "card_os_01001",
-      "dueAt": 1787152745294,
-      "fsrsData": {
-        "due": "2026-08-19T15:19:05.294Z",
-        "stability": 7.98279107,
-        "difficulty": 7.58441627,
-        "elapsed_days": 9,
-        "scheduled_days": 10,
-        "reps": 4,
-        "lapses": 0,
-        "learning_steps": 0,
-        "state": 2,
-        "last_review": "2026-08-09T15:19:05.294Z"
-      },
-      "lastReviewAt": 1786288745294
-    },
-    {
-      "cardId": "card_os_01009",
-      "dueAt": 1786290891710,
-      "fsrsData": {
-        "due": "2026-08-09T15:54:51.710Z",
-        "stability": 15.62126651,
-        "difficulty": 6.72894743,
-        "elapsed_days": 5,
+        "due": "2026-08-23T14:48:15.915Z",
+        "stability": 2.3065,
+        "difficulty": 2.11810397,
+        "elapsed_days": 0,
         "scheduled_days": 0,
-        "reps": 3,
+        "reps": 1,
         "lapses": 0,
         "learning_steps": 1,
         "state": 1,
-        "last_review": "2026-08-09T15:44:51.710Z"
+        "last_review": "2026-08-23T14:38:15.915Z"
       },
-      "lastReviewAt": 1786290291710
+      "lastReviewAt": 1787495895915
     },
     {
-      "cardId": "card_os_01008",
-      "dueAt": 1787499940259,
+      "cardId": "preset_operating_system_card_002",
+      "dueAt": 1787496509036,
       "fsrsData": {
-        "due": "2026-08-23T15:45:40.259Z",
-        "stability": 13.63570161,
-        "difficulty": 6.72239265,
-        "elapsed_days": 3,
-        "scheduled_days": 14,
-        "reps": 4,
+        "due": "2026-08-23T14:48:29.036Z",
+        "stability": 2.3065,
+        "difficulty": 2.11810397,
+        "elapsed_days": 0,
+        "scheduled_days": 0,
+        "reps": 1,
         "lapses": 0,
-        "learning_steps": 0,
-        "state": 2,
-        "last_review": "2026-08-09T15:45:40.259Z"
+        "learning_steps": 1,
+        "state": 1,
+        "last_review": "2026-08-23T14:38:29.036Z"
       },
-      "lastReviewAt": 1786290340259
+      "lastReviewAt": 1787495909036
     },
     {
-      "cardId": "card_os_01006",
-      "dueAt": 1790351145850,
+      "cardId": "preset_operating_system_card_003",
+      "dueAt": 1787496351430,
       "fsrsData": {
-        "due": "2026-09-25T15:45:45.850Z",
-        "stability": 44.09694232,
-        "difficulty": 1,
-        "elapsed_days": 10,
-        "scheduled_days": 47,
-        "reps": 2,
-        "lapses": 0,
-        "learning_steps": 0,
-        "state": 2,
-        "last_review": "2026-08-09T15:45:45.850Z"
-      },
-      "lastReviewAt": 1786290345850
-    },
-    {
-      "cardId": "card_os_01007",
-      "dueAt": 1791733547142,
-      "fsrsData": {
-        "due": "2026-10-11T15:45:47.142Z",
-        "stability": 61.73762078,
-        "difficulty": 1,
-        "elapsed_days": 9,
-        "scheduled_days": 63,
-        "reps": 3,
-        "lapses": 0,
-        "learning_steps": 0,
-        "state": 2,
-        "last_review": "2026-08-09T15:45:47.142Z"
-      },
-      "lastReviewAt": 1786290347142
-    },
-    {
-      "cardId": "card_os_01010",
-      "dueAt": 1786290708730,
-      "fsrsData": {
-        "due": "2026-08-09T15:51:48.730Z",
+        "due": "2026-08-23T14:45:51.430Z",
         "stability": 1.2931,
         "difficulty": 5.11217071,
         "elapsed_days": 0,
@@ -1880,9 +2982,111 @@
         "lapses": 0,
         "learning_steps": 0,
         "state": 1,
-        "last_review": "2026-08-09T15:45:48.730Z"
+        "last_review": "2026-08-23T14:39:51.430Z"
       },
-      "lastReviewAt": 1786290348730
+      "lastReviewAt": 1787495991430
+    },
+    {
+      "cardId": "preset_operating_system_card_004",
+      "dueAt": 1787496069093,
+      "fsrsData": {
+        "due": "2026-08-23T14:41:09.093Z",
+        "stability": 0.212,
+        "difficulty": 6.4133,
+        "elapsed_days": 0,
+        "scheduled_days": 0,
+        "reps": 1,
+        "lapses": 0,
+        "learning_steps": 0,
+        "state": 1,
+        "last_review": "2026-08-23T14:40:09.093Z"
+      },
+      "lastReviewAt": 1787496009093
+    },
+    {
+      "cardId": "preset_operating_system_card_005",
+      "dueAt": 1787496612649,
+      "fsrsData": {
+        "due": "2026-08-23T14:50:12.649Z",
+        "stability": 2.3065,
+        "difficulty": 2.11810397,
+        "elapsed_days": 0,
+        "scheduled_days": 0,
+        "reps": 1,
+        "lapses": 0,
+        "learning_steps": 1,
+        "state": 1,
+        "last_review": "2026-08-23T14:40:12.649Z"
+      },
+      "lastReviewAt": 1787496012649
+    },
+    {
+      "cardId": "preset_operating_system_card_006",
+      "dueAt": 1787496379359,
+      "fsrsData": {
+        "due": "2026-08-23T14:46:19.359Z",
+        "stability": 1.2931,
+        "difficulty": 5.11217071,
+        "elapsed_days": 0,
+        "scheduled_days": 0,
+        "reps": 1,
+        "lapses": 0,
+        "learning_steps": 0,
+        "state": 1,
+        "last_review": "2026-08-23T14:40:19.359Z"
+      },
+      "lastReviewAt": 1787496019359
+    },
+    {
+      "cardId": "preset_operating_system_card_007",
+      "dueAt": 1787496097335,
+      "fsrsData": {
+        "due": "2026-08-23T14:41:37.335Z",
+        "stability": 0.212,
+        "difficulty": 6.4133,
+        "elapsed_days": 0,
+        "scheduled_days": 0,
+        "reps": 1,
+        "lapses": 0,
+        "learning_steps": 0,
+        "state": 1,
+        "last_review": "2026-08-23T14:40:37.335Z"
+      },
+      "lastReviewAt": 1787496037335
+    },
+    {
+      "cardId": "preset_operating_system_card_008",
+      "dueAt": 1787498125031,
+      "fsrsData": {
+        "due": "2026-08-23T15:15:25.031Z",
+        "stability": 2.3065,
+        "difficulty": 2.11810397,
+        "elapsed_days": 0,
+        "scheduled_days": 0,
+        "reps": 1,
+        "lapses": 0,
+        "learning_steps": 1,
+        "state": 1,
+        "last_review": "2026-08-23T15:05:25.031Z"
+      },
+      "lastReviewAt": 1787497525031
+    },
+    {
+      "cardId": "preset_operating_system_card_009",
+      "dueAt": 1787497901006,
+      "fsrsData": {
+        "due": "2026-08-23T15:11:41.006Z",
+        "stability": 1.2931,
+        "difficulty": 5.11217071,
+        "elapsed_days": 0,
+        "scheduled_days": 0,
+        "reps": 1,
+        "lapses": 0,
+        "learning_steps": 0,
+        "state": 1,
+        "last_review": "2026-08-23T15:05:41.006Z"
+      },
+      "lastReviewAt": 1787497541006
     }
   ],
   "recalllab:settings": {
@@ -1890,231 +3094,123 @@
   },
   "recalllab:reviewLogs": [
     {
-      "id": "review_1785424354895_4idy",
-      "cardId": "card_os_01001",
-      "subjectId": "subject_operating_system_13180",
+      "id": "review_1787495895922_chmz",
+      "cardId": "preset_operating_system_card_001",
+      "subjectId": "preset_operating_system_subject_v2",
+      "rating": 3,
+      "reviewedAt": 1787495895915
+    },
+    {
+      "id": "review_1787495909045_ofem",
+      "cardId": "preset_operating_system_card_002",
+      "subjectId": "preset_operating_system_subject_v2",
+      "rating": 3,
+      "reviewedAt": 1787495909036
+    },
+    {
+      "id": "review_1787495991436_hnio",
+      "cardId": "preset_operating_system_card_003",
+      "subjectId": "preset_operating_system_subject_v2",
+      "rating": 2,
+      "reviewedAt": 1787495991430
+    },
+    {
+      "id": "review_1787496009099_7ktt",
+      "cardId": "preset_operating_system_card_004",
+      "subjectId": "preset_operating_system_subject_v2",
       "rating": 1,
-      "reviewedAt": 1785424354894
+      "reviewedAt": 1787496009093
     },
     {
-      "id": "review_1785424358495_b4qf",
-      "cardId": "card_os_01002",
-      "subjectId": "subject_operating_system_13180",
+      "id": "review_1787496012654_mcbf",
+      "cardId": "preset_operating_system_card_005",
+      "subjectId": "preset_operating_system_subject_v2",
       "rating": 3,
-      "reviewedAt": 1785424358494
+      "reviewedAt": 1787496012649
     },
     {
-      "id": "review_1785424365830_jluv",
-      "cardId": "card_os_01003",
-      "subjectId": "subject_operating_system_13180",
-      "rating": 3,
-      "reviewedAt": 1785424365830
+      "id": "review_1787496019364_amfl",
+      "cardId": "preset_operating_system_card_006",
+      "subjectId": "preset_operating_system_subject_v2",
+      "rating": 2,
+      "reviewedAt": 1787496019359
     },
     {
-      "id": "review_1785424379198_cv9v",
-      "cardId": "card_os_01004",
-      "subjectId": "subject_operating_system_13180",
-      "rating": 3,
-      "reviewedAt": 1785424379198
-    },
-    {
-      "id": "review_1785424409411_2avd",
-      "cardId": "card_os_01005",
-      "subjectId": "subject_operating_system_13180",
+      "id": "review_1787496037341_qyv5",
+      "cardId": "preset_operating_system_card_007",
+      "subjectId": "preset_operating_system_subject_v2",
       "rating": 1,
-      "reviewedAt": 1785424409410
+      "reviewedAt": 1787496037335
     },
     {
-      "id": "review_1785424420323_ez82",
-      "cardId": "card_os_01006",
-      "subjectId": "subject_operating_system_13180",
-      "rating": 4,
-      "reviewedAt": 1785424420322
-    },
-    {
-      "id": "review_1785424428261_ulyb",
-      "cardId": "card_os_01007",
-      "subjectId": "subject_operating_system_13180",
+      "id": "review_1787497525039_qmmx",
+      "cardId": "preset_operating_system_card_008",
+      "subjectId": "preset_operating_system_subject_v2",
       "rating": 3,
-      "reviewedAt": 1785424428261
+      "reviewedAt": 1787497525031
     },
     {
-      "id": "review_1785424432053_pw99",
-      "cardId": "card_os_01008",
-      "subjectId": "subject_operating_system_13180",
+      "id": "review_1787497541012_i93m",
+      "cardId": "preset_operating_system_card_009",
+      "subjectId": "preset_operating_system_subject_v2",
       "rating": 2,
-      "reviewedAt": 1785424432053
-    },
-    {
-      "id": "review_1785424448664_fd6h",
-      "cardId": "card_os_01001",
-      "subjectId": "subject_operating_system_13180",
-      "rating": 3,
-      "reviewedAt": 1785424448649
-    },
-    {
-      "id": "review_1785424940402_402t",
-      "cardId": "card_os_01005",
-      "subjectId": "subject_operating_system_13180",
-      "rating": 3,
-      "reviewedAt": 1785424940368
-    },
-    {
-      "id": "review_1785424964918_np6r",
-      "cardId": "card_os_01008",
-      "subjectId": "subject_operating_system_13180",
-      "rating": 3,
-      "reviewedAt": 1785424964879
-    },
-    {
-      "id": "review_1785424985488_l39n",
-      "cardId": "card_os_01009",
-      "subjectId": "subject_operating_system_13180",
-      "rating": 2,
-      "reviewedAt": 1785424985451
-    },
-    {
-      "id": "review_1785513971462_d6ng",
-      "cardId": "card_os_01002",
-      "subjectId": "subject_operating_system_13180",
-      "rating": 4,
-      "reviewedAt": 1785513971455
-    },
-    {
-      "id": "review_1785513990775_nbf8",
-      "cardId": "card_os_01003",
-      "subjectId": "subject_operating_system_13180",
-      "rating": 2,
-      "reviewedAt": 1785513990769
-    },
-    {
-      "id": "review_1785513994115_o422",
-      "cardId": "card_os_01004",
-      "subjectId": "subject_operating_system_13180",
-      "rating": 2,
-      "reviewedAt": 1785513994109
-    },
-    {
-      "id": "review_1785513995192_hjh9",
-      "cardId": "card_os_01007",
-      "subjectId": "subject_operating_system_13180",
-      "rating": 3,
-      "reviewedAt": 1785513995188
-    },
-    {
-      "id": "review_1785513996487_bh8l",
-      "cardId": "card_os_01001",
-      "subjectId": "subject_operating_system_13180",
-      "rating": 2,
-      "reviewedAt": 1785513996482
-    },
-    {
-      "id": "review_1785858106221_85jo",
-      "cardId": "card_os_01009",
-      "subjectId": "subject_operating_system_13180",
-      "rating": 2,
-      "reviewedAt": 1785858106215
-    },
-    {
-      "id": "review_1785858110280_h3a7",
-      "cardId": "card_os_01005",
-      "subjectId": "subject_operating_system_13180",
-      "rating": 4,
-      "reviewedAt": 1785858110274
-    },
-    {
-      "id": "review_1785858141120_htsq",
-      "cardId": "card_os_01004",
-      "subjectId": "subject_operating_system_13180",
-      "rating": 3,
-      "reviewedAt": 1785858141115
-    },
-    {
-      "id": "review_1786026347595_s4pl",
-      "cardId": "card_os_01008",
-      "subjectId": "subject_operating_system_13180",
-      "rating": 2,
-      "reviewedAt": 1786026347590
-    },
-    {
-      "id": "review_1786288743051_b094",
-      "cardId": "card_os_01003",
-      "subjectId": "subject_operating_system_13180",
-      "rating": 3,
-      "reviewedAt": 1786288743045
-    },
-    {
-      "id": "review_1786288745301_5n80",
-      "cardId": "card_os_01001",
-      "subjectId": "subject_operating_system_13180",
-      "rating": 3,
-      "reviewedAt": 1786288745294
-    },
-    {
-      "id": "review_1786290291715_xbg4",
-      "cardId": "card_os_01009",
-      "subjectId": "subject_operating_system_13180",
-      "rating": 3,
-      "reviewedAt": 1786290291710
-    },
-    {
-      "id": "review_1786290340265_n1ou",
-      "cardId": "card_os_01008",
-      "subjectId": "subject_operating_system_13180",
-      "rating": 3,
-      "reviewedAt": 1786290340259
-    },
-    {
-      "id": "review_1786290345855_7ftf",
-      "cardId": "card_os_01006",
-      "subjectId": "subject_operating_system_13180",
-      "rating": 3,
-      "reviewedAt": 1786290345850
-    },
-    {
-      "id": "review_1786290347147_ktob",
-      "cardId": "card_os_01007",
-      "subjectId": "subject_operating_system_13180",
-      "rating": 4,
-      "reviewedAt": 1786290347142
-    },
-    {
-      "id": "review_1786290348737_su5q",
-      "cardId": "card_os_01010",
-      "subjectId": "subject_operating_system_13180",
-      "rating": 2,
-      "reviewedAt": 1786290348730
+      "reviewedAt": 1787497541006
     }
   ],
-  "recalllab:presetKnowledgeVersion": 1,
+  "recalllab:presetKnowledgeVersion": 2,
   "recalllab:reviewSession": {
     "version": 1,
     "cardIds": [
-      "card_os_02001",
-      "card_os_02002",
-      "card_os_02003",
-      "card_os_02004",
-      "card_os_02005",
-      "card_os_02006",
-      "card_os_02007",
-      "card_os_02008",
-      "card_os_02009",
-      "card_os_02010",
-      "card_os_02011",
-      "card_os_02012",
-      "card_os_02013",
-      "card_os_02014",
-      "card_os_02015",
-      "card_os_02016",
-      "card_os_02017",
-      "card_os_02018",
-      "card_os_02019",
-      "card_os_02020"
+      "preset_operating_system_card_001",
+      "preset_operating_system_card_002",
+      "preset_operating_system_card_003",
+      "preset_operating_system_card_004",
+      "preset_operating_system_card_005",
+      "preset_operating_system_card_006",
+      "preset_operating_system_card_007",
+      "preset_operating_system_card_008",
+      "preset_operating_system_card_009",
+      "preset_operating_system_card_010",
+      "preset_operating_system_card_011",
+      "preset_operating_system_card_012",
+      "preset_operating_system_card_013",
+      "preset_operating_system_card_014",
+      "preset_operating_system_card_015",
+      "preset_operating_system_card_016",
+      "preset_operating_system_card_017",
+      "preset_operating_system_card_018",
+      "preset_operating_system_card_019",
+      "preset_operating_system_card_020"
     ],
-    "currentIndex": 0,
-    "startedAt": 1786554717726,
-    "filter": {
-      "chapterId": "chapter_os_02_environment"
+    "currentIndex": 9,
+    "startedAt": 1787495890168,
+    "filter": {},
+    "lastCommit": {
+      "cardId": "preset_operating_system_card_009",
+      "nextState": {
+        "cardId": "preset_operating_system_card_009",
+        "dueAt": 1787497901006,
+        "fsrsData": {
+          "due": "2026-08-23T15:11:41.006Z",
+          "stability": 1.2931,
+          "difficulty": 5.11217071,
+          "elapsed_days": 0,
+          "scheduled_days": 0,
+          "reps": 1,
+          "lapses": 0,
+          "learning_steps": 0,
+          "state": 1,
+          "last_review": "2026-08-23T15:05:41.006Z"
+        },
+        "lastReviewAt": 1787497541006
+      },
+      "log": {
+        "id": "review_1787497541012_i93m",
+        "cardId": "preset_operating_system_card_009",
+        "subjectId": "preset_operating_system_subject_v2",
+        "rating": 2,
+        "reviewedAt": 1787497541006
+      }
     }
   }
 }

@@ -7,6 +7,7 @@ import { getChapters, getSubjects } from '@/services/subjectService'
 import type { KnowledgeCard } from '@/types/card'
 import type { ReviewFilter } from '@/types/review'
 import type { Chapter, Subject } from '@/types/subject'
+import { reviewRoute } from '@/utils/reviewFilter'
 
 const subjects = ref<Subject[]>([])
 const chapters = ref<Chapter[]>([])
@@ -112,12 +113,7 @@ function startStudy(): void {
     return
   }
   const filter = currentFilter()
-  const parts = ['fresh=1']
-  if (filter.subjectId) parts.push(`subjectId=${encodeURIComponent(filter.subjectId)}`)
-  if (filter.chapterId) parts.push(`chapterId=${encodeURIComponent(filter.chapterId)}`)
-  if (filter.uncategorizedOnly) parts.push('uncategorized=1')
-  if (filter.tag) parts.push(`tag=${encodeURIComponent(filter.tag)}`)
-  uni.navigateTo({ url: `/pages/review/index?${parts.join('&')}` })
+  uni.navigateTo({ url: reviewRoute(filter, true) })
 }
 </script>
 
@@ -173,7 +169,6 @@ function startStudy(): void {
 
 .filter-card {
   padding: 30rpx;
-  border-top: 5rpx solid var(--color-primary);
 }
 
 .first-label {
@@ -187,7 +182,7 @@ function startStudy(): void {
 }
 
 .picker-field.disabled {
-  background: rgba(119, 139, 156, 0.1);
+  background: #f2f3f1;
   color: var(--color-subtle);
 }
 

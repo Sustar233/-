@@ -10,16 +10,16 @@
     { "path": "pages/review/index", "style": { "navigationStyle": "custom" } }
   ],
   "globalStyle": {
-    "navigationBarTextStyle": "white",
+    "navigationBarTextStyle": "black",
     "navigationBarTitleText": "苦作舟",
-    "navigationBarBackgroundColor": "#07182a",
-    "backgroundColor": "#061629"
+    "navigationBarBackgroundColor": "#f6f7f5",
+    "backgroundColor": "#f6f7f5"
   },
   "tabBar": {
-    "color": "#8997a4",
-    "selectedColor": "#67d8c5",
-    "backgroundColor": "#07182a",
-    "borderStyle": "black",
+    "color": "#777d77",
+    "selectedColor": "#28624f",
+    "backgroundColor": "#ffffff",
+    "borderStyle": "white",
     "list": [
       { "pagePath": "pages/index/index", "text": "首页" },
       { "pagePath": "pages/library/index", "text": "知识库" },

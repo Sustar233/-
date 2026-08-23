@@ -203,53 +203,14 @@ function restoreAutomaticBackup(): void {
 </template>
 
 <style scoped>
-.page-heading {
-  margin: 10rpx 2rpx 36rpx;
-}
-
-.eyebrow,
-.page-title,
-.page-subtitle {
-  display: block;
-}
-
-.eyebrow {
-  color: var(--color-accent);
-  font-size: 19rpx;
-  font-weight: 700;
-  letter-spacing: 3rpx;
-}
-
-.page-title {
-  margin-top: 7rpx;
-  font-size: 48rpx;
-  color: var(--color-text);
-  font-weight: 820;
-}
-
-.page-subtitle {
-  margin-top: 10rpx;
-  color: var(--color-muted);
-  font-size: 24rpx;
-}
-
 .setting-card,
 .fsrs-card,
 .backup-card {
   padding: 30rpx;
 }
 
-.setting-card {
-  border-left: 5rpx solid var(--color-primary);
-}
-
 .fsrs-card {
   margin-top: 18rpx;
-  border-left: 5rpx solid #668fb3;
-}
-
-.backup-card {
-  border-left: 5rpx solid var(--color-accent);
 }
 
 .setting-name,
@@ -281,7 +242,7 @@ function restoreAutomaticBackup(): void {
   min-height: 76rpx;
   padding: 0 20rpx;
   border: 1rpx solid var(--color-line);
-  border-radius: 16rpx;
+  border-radius: 14rpx;
   background: var(--color-surface-strong);
   color: var(--color-text);
   font-size: 30rpx;
@@ -335,9 +296,9 @@ function restoreAutomaticBackup(): void {
   margin-top: 24rpx;
   padding: 22rpx;
   border: 1rpx solid var(--color-line);
-  border-radius: 16rpx;
-  background: rgba(5, 21, 38, 0.72);
-  color: #dce5e8;
+  border-radius: 14rpx;
+  background: #fafbfa;
+  color: var(--color-text);
   font-family: monospace;
   font-size: 20rpx;
   line-height: 1.55;
@@ -374,11 +335,9 @@ function restoreAutomaticBackup(): void {
   height: 44rpx;
   align-items: center;
   justify-content: center;
-  border-radius: 11rpx 11rpx 11rpx 4rpx;
-  border: 1rpx solid rgba(230, 154, 116, 0.72);
-  background: #842f35;
-  color: #ffd8b4;
-  font-family: "STKaiti", "KaiTi", serif;
+  border-radius: 10rpx;
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
   font-size: 24rpx;
 }
 

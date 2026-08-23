@@ -19,6 +19,17 @@ export interface StatisticsSummary {
   weakCards: Array<{ card: KnowledgeCard; score: number; reviewCount: number }>
 }
 
+export function createEmptyStatistics(): StatisticsSummary {
+  return {
+    todayReviews: 0,
+    todayNewCards: 0,
+    todayAgain: 0,
+    streakDays: 0,
+    last7Days: [],
+    weakCards: [],
+  }
+}
+
 export function calculateStreak(logs: ReviewLog[], now = Date.now()): number {
   const studiedDays = new Set(logs.map((log) => startOfDay(log.reviewedAt)))
   let cursor = startOfDay(now)

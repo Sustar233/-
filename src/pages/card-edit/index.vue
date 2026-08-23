@@ -223,7 +223,6 @@ async function save(): Promise<void> {
 
 .form-card {
   padding: 30rpx;
-  border-top: 5rpx solid var(--color-primary);
 }
 
 .first-label {
@@ -246,7 +245,7 @@ async function save(): Promise<void> {
 .path-badge {
   margin-top: 26rpx;
   padding: 6rpx 12rpx;
-  border: 1rpx solid rgba(103, 216, 197, 0.32);
+  border: 1rpx solid #d0dfd7;
   border-radius: 999rpx;
   background: var(--color-primary-soft);
   color: var(--color-primary);

@@ -35,7 +35,6 @@ defineEmits<{
   gap: 22rpx;
   margin-bottom: 18rpx;
   padding: 26rpx;
-  transition: border-color 160ms ease, transform 160ms ease;
 }
 
 .subject-mark {
@@ -45,11 +44,9 @@ defineEmits<{
   flex: 0 0 auto;
   align-items: center;
   justify-content: center;
-  border-radius: 22rpx;
-  border: 1rpx solid rgba(103, 216, 197, 0.32);
-  background: linear-gradient(145deg, rgba(33, 119, 108, 0.58), rgba(11, 66, 68, 0.72));
-  color: #a6ecdf;
-  font-family: var(--font-display);
+  border-radius: 16rpx;
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
   font-size: 34rpx;
   font-weight: 800;
 }

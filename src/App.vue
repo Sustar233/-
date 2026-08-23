@@ -13,40 +13,21 @@ onLaunch(async () => {
 
 <style>
 page {
-  --color-bg: #061629;
-  --color-surface: rgba(8, 31, 54, 0.94);
-  --color-surface-strong: #0d2944;
-  --color-text: #f4e8cb;
-  --color-muted: #aab8c4;
-  --color-subtle: #788b9c;
-  --color-line: rgba(215, 176, 105, 0.34);
-  --color-primary: #67d8c5;
-  --color-primary-dark: #0c5550;
-  --color-primary-soft: rgba(70, 177, 159, 0.16);
-  --color-accent: #d7ad66;
-  --color-accent-soft: rgba(215, 173, 102, 0.15);
-  --color-danger: #eb8279;
-  --font-display: "STKaiti", "KaiTi", "FangSong", serif;
+  --color-bg: #f6f7f5;
+  --color-surface: #ffffff;
+  --color-surface-strong: #ffffff;
+  --color-text: #202521;
+  --color-muted: #6f766f;
+  --color-subtle: #959b95;
+  --color-line: #e2e5e1;
+  --color-primary: #28624f;
+  --color-primary-dark: #1e493c;
+  --color-primary-soft: #edf4f0;
+  --color-accent: #9a6548;
+  --color-accent-soft: #f6eee9;
+  --color-danger: #a3453e;
   min-height: 100%;
-  background-color: var(--color-bg);
-  background-image:
-    radial-gradient(circle at 4% 13%, rgba(255, 231, 177, 0.62) 0, rgba(255, 231, 177, 0.62) 1rpx, transparent 2rpx),
-    radial-gradient(circle at 13% 71%, rgba(132, 196, 226, 0.34) 0, rgba(132, 196, 226, 0.34) 1rpx, transparent 2rpx),
-    radial-gradient(circle at 27% 28%, rgba(255, 255, 255, 0.24) 0, rgba(255, 255, 255, 0.24) 1rpx, transparent 2rpx),
-    radial-gradient(circle at 34% 87%, rgba(220, 179, 104, 0.4) 0, rgba(220, 179, 104, 0.4) 1rpx, transparent 2rpx),
-    radial-gradient(circle at 62% 15%, rgba(154, 207, 232, 0.34) 0, rgba(154, 207, 232, 0.34) 1rpx, transparent 2rpx),
-    radial-gradient(circle at 72% 66%, rgba(255, 229, 173, 0.4) 0, rgba(255, 229, 173, 0.4) 1rpx, transparent 2rpx),
-    radial-gradient(circle at 83% 34%, rgba(255, 255, 255, 0.26) 0, rgba(255, 255, 255, 0.26) 1rpx, transparent 2rpx),
-    radial-gradient(circle at 92% 82%, rgba(137, 200, 225, 0.34) 0, rgba(137, 200, 225, 0.34) 1rpx, transparent 2rpx),
-    radial-gradient(circle at 97% 9%, rgba(231, 190, 116, 0.5) 0, rgba(231, 190, 116, 0.5) 1rpx, transparent 2rpx),
-    radial-gradient(ellipse at 18% -8%, rgba(43, 91, 132, 0.42) 0%, transparent 45%),
-    radial-gradient(ellipse at 88% 24%, rgba(78, 54, 112, 0.22) 0%, transparent 38%),
-    radial-gradient(ellipse at 70% 62%, rgba(64, 111, 142, 0.1) 0%, transparent 24%),
-    radial-gradient(ellipse at 48% 108%, rgba(19, 101, 105, 0.17) 0%, transparent 42%),
-    linear-gradient(160deg, #041221 0%, #071b31 52%, #051426 100%);
-  background-size: 100% 100%;
-  background-repeat: no-repeat;
-  background-attachment: fixed;
+  background: var(--color-bg);
   color: var(--color-text);
   font-family: "PingFang SC", "Microsoft YaHei", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   font-size: 28rpx;
@@ -62,7 +43,7 @@ button {
 
 button {
   margin: 0;
-  border-radius: 16rpx;
+  border-radius: 14rpx;
   font-size: 28rpx;
   line-height: 1.2;
   transition: opacity 160ms ease, transform 160ms ease, background-color 160ms ease;
@@ -88,19 +69,6 @@ button[disabled] {
   margin: 0 auto;
   padding: 34rpx 30rpx calc(72rpx + env(safe-area-inset-bottom));
   overflow-x: hidden;
-  background-image:
-    radial-gradient(circle at 7% 4%, rgba(255, 224, 158, 0.66) 0, rgba(255, 224, 158, 0.66) 1rpx, transparent 2rpx),
-    radial-gradient(circle at 91% 7%, rgba(154, 205, 230, 0.5) 0, rgba(154, 205, 230, 0.5) 1rpx, transparent 2rpx),
-    radial-gradient(circle at 19% 18%, rgba(255, 255, 255, 0.3) 0, rgba(255, 255, 255, 0.3) 1rpx, transparent 2rpx),
-    radial-gradient(circle at 77% 24%, rgba(229, 188, 116, 0.5) 0, rgba(229, 188, 116, 0.5) 1rpx, transparent 2rpx),
-    radial-gradient(circle at 12% 39%, rgba(138, 194, 220, 0.38) 0, rgba(138, 194, 220, 0.38) 1rpx, transparent 2rpx),
-    radial-gradient(circle at 96% 45%, rgba(255, 225, 164, 0.36) 0, rgba(255, 225, 164, 0.36) 1rpx, transparent 2rpx),
-    radial-gradient(circle at 68% 57%, rgba(255, 255, 255, 0.28) 0, rgba(255, 255, 255, 0.28) 1rpx, transparent 2rpx),
-    radial-gradient(circle at 4% 69%, rgba(216, 174, 104, 0.36) 0, rgba(216, 174, 104, 0.36) 1rpx, transparent 2rpx),
-    radial-gradient(circle at 84% 78%, rgba(136, 196, 221, 0.32) 0, rgba(136, 196, 221, 0.32) 1rpx, transparent 2rpx),
-    radial-gradient(circle at 25% 91%, rgba(255, 224, 158, 0.4) 0, rgba(255, 224, 158, 0.4) 1rpx, transparent 2rpx);
-  background-size: 100% 100%;
-  background-repeat: no-repeat;
 }
 
 @media (min-width: 900px) {
@@ -118,15 +86,13 @@ button[disabled] {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin: 46rpx 2rpx 20rpx;
+  margin: 42rpx 2rpx 18rpx;
 }
 
 .section-title {
   color: var(--color-text);
-  font-size: 32rpx;
-  font-family: var(--font-display);
-  font-weight: 700;
-  letter-spacing: 2rpx;
+  font-size: 30rpx;
+  font-weight: 720;
 }
 
 .muted {
@@ -135,24 +101,21 @@ button[disabled] {
 }
 
 .surface {
-  background: linear-gradient(145deg, rgba(12, 39, 65, 0.96), rgba(7, 27, 48, 0.96));
+  background: var(--color-surface);
   border: 1rpx solid var(--color-line);
-  border-radius: 24rpx;
-  box-shadow: 0 16rpx 42rpx rgba(0, 5, 16, 0.28);
+  border-radius: 18rpx;
 }
 
 .primary-button {
   padding: 26rpx 32rpx;
-  border: 1rpx solid rgba(151, 231, 214, 0.52);
-  background: linear-gradient(135deg, #16786f 0%, #0b5753 100%);
-  color: #fff1d2;
+  background: var(--color-primary);
+  color: #ffffff;
   font-weight: 740;
-  box-shadow: 0 12rpx 28rpx rgba(0, 9, 20, 0.26);
 }
 
 .secondary-button {
   padding: 22rpx 28rpx;
-  border: 1rpx solid rgba(103, 216, 197, 0.36);
+  border: 1rpx solid #cfddd5;
   background: var(--color-primary-soft);
   color: var(--color-primary);
   font-weight: 680;
@@ -160,8 +123,8 @@ button[disabled] {
 
 .danger-button {
   padding: 20rpx 26rpx;
-  border: 1rpx solid rgba(235, 130, 121, 0.35);
-  background: rgba(132, 48, 53, 0.2);
+  border: 1rpx solid #ecd3d0;
+  background: #fbefed;
   color: var(--color-danger);
 }
 
@@ -185,17 +148,15 @@ button[disabled] {
 .eyebrow {
   color: var(--color-accent);
   font-size: 19rpx;
-  font-weight: 760;
-  letter-spacing: 3rpx;
+  font-weight: 700;
+  letter-spacing: 2rpx;
 }
 
 .page-title {
   margin-top: 8rpx;
   color: var(--color-text);
-  font-size: 48rpx;
-  font-family: var(--font-display);
-  font-weight: 700;
-  letter-spacing: 2rpx;
+  font-size: 46rpx;
+  font-weight: 800;
 }
 
 .page-subtitle {
@@ -208,7 +169,7 @@ button[disabled] {
 .field-label {
   display: block;
   margin: 26rpx 0 12rpx;
-  color: var(--color-muted);
+  color: #525a53;
   font-size: 25rpx;
   font-weight: 680;
 }
@@ -218,8 +179,8 @@ button[disabled] {
 .picker-field {
   width: 100%;
   background: var(--color-surface-strong);
-  border: 1rpx solid rgba(215, 176, 105, 0.31);
-  border-radius: 18rpx;
+  border: 1rpx solid #d9ddd8;
+  border-radius: 14rpx;
   color: var(--color-text);
   transition: border-color 160ms ease, box-shadow 160ms ease;
 }
@@ -244,8 +205,8 @@ button[disabled] {
 .field-input:focus-within,
 .field-textarea:focus,
 .picker-field:active {
-  border-color: rgba(103, 216, 197, 0.72);
-  box-shadow: 0 0 0 5rpx rgba(103, 216, 197, 0.1);
+  border-color: #7a9f8f;
+  box-shadow: 0 0 0 4rpx rgba(40, 98, 79, 0.08);
 }
 
 input,

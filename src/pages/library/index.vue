@@ -137,38 +137,14 @@ function openSubject(id: string): void {
   margin: 10rpx 2rpx 32rpx;
 }
 
-.eyebrow,
-.page-title {
-  display: block;
-}
-
-.eyebrow {
-  color: var(--color-accent);
-  font-size: 19rpx;
-  font-weight: 700;
-  letter-spacing: 3rpx;
-}
-
-.page-title {
-  margin-top: 7rpx;
-  font-size: 48rpx;
-  color: var(--color-text);
-  font-weight: 820;
-}
-
 .subject-total {
   margin-bottom: 5rpx;
-  padding: 8rpx 14rpx;
-  border: 1rpx solid var(--color-line);
-  border-radius: 999rpx;
-  background: rgba(10, 34, 58, 0.72);
   color: var(--color-muted);
   font-size: 22rpx;
 }
 
 .editor {
   padding: 30rpx;
-  border-top: 5rpx solid var(--color-primary);
 }
 
 .editor-heading {

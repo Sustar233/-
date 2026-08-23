@@ -354,7 +354,7 @@ async function toggleCard(id: string): Promise<void> {
 
 .chapter-pill.active,
 .chapter-item.active {
-  border-color: rgba(103, 216, 197, 0.6);
+  border-color: #9db9ab;
   background: var(--color-primary-soft);
   color: var(--color-primary);
 }

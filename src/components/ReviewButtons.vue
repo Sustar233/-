@@ -46,15 +46,14 @@ function intervalFor(rating: ReviewRating): string {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  border: 1rpx solid rgba(255, 255, 255, 0.1);
-  color: #fff2d4;
-  box-shadow: 0 8rpx 22rpx rgba(0, 6, 18, 0.28);
+  border: 1rpx solid var(--color-line);
+  background: var(--color-surface);
 }
 
-.again { background: linear-gradient(145deg, #9b4848, #6f3038); }
-.hard { background: linear-gradient(145deg, #9b6a32, #6a4727); }
-.good { background: linear-gradient(145deg, #18766d, #0b5350); }
-.easy { background: linear-gradient(145deg, #416f99, #2b4d78); }
+.again { color: #a3453e; border-color: #e7c8c5; background: #fbf1ef; }
+.hard { color: #8b602c; border-color: #e6d4bc; background: #faf5eb; }
+.good { color: var(--color-primary); border-color: #c7dbd1; background: var(--color-primary-soft); }
+.easy { color: #466b83; border-color: #ccdae2; background: #f0f5f7; }
 
 .rating-label,
 .rating-interval {

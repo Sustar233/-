@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { onLoad } from '@dcloudio/uni-app'
 import EmptyState from '@/components/EmptyState.vue'
 import ReviewButtons from '@/components/ReviewButtons.vue'
@@ -7,11 +7,13 @@ import { useReviewStore } from '@/stores/review'
 import { getChapters, getSubjects } from '@/services/subjectService'
 import type { ReviewFilter, ReviewRating } from '@/types/review'
 import type { Chapter, Subject } from '@/types/subject'
+import { reviewFilterFromQuery } from '@/utils/reviewFilter'
 
 const reviewStore = useReviewStore()
 const subjects = ref<Subject[]>([])
 const chapters = ref<Chapter[]>([])
 const rating = ref(false)
+const noteVisible = ref(false)
 
 const isFocusedReview = computed(() =>
   Boolean(
@@ -36,14 +38,16 @@ const breadcrumb = computed(() => {
   return chapter ? `${subject} · ${chapter}` : `${subject} · 未分类`
 })
 
+watch(
+  () => reviewStore.currentCard?.id,
+  () => {
+    noteVisible.value = false
+  },
+)
+
 onLoad(async (query) => {
   ;[subjects.value, chapters.value] = await Promise.all([getSubjects(), getChapters()])
-  const filter: ReviewFilter = {
-    subjectId: query?.subjectId ? String(query.subjectId) : undefined,
-    chapterId: query?.chapterId ? String(query.chapterId) : undefined,
-    uncategorizedOnly: query?.uncategorized === '1' || undefined,
-    tag: query?.tag ? String(query.tag) : undefined,
-  }
+  const filter: ReviewFilter = reviewFilterFromQuery(query)
   await reviewStore.start(filter, query?.fresh !== '1')
 })
 
@@ -174,13 +178,25 @@ async function goBack(): Promise<void> {
             <view class="divider" />
             <text class="card-kicker">理解答案</text>
             <text class="review-answer">{{ reviewStore.currentCard.answer }}</text>
-            <view v-if="reviewStore.currentCard.connection" class="connection-block">
-              <text class="connection-label">知识连接</text>
-              <text class="connection-copy">{{ reviewStore.currentCard.connection }}</text>
-            </view>
-            <view v-if="reviewStore.currentCard.note" class="note-block">
-              <text class="note-label">备注</text>
-              <text class="note-copy">{{ reviewStore.currentCard.note }}</text>
+            <button
+              v-if="reviewStore.currentCard.connection || reviewStore.currentCard.note"
+              class="note-toggle"
+              @click="noteVisible = !noteVisible"
+            >
+              {{ noteVisible ? '收起备注' : '查看备注' }}
+            </button>
+            <view
+              v-if="(reviewStore.currentCard.connection || reviewStore.currentCard.note) && noteVisible"
+              class="note-block"
+            >
+              <view v-if="reviewStore.currentCard.connection" class="note-item">
+                <text class="note-label">知识关联</text>
+                <text class="note-copy">{{ reviewStore.currentCard.connection }}</text>
+              </view>
+              <view v-if="reviewStore.currentCard.note" class="note-item">
+                <text class="note-label">其他备注</text>
+                <text class="note-copy">{{ reviewStore.currentCard.note }}</text>
+              </view>
             </view>
           </view>
         </view>
@@ -211,13 +227,25 @@ async function goBack(): Promise<void> {
             <view class="divider" />
             <text class="card-kicker">标准答案</text>
             <text class="review-answer">{{ reviewStore.currentCard.answer }}</text>
-            <view v-if="reviewStore.currentCard.connection" class="connection-block">
-              <text class="connection-label">知识连接</text>
-              <text class="connection-copy">{{ reviewStore.currentCard.connection }}</text>
-            </view>
-            <view v-if="reviewStore.currentCard.note" class="note-block">
-              <text class="note-label">备注</text>
-              <text class="note-copy">{{ reviewStore.currentCard.note }}</text>
+            <button
+              v-if="reviewStore.currentCard.connection || reviewStore.currentCard.note"
+              class="note-toggle"
+              @click="noteVisible = !noteVisible"
+            >
+              {{ noteVisible ? '收起备注' : '查看备注' }}
+            </button>
+            <view
+              v-if="(reviewStore.currentCard.connection || reviewStore.currentCard.note) && noteVisible"
+              class="note-block"
+            >
+              <view v-if="reviewStore.currentCard.connection" class="note-item">
+                <text class="note-label">知识关联</text>
+                <text class="note-copy">{{ reviewStore.currentCard.connection }}</text>
+              </view>
+              <view v-if="reviewStore.currentCard.note" class="note-item">
+                <text class="note-label">其他备注</text>
+                <text class="note-copy">{{ reviewStore.currentCard.note }}</text>
+              </view>
             </view>
           </view>
         </view>
@@ -321,14 +349,13 @@ async function goBack(): Promise<void> {
   height: 8rpx;
   overflow: hidden;
   border-radius: 999rpx;
-  background: rgba(167, 184, 197, 0.18);
+  background: #e4e7e3;
 }
 
 .progress-fill {
   height: 100%;
   border-radius: inherit;
-  background: linear-gradient(90deg, var(--color-accent) 0%, var(--color-primary) 100%);
-  box-shadow: 0 0 14rpx rgba(103, 216, 197, 0.38);
+  background: var(--color-primary);
   transition: width 180ms ease;
 }
 
@@ -345,9 +372,9 @@ async function goBack(): Promise<void> {
 .resume-notice {
   margin: 8rpx 0 14rpx;
   padding: 13rpx 18rpx;
-  border: 1rpx solid rgba(103, 216, 197, 0.32);
+  border: 1rpx solid #ccddd4;
   border-radius: 14rpx;
-  background: rgba(54, 143, 132, 0.14);
+  background: var(--color-primary-soft);
   color: var(--color-primary);
   font-size: 22rpx;
   text-align: center;
@@ -397,7 +424,7 @@ async function goBack(): Promise<void> {
   height: 34rpx;
   align-items: center;
   justify-content: center;
-  border: 1rpx solid rgba(120, 139, 156, 0.45);
+  border: 1rpx solid var(--color-line);
   border-radius: 50%;
   font-size: 18rpx;
 }
@@ -417,7 +444,7 @@ async function goBack(): Promise<void> {
 }
 
 .phase-item.done .phase-number {
-  border-color: rgba(215, 173, 102, 0.7);
+  border-color: #d9bda9;
   background: var(--color-accent-soft);
 }
 
@@ -499,7 +526,7 @@ async function goBack(): Promise<void> {
   flex: 0 0 30rpx;
   align-items: center;
   justify-content: center;
-  border: 1rpx solid rgba(215, 173, 102, 0.62);
+  border: 1rpx solid #dec5b4;
   border-radius: 50%;
   background: var(--color-accent-soft);
   color: var(--color-accent);
@@ -510,7 +537,7 @@ async function goBack(): Promise<void> {
   width: 1rpx;
   min-height: 50rpx;
   flex: 1;
-  background: rgba(215, 173, 102, 0.38);
+  background: #e6d4c8;
 }
 
 .node-copy {
@@ -544,10 +571,7 @@ async function goBack(): Promise<void> {
 .review-card {
   min-height: 570rpx;
   padding: 48rpx 38rpx;
-  border-top: 6rpx solid var(--color-accent);
-  background:
-    radial-gradient(circle at 86% 12%, rgba(215, 173, 102, 0.12) 0, transparent 24%),
-    linear-gradient(145deg, rgba(12, 39, 65, 0.98), rgba(7, 27, 48, 0.98));
+  border-top: 4rpx solid var(--color-accent);
 }
 
 .learning-card {
@@ -573,37 +597,12 @@ async function goBack(): Promise<void> {
   white-space: pre-wrap;
 }
 
-.connection-block {
-  margin-top: 28rpx;
-  padding: 20rpx 22rpx;
-  border-left: 4rpx solid var(--color-primary);
-  border-radius: 16rpx;
-  background: var(--color-primary-soft);
-}
-
-.connection-label,
-.connection-copy {
-  display: block;
-}
-
-.connection-label {
-  color: var(--color-primary);
-  font-size: 21rpx;
-}
-
-.connection-copy {
-  margin-top: 8rpx;
-  color: #dce8e3;
-  font-size: 24rpx;
-  line-height: 1.65;
-}
-
 .inline-context {
   margin-top: 32rpx;
   padding: 22rpx;
-  border: 1rpx solid rgba(103, 216, 197, 0.28);
+  border: 1rpx solid #d3e1da;
   border-radius: 16rpx;
-  background: rgba(54, 143, 132, 0.1);
+  background: #f7faf8;
 }
 
 .inline-context-label {
@@ -617,7 +616,7 @@ async function goBack(): Promise<void> {
 .inline-context-item + .inline-context-item {
   margin-top: 18rpx;
   padding-top: 18rpx;
-  border-top: 1rpx solid rgba(103, 216, 197, 0.16);
+  border-top: 1rpx solid var(--color-line);
 }
 
 .inline-context-question,
@@ -660,22 +659,37 @@ async function goBack(): Promise<void> {
 
 .review-answer {
   margin-top: 24rpx;
-  color: #e3e9e5;
+  color: var(--color-text);
   font-size: 30rpx;
   line-height: 1.8;
 }
 
+.note-toggle {
+  margin-top: 20rpx;
+  padding: 10rpx 0;
+  background: transparent;
+  color: var(--color-subtle);
+  font-size: 22rpx;
+  text-align: left;
+}
+
 .note-block {
-  margin-top: 32rpx;
+  margin-top: 8rpx;
   padding: 22rpx;
   border-radius: 16rpx;
   border-left: 4rpx solid var(--color-accent);
-  background: rgba(215, 173, 102, 0.1);
+  background: var(--color-accent-soft);
 }
 
 .note-label,
 .note-copy {
   display: block;
+}
+
+.note-item + .note-item {
+  margin-top: 18rpx;
+  padding-top: 18rpx;
+  border-top: 1rpx solid var(--color-line);
 }
 
 .note-label {
