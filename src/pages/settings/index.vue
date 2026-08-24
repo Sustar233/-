@@ -8,6 +8,7 @@ import {
   parseBackup,
   restoreAutomaticBackup as restoreAutomaticBackupData,
 } from '@/services/backupService'
+import { restorePresetKnowledge } from '@/services/presetKnowledgeService'
 import { useSettingsStore } from '@/stores/settings'
 
 const settingsStore = useSettingsStore()
@@ -70,7 +71,7 @@ function importData(): void {
   uni.showModal({
     title: '覆盖当前数据',
     content: '导入会覆盖当前全部科目、卡片和复习记录。系统会先自动保存当前数据。',
-    confirmColor: '#c65f5b',
+    confirmColor: '#a3453e',
     success: async ({ confirm }) => {
       if (!confirm) return
       working.value = true
@@ -97,7 +98,7 @@ function restoreAutomaticBackup(): void {
   uni.showModal({
     title: '恢复导入前备份',
     content: '将恢复最近一次导入前的数据，当前数据也会自动保留为新的恢复点。',
-    confirmColor: '#2c9f8e',
+    confirmColor: '#28624f',
     success: async ({ confirm }) => {
       if (!confirm) return
       working.value = true
@@ -110,6 +111,26 @@ function restoreAutomaticBackup(): void {
         )
         enableFuzz.value = settingsStore.settings.enableFuzz
         uni.showToast({ title: '已恢复备份', icon: 'success' })
+      } catch (error) {
+        uni.showToast({ title: (error as Error).message, icon: 'none' })
+      } finally {
+        working.value = false
+      }
+    },
+  })
+}
+
+function restoreDefaultKnowledge(): void {
+  uni.showModal({
+    title: '恢复默认知识库',
+    content: '将补齐内置的操作系统知识库，并保留你自行创建的科目和卡片。',
+    confirmColor: '#28624f',
+    success: async ({ confirm }) => {
+      if (!confirm) return
+      working.value = true
+      try {
+        await restorePresetKnowledge()
+        uni.showToast({ title: '默认知识库已恢复', icon: 'success' })
       } catch (error) {
         uni.showToast({ title: (error as Error).message, icon: 'none' })
       } finally {
@@ -157,9 +178,22 @@ function restoreAutomaticBackup(): void {
           <text class="setting-name small-name">分散到期日期</text>
           <text class="setting-description">为较长间隔加入轻微浮动，避免卡片集中到期。</text>
         </view>
-        <switch :checked="enableFuzz" color="#2c9f8e" @change="changeFuzz" />
+        <switch :checked="enableFuzz" color="#28624f" @change="changeFuzz" />
       </view>
       <button class="secondary-button save-fsrs" @click="saveFsrsPreferences">保存调度偏好</button>
+    </view>
+
+    <view class="section-heading">
+      <text class="section-title">默认知识库</text>
+    </view>
+    <view class="preset-card surface">
+      <view class="setting-copy">
+        <text class="setting-name">操作系统知识库</text>
+        <text class="setting-description">知识库缺失或不完整时，可以在这里重新补齐。</text>
+      </view>
+      <button class="secondary-button restore-preset" :disabled="working" @click="restoreDefaultKnowledge">
+        恢复默认知识库
+      </button>
     </view>
 
     <view class="section-heading">
@@ -205,6 +239,7 @@ function restoreAutomaticBackup(): void {
 <style scoped>
 .setting-card,
 .fsrs-card,
+.preset-card,
 .backup-card {
   padding: 30rpx;
 }
@@ -281,6 +316,11 @@ function restoreAutomaticBackup(): void {
 .save-fsrs {
   width: 100%;
   margin-top: 26rpx;
+}
+
+.restore-preset {
+  width: 100%;
+  margin-top: 24rpx;
 }
 
 .backup-intro {

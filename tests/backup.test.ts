@@ -154,6 +154,26 @@ test('backup validation rejects corrupt or inconsistent FSRS state', () => {
     }),
     false,
   )
+
+  for (const field of [
+    'stability',
+    'difficulty',
+    'elapsed_days',
+    'scheduled_days',
+    'learning_steps',
+    'lapses',
+  ]) {
+    const fsrsData = { ...(validState.fsrsData as Record<string, unknown>) }
+    delete fsrsData[field]
+    assert.equal(
+      validateBackupData({
+        ...backup,
+        reviewStates: [{ ...validState, fsrsData }],
+      }),
+      false,
+      `missing FSRS field should be rejected: ${field}`,
+    )
+  }
 })
 
 test('import creates a restorable snapshot of the previous data', async () => {

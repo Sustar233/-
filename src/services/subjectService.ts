@@ -1,10 +1,10 @@
 import { STORAGE_KEYS } from '@/storage/keys'
-import { getStorage, setStorage, setStorageBatch } from '@/storage/storage'
+import { getStorage, setStorage, setStorageBatch, type StorageMutation } from '@/storage/storage'
 import type { KnowledgeCard } from '@/types/card'
 import type { ReviewLog, ReviewState } from '@/types/review'
 import type { Chapter, Subject } from '@/types/subject'
 import { generateId } from '@/utils/id'
-import { ensurePresetKnowledge } from './presetKnowledgeService'
+import { ensurePresetKnowledge, isPresetKnowledgeId } from './presetKnowledgeService'
 
 export async function getSubjects(): Promise<Subject[]> {
   await ensurePresetKnowledge()
@@ -67,7 +67,7 @@ export async function deleteSubject(id: string): Promise<void> {
   ])
   const removedCardIds = new Set(cards.filter((card) => card.subjectId === id).map((card) => card.id))
 
-  await setStorageBatch([
+  const mutations: StorageMutation[] = [
     {
       type: 'set',
       key: STORAGE_KEYS.subjects,
@@ -94,7 +94,11 @@ export async function deleteSubject(id: string): Promise<void> {
       value: reviewLogs.filter((log) => log.subjectId !== id),
     },
     { type: 'remove', key: STORAGE_KEYS.reviewSession },
-  ])
+  ]
+  if (isPresetKnowledgeId(id)) {
+    mutations.push({ type: 'set', key: STORAGE_KEYS.presetKnowledgeDismissed, value: true })
+  }
+  await setStorageBatch(mutations)
 }
 
 export async function createChapter(subjectId: string, name: string): Promise<Chapter> {
@@ -135,7 +139,7 @@ export async function deleteChapter(id: string): Promise<void> {
     getChapters(),
     getStorage<KnowledgeCard[]>(STORAGE_KEYS.cards).then((value) => value ?? []),
   ])
-  await setStorageBatch([
+  const mutations: StorageMutation[] = [
     {
       type: 'set',
       key: STORAGE_KEYS.chapters,
@@ -150,5 +154,9 @@ export async function deleteChapter(id: string): Promise<void> {
         return { ...uncategorized, updatedAt: Date.now() }
       }),
     },
-  ])
+  ]
+  if (isPresetKnowledgeId(id)) {
+    mutations.push({ type: 'set', key: STORAGE_KEYS.presetKnowledgeDismissed, value: true })
+  }
+  await setStorageBatch(mutations)
 }

@@ -2,6 +2,7 @@
 import { computed, ref } from 'vue'
 import { onShow } from '@dcloudio/uni-app'
 import EmptyState from '@/components/EmptyState.vue'
+import LoadErrorState from '@/components/LoadErrorState.vue'
 import StatCard from '@/components/StatCard.vue'
 import { getCards } from '@/services/cardService'
 import { buildReviewQueue, getReviewSession } from '@/services/reviewService'
@@ -18,12 +19,19 @@ const cards = ref<KnowledgeCard[]>([])
 const dueCount = ref(0)
 const resumableSession = ref<ReviewSession | null>(null)
 const loading = ref(false)
+const loadError = ref(false)
 const summary = ref(createEmptyStatistics())
 
 const recentSubjects = computed(() =>
   [...subjects.value].sort((first, second) => second.updatedAt - first.updatedAt).slice(0, 3),
 )
 const isResuming = computed(() => Boolean(resumableSession.value))
+const cardCounts = computed(() =>
+  cards.value.reduce<Record<string, number>>((counts, card) => {
+    counts[card.subjectId] = (counts[card.subjectId] ?? 0) + 1
+    return counts
+  }, {}),
+)
 const reviewCount = computed(() =>
   resumableSession.value
     ? Math.max(0, resumableSession.value.cardIds.length - resumableSession.value.currentIndex)
@@ -32,6 +40,7 @@ const reviewCount = computed(() =>
 
 async function refresh(): Promise<void> {
   loading.value = true
+  loadError.value = false
   try {
     const [subjectData, cardData, queue, statistics, session] = await Promise.all([
       getSubjects(),
@@ -50,16 +59,14 @@ async function refresh(): Promise<void> {
       session.currentIndex < session.cardIds.length
         ? session
         : null
+  } catch {
+    loadError.value = true
   } finally {
     loading.value = false
   }
 }
 
 onShow(refresh)
-
-function cardCount(subjectId: string): number {
-  return cards.value.filter((card) => card.subjectId === subjectId).length
-}
 
 function startReview(): void {
   if (!reviewCount.value) {
@@ -89,6 +96,9 @@ function openStudy(): void {
       <text class="tagline">把知识记得更久</text>
     </view>
 
+    <LoadErrorState v-if="loadError" @retry="refresh" />
+
+    <template v-else>
     <view class="review-hero surface">
       <text class="hero-label">{{ isResuming ? '继续上次复习' : '今日待复习' }}</text>
       <view class="hero-number-row">
@@ -134,10 +144,11 @@ function openStudy(): void {
       <view class="recent-mark">{{ subject.name.slice(0, 1) }}</view>
       <view class="recent-copy">
         <text class="recent-name">{{ subject.name }}</text>
-        <text class="recent-count">{{ cardCount(subject.id) }} 张知识卡</text>
+        <text class="recent-count">{{ cardCounts[subject.id] ?? 0 }} 张知识卡</text>
       </view>
       <text class="chevron">›</text>
     </view>
+    </template>
   </view>
 </template>
 

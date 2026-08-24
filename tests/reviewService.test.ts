@@ -67,7 +67,7 @@ test('review queue places a prerequisite before its dependent card', async () =>
   ])
 
   assert.deepEqual(
-    (await buildReviewQueue(now)).map((item) => item.id),
+    (await buildReviewQueue(now, { subjectId: 'subject_1' })).map((item) => item.id),
     ['prerequisite', 'dependent'],
   )
 })

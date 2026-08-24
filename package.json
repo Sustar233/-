@@ -8,7 +8,7 @@
     "dev:lan": "uni --host 0.0.0.0",
     "dev:mp-weixin": "uni -p mp-weixin",
     "build:h5": "uni build",
-    "build:mp-weixin": "uni build -p mp-weixin",
+    "build:mp-weixin": "node scripts/build-weixin.mjs",
     "type-check": "vue-tsc --noEmit",
     "test": "node --import tsx --test tests/*.test.ts"
   },
@@ -19,8 +19,7 @@
     "@dcloudio/uni-mp-weixin": "3.0.0-5010520260709002",
     "pinia": "2.1.7",
     "ts-fsrs": "5.4.1",
-    "vue": "3.4.21",
-    "vue-i18n": "9.14.5"
+    "vue": "3.4.21"
   },
   "devDependencies": {
     "@dcloudio/types": "3.4.31",
@@ -29,9 +28,9 @@
     "@types/node": "22.10.10",
     "@vue/compiler-sfc": "3.4.21",
     "@vue/tsconfig": "0.5.1",
+    "tsx": "4.20.3",
     "typescript": "5.6.3",
     "vite": "5.2.8",
-    "tsx": "4.20.3",
     "vue-tsc": "2.1.10"
   }
 }

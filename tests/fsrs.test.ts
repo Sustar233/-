@@ -21,6 +21,18 @@ test('FSRS adapter previews and applies all four ratings', () => {
   assert.ok(reviewed.dueAt > now)
 })
 
+test('FSRS adapter rejects incomplete persisted state before scheduling', () => {
+  const now = new Date('2026-07-30T08:00:00.000Z').getTime()
+  const state = createReviewState('card_1', now)
+  const fsrsData = { ...(state.fsrsData as Record<string, unknown>) }
+  delete fsrsData.stability
+
+  assert.throws(
+    () => applyReview({ ...state, fsrsData }, 3, now),
+    /复习状态缺少必要字段/,
+  )
+})
+
 test('scheduler settings normalize legacy and out-of-range values', () => {
   assert.deepEqual(normalizeSettings({ dailyNewCards: 12 }), {
     dailyNewCards: 12,

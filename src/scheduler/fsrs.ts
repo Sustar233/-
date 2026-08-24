@@ -3,9 +3,25 @@ import type { ReviewPreview, ReviewRating, ReviewState } from '@/types/review'
 import { DEFAULT_SETTINGS, type Settings } from '@/types/settings'
 import { formatInterval } from '@/utils/date'
 
-interface StoredFsrsCard extends Omit<Card, 'due' | 'last_review'> {
+export interface StoredFsrsCard extends Omit<Card, 'due' | 'last_review'> {
   due: string
   last_review?: string
+}
+
+const INTEGER_FIELDS = [
+  'elapsed_days',
+  'scheduled_days',
+  'learning_steps',
+  'reps',
+  'lapses',
+] as const
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === 'object' && !Array.isArray(value)
+}
+
+function isNonNegativeNumber(value: unknown): value is number {
+  return typeof value === 'number' && Number.isFinite(value) && value >= 0
 }
 
 function createScheduler(settings: Settings) {
@@ -23,16 +39,41 @@ function serializeCard(card: Card): StoredFsrsCard {
   }
 }
 
-function restoreCard(data: unknown): CardInput {
-  if (!data || typeof data !== 'object') {
+export function parseStoredFsrsCard(data: unknown): CardInput {
+  if (!isRecord(data)) {
     throw new Error('复习状态已损坏')
   }
 
-  const card = data as Partial<StoredFsrsCard>
-  if (!card.due || typeof card.reps !== 'number' || typeof card.state === 'undefined') {
+  if (
+    typeof data.due !== 'string' ||
+    !Number.isFinite(Date.parse(data.due)) ||
+    !isNonNegativeNumber(data.stability) ||
+    !isNonNegativeNumber(data.difficulty) ||
+    !INTEGER_FIELDS.every(
+      (field) => isNonNegativeNumber(data[field]) && Number.isInteger(data[field]),
+    ) ||
+    typeof data.state !== 'number' ||
+    !Number.isInteger(data.state) ||
+    ![0, 1, 2, 3].includes(data.state) ||
+    !(
+      data.last_review === undefined ||
+      data.last_review === null ||
+      (typeof data.last_review === 'string' && Number.isFinite(Date.parse(data.last_review)))
+    )
+  ) {
     throw new Error('复习状态缺少必要字段')
   }
-  return card as CardInput
+
+  return data as unknown as CardInput
+}
+
+export function isStoredFsrsCard(data: unknown): boolean {
+  try {
+    parseStoredFsrsCard(data)
+    return true
+  } catch {
+    return false
+  }
 }
 
 export function createReviewState(cardId: string, now = Date.now()): ReviewState {
@@ -50,7 +91,7 @@ export function previewReview(
   settings = DEFAULT_SETTINGS,
 ): ReviewPreview[] {
   const scheduler = createScheduler(settings)
-  const result = scheduler.repeat(restoreCard(state.fsrsData), new Date(now))
+  const result = scheduler.repeat(parseStoredFsrsCard(state.fsrsData), new Date(now))
   return ([1, 2, 3, 4] as ReviewRating[]).map((rating) => {
     const dueAt = result[rating].card.due.getTime()
     return {
@@ -68,7 +109,7 @@ export function applyReview(
   settings = DEFAULT_SETTINGS,
 ): ReviewState {
   const scheduler = createScheduler(settings)
-  const result = scheduler.next(restoreCard(state.fsrsData), new Date(now), rating as Grade)
+  const result = scheduler.next(parseStoredFsrsCard(state.fsrsData), new Date(now), rating as Grade)
   return {
     cardId: state.cardId,
     dueAt: result.card.due.getTime(),

@@ -1,4 +1,6 @@
 import { STORAGE_KEYS } from '@/storage/keys'
+import { isStoredFsrsCard } from '@/scheduler/fsrs'
+import { PRESET_ID_PREFIX } from '@/data/presetKnowledge'
 import { getStorage, setStorage, setStorageBatch } from '@/storage/storage'
 import type { KnowledgeCard } from '@/types/card'
 import type { ReviewLog, ReviewState } from '@/types/review'
@@ -70,15 +72,7 @@ function isReviewState(value: unknown): value is ReviewState {
     Number.isInteger(value.dueAt) &&
     Number.isFinite(parsedDue) &&
     parsedDue === value.dueAt &&
-    hasNumber(fsrsData, 'reps') &&
-    Number.isInteger(fsrsData.reps) &&
-    (fsrsData.reps as number) >= 0 &&
-    hasNumber(fsrsData, 'state') &&
-    [0, 1, 2, 3].includes(fsrsData.state as number) &&
-    (!('last_review' in fsrsData) ||
-      fsrsData.last_review === undefined ||
-      (typeof fsrsData.last_review === 'string' &&
-        Number.isFinite(Date.parse(fsrsData.last_review)))) &&
+    isStoredFsrsCard(fsrsData) &&
     (!('lastReviewAt' in value) ||
       value.lastReviewAt === undefined ||
       hasNumber(value, 'lastReviewAt'))
@@ -184,6 +178,10 @@ async function readCurrentBackup(): Promise<BackupData> {
 }
 
 async function writeBackupData(data: BackupData): Promise<void> {
+  const includesPreset =
+    data.subjects.some((item) => item.id.startsWith(PRESET_ID_PREFIX)) ||
+    data.chapters.some((item) => item.id.startsWith(PRESET_ID_PREFIX)) ||
+    data.cards.some((item) => item.id.startsWith(PRESET_ID_PREFIX))
   await setStorageBatch([
     { type: 'set', key: STORAGE_KEYS.subjects, value: data.subjects },
     { type: 'set', key: STORAGE_KEYS.chapters, value: data.chapters },
@@ -196,6 +194,7 @@ async function writeBackupData(data: BackupData): Promise<void> {
       value: normalizeSettings(data.settings),
     },
     { type: 'remove', key: STORAGE_KEYS.reviewSession },
+    { type: 'set', key: STORAGE_KEYS.presetKnowledgeDismissed, value: !includesPreset },
   ])
 }
 

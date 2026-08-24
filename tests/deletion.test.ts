@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import { beforeEach, test } from 'node:test'
+import { PRESET_ID_PREFIX } from '../src/data/presetKnowledge'
 import { deleteCard } from '../src/services/cardService'
 import { deleteSubject } from '../src/services/subjectService'
 import { STORAGE_KEYS } from '../src/storage/keys'
@@ -51,7 +52,12 @@ test('deleting a card removes its state and logs only', async () => {
   await seed()
   await deleteCard('card_1')
 
-  assert.deepEqual(readStored<KnowledgeCard[]>(STORAGE_KEYS.cards)?.map((card) => card.id), ['card_2'])
+  assert.deepEqual(
+    readStored<KnowledgeCard[]>(STORAGE_KEYS.cards)
+      ?.filter((card) => !card.id.startsWith(PRESET_ID_PREFIX))
+      .map((card) => card.id),
+    ['card_2'],
+  )
   assert.deepEqual(
     readStored<Array<{ cardId: string }>>(STORAGE_KEYS.reviewStates)?.map((state) => state.cardId),
     ['card_2'],
@@ -83,11 +89,24 @@ test('deleting a subject cascades chapters, cards, states and logs', async () =>
   await seed()
   await deleteSubject('subject_1')
 
-  assert.deepEqual(readStored<Array<{ id: string }>>(STORAGE_KEYS.subjects)?.map((item) => item.id), [
-    'subject_2',
-  ])
-  assert.deepEqual(readStored<unknown[]>(STORAGE_KEYS.chapters), [])
-  assert.deepEqual(readStored<KnowledgeCard[]>(STORAGE_KEYS.cards)?.map((item) => item.id), ['card_2'])
+  assert.deepEqual(
+    readStored<Array<{ id: string }>>(STORAGE_KEYS.subjects)
+      ?.filter((item) => !item.id.startsWith(PRESET_ID_PREFIX))
+      .map((item) => item.id),
+    ['subject_2'],
+  )
+  assert.deepEqual(
+    readStored<Array<{ id: string }>>(STORAGE_KEYS.chapters)?.filter(
+      (item) => !item.id.startsWith(PRESET_ID_PREFIX),
+    ),
+    [],
+  )
+  assert.deepEqual(
+    readStored<KnowledgeCard[]>(STORAGE_KEYS.cards)
+      ?.filter((item) => !item.id.startsWith(PRESET_ID_PREFIX))
+      .map((item) => item.id),
+    ['card_2'],
+  )
   assert.deepEqual(
     readStored<Array<{ cardId: string }>>(STORAGE_KEYS.reviewStates)?.map((item) => item.cardId),
     ['card_2'],

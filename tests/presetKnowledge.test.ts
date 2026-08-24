@@ -5,10 +5,14 @@ import {
   PRESET_ID_PREFIX,
   PRESET_KNOWLEDGE_VERSION,
 } from '../src/data/presetKnowledge'
-import { ensurePresetKnowledge } from '../src/services/presetKnowledgeService'
+import {
+  ensurePresetKnowledge,
+  restorePresetKnowledge,
+} from '../src/services/presetKnowledgeService'
 import { STORAGE_KEYS } from '../src/storage/keys'
 import { setStorage } from '../src/storage/storage'
 import type { KnowledgeCard } from '../src/types/card'
+import type { ReviewLog, ReviewState } from '../src/types/review'
 import type { Chapter, Subject } from '../src/types/subject'
 import { installStorageMock, readStored, resetStorage } from './helpers/storageMock'
 
@@ -43,7 +47,7 @@ test('operating-system preset contains 8 chapters and 160 linked cards', () => {
   }
 })
 
-test('empty knowledge storage is seeded once', async () => {
+test('empty knowledge storage is seeded and an explicit dismissal is respected', async () => {
   await ensurePresetKnowledge()
 
   assert.equal(readStored<Subject[]>(STORAGE_KEYS.subjects)?.length, 1)
@@ -57,11 +61,28 @@ test('empty knowledge storage is seeded once', async () => {
   await setStorage(STORAGE_KEYS.subjects, [])
   await setStorage(STORAGE_KEYS.chapters, [])
   await setStorage(STORAGE_KEYS.cards, [])
+  await setStorage(STORAGE_KEYS.presetKnowledgeDismissed, true)
   await ensurePresetKnowledge()
 
   assert.deepEqual(readStored(STORAGE_KEYS.subjects), [])
   assert.deepEqual(readStored(STORAGE_KEYS.chapters), [])
   assert.deepEqual(readStored(STORAGE_KEYS.cards), [])
+
+  await restorePresetKnowledge()
+  assert.equal(readStored<Subject[]>(STORAGE_KEYS.subjects)?.length, 1)
+  assert.equal(readStored<Chapter[]>(STORAGE_KEYS.chapters)?.length, 8)
+  assert.equal(readStored<KnowledgeCard[]>(STORAGE_KEYS.cards)?.length, 160)
+  assert.equal(readStored(STORAGE_KEYS.presetKnowledgeDismissed), false)
+})
+
+test('current version with missing preset self-heals unless explicitly dismissed', async () => {
+  await setStorage(STORAGE_KEYS.presetKnowledgeVersion, PRESET_KNOWLEDGE_VERSION)
+
+  await ensurePresetKnowledge()
+
+  assert.equal(readStored<Subject[]>(STORAGE_KEYS.subjects)?.length, 1)
+  assert.equal(readStored<Chapter[]>(STORAGE_KEYS.chapters)?.length, 8)
+  assert.equal(readStored<KnowledgeCard[]>(STORAGE_KEYS.cards)?.length, 160)
 })
 
 test('existing user knowledge is preserved alongside the default preset', async () => {
@@ -83,6 +104,87 @@ test('existing user knowledge is preserved alongside the default preset', async 
   assert.equal(subjects.some((subject) => subject.id.startsWith(PRESET_ID_PREFIX)), true)
   assert.equal(readStored<Chapter[]>(STORAGE_KEYS.chapters)?.length, 8)
   assert.equal(readStored<KnowledgeCard[]>(STORAGE_KEYS.cards)?.length, 160)
+  assert.equal(
+    readStored<number>(STORAGE_KEYS.presetKnowledgeVersion),
+    PRESET_KNOWLEDGE_VERSION,
+  )
+})
+
+test('version 2 store missing the preset is repaired without losing user data', async () => {
+  const userSubject: Subject = {
+    id: 'subject_user_existing',
+    name: '我的科目',
+    createdAt: 1,
+    updatedAt: 1,
+  }
+  const userCard: KnowledgeCard = {
+    id: 'card_user_existing',
+    subjectId: userSubject.id,
+    question: '用户问题',
+    answer: '用户答案',
+    tags: ['用户'],
+    importance: 2,
+    status: 'active',
+    createdAt: 1,
+    updatedAt: 1,
+  }
+  const userState: ReviewState = { cardId: userCard.id, dueAt: 10, fsrsData: {} }
+  const userLog: ReviewLog = {
+    id: 'review_user_existing',
+    cardId: userCard.id,
+    subjectId: userSubject.id,
+    rating: 3,
+    reviewedAt: 10,
+  }
+  await Promise.all([
+    setStorage(STORAGE_KEYS.presetKnowledgeVersion, 2),
+    setStorage(STORAGE_KEYS.subjects, [userSubject]),
+    setStorage(STORAGE_KEYS.cards, [userCard]),
+    setStorage(STORAGE_KEYS.reviewStates, [userState]),
+    setStorage(STORAGE_KEYS.reviewLogs, [userLog]),
+  ])
+
+  await ensurePresetKnowledge()
+
+  const subjects = readStored<Subject[]>(STORAGE_KEYS.subjects) ?? []
+  const cards = readStored<KnowledgeCard[]>(STORAGE_KEYS.cards) ?? []
+  assert.equal(subjects.some((subject) => subject.id === userSubject.id), true)
+  assert.equal(subjects.some((subject) => subject.id.startsWith(PRESET_ID_PREFIX)), true)
+  assert.equal(cards.some((card) => card.id === userCard.id), true)
+  assert.equal(cards.filter((card) => card.id.startsWith(PRESET_ID_PREFIX)).length, 160)
+  assert.deepEqual(readStored(STORAGE_KEYS.reviewStates), [userState])
+  assert.deepEqual(readStored(STORAGE_KEYS.reviewLogs), [userLog])
+  assert.equal(
+    readStored<number>(STORAGE_KEYS.presetKnowledgeVersion),
+    PRESET_KNOWLEDGE_VERSION,
+  )
+})
+
+test('version marker upgrade preserves progress for an existing complete preset', async () => {
+  const preset = buildPresetKnowledgeData()
+  const presetCard = preset.cards[0]
+  assert.ok(presetCard)
+  const state: ReviewState = { cardId: presetCard.id, dueAt: 20, fsrsData: {} }
+  const log: ReviewLog = {
+    id: 'review_preset_existing',
+    cardId: presetCard.id,
+    subjectId: preset.subject.id,
+    rating: 3,
+    reviewedAt: 20,
+  }
+  await Promise.all([
+    setStorage(STORAGE_KEYS.presetKnowledgeVersion, 2),
+    setStorage(STORAGE_KEYS.subjects, [preset.subject]),
+    setStorage(STORAGE_KEYS.chapters, preset.chapters),
+    setStorage(STORAGE_KEYS.cards, preset.cards),
+    setStorage(STORAGE_KEYS.reviewStates, [state]),
+    setStorage(STORAGE_KEYS.reviewLogs, [log]),
+  ])
+
+  await ensurePresetKnowledge()
+
+  assert.deepEqual(readStored(STORAGE_KEYS.reviewStates), [state])
+  assert.deepEqual(readStored(STORAGE_KEYS.reviewLogs), [log])
   assert.equal(
     readStored<number>(STORAGE_KEYS.presetKnowledgeVersion),
     PRESET_KNOWLEDGE_VERSION,

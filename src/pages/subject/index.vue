@@ -97,7 +97,7 @@ function removeChapter(id: string): void {
   uni.showModal({
     title: '删除章节',
     content: `删除“${chapter.name}”后，其中的卡片会移到未分类。`,
-    confirmColor: '#c65f5b',
+    confirmColor: '#a3453e',
     success: async ({ confirm }) => {
       if (!confirm) return
       await subjectStore.removeChapter(id)
@@ -126,7 +126,7 @@ function removeCard(id: string): void {
   uni.showModal({
     title: '删除知识卡',
     content: '卡片及其全部复习状态和记录都会删除。',
-    confirmColor: '#c65f5b',
+    confirmColor: '#a3453e',
     success: async ({ confirm }) => {
       if (!confirm) return
       await cardStore.remove(id, subjectId.value)

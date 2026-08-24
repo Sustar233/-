@@ -3,6 +3,7 @@ import { computed, ref } from 'vue'
 import { onShow } from '@dcloudio/uni-app'
 import SubjectCard from '@/components/SubjectCard.vue'
 import EmptyState from '@/components/EmptyState.vue'
+import LoadErrorState from '@/components/LoadErrorState.vue'
 import { getCards } from '@/services/cardService'
 import { useSubjectStore } from '@/stores/subject'
 
@@ -12,16 +13,22 @@ const name = ref('')
 const description = ref('')
 const editingId = ref('')
 const saving = ref(false)
+const loadError = ref(false)
 
 const formTitle = computed(() => (editingId.value ? '编辑科目' : '新建科目'))
 
 async function refresh(): Promise<void> {
-  await subjectStore.load()
-  const cards = await getCards()
-  cardCounts.value = cards.reduce<Record<string, number>>((counts, card) => {
-    counts[card.subjectId] = (counts[card.subjectId] ?? 0) + 1
-    return counts
-  }, {})
+  loadError.value = false
+  try {
+    await subjectStore.load()
+    const cards = await getCards()
+    cardCounts.value = cards.reduce<Record<string, number>>((counts, card) => {
+      counts[card.subjectId] = (counts[card.subjectId] ?? 0) + 1
+      return counts
+    }, {})
+  } catch {
+    loadError.value = true
+  }
 }
 
 onShow(refresh)
@@ -65,7 +72,7 @@ function removeSubject(id: string): void {
   uni.showModal({
     title: '删除科目',
     content: `“${subject.name}”下的章节、卡片和复习记录都会删除，确定继续吗？`,
-    confirmColor: '#c65f5b',
+    confirmColor: '#a3453e',
     success: async ({ confirm }) => {
       if (!confirm) return
       await subjectStore.removeSubject(id)
@@ -90,6 +97,9 @@ function openSubject(id: string): void {
       <text class="subject-total">{{ subjectStore.subjects.length }} 个科目</text>
     </view>
 
+    <LoadErrorState v-if="loadError" @retry="refresh" />
+
+    <template v-else>
     <view class="editor surface">
       <view class="editor-heading">
         <text class="editor-title">{{ formTitle }}</text>
@@ -126,6 +136,7 @@ function openSubject(id: string): void {
       @edit="editSubject(subject.id)"
       @remove="removeSubject(subject.id)"
     />
+    </template>
   </view>
 </template>
 

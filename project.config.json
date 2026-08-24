@@ -1,0 +1,20 @@
+{
+  "description": "苦作舟微信小程序项目配置",
+  "appid": "wx5b914c7d954302ad",
+  "projectname": "苦作舟",
+  "compileType": "miniprogram",
+  "miniprogramRoot": "dist/build/mp-weixin/",
+  "packOptions": {
+    "ignore": []
+  },
+  "setting": {
+    "urlCheck": true,
+    "es6": true,
+    "postcss": true,
+    "minified": true,
+    "newFeature": true,
+    "bigPackageSizeSupport": true,
+    "checkSiteMap": true
+  },
+  "condition": {}
+}

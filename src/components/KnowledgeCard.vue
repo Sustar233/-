@@ -1,9 +1,14 @@
 <script setup lang="ts">
+import { computed, ref } from 'vue'
 import type { KnowledgeCard } from '@/types/card'
 
-const importanceLabels = ['', '一般', '重要', '重点']
+const importanceLabels = ['', '一般', '重要', '非常重要']
 
-defineProps<{ card: KnowledgeCard; parentQuestion?: string }>()
+const props = defineProps<{ card: KnowledgeCard; parentQuestion?: string }>()
+const noteVisible = ref(false)
+const hasNote = computed(() =>
+  Boolean(props.card.parentCardId || props.card.connection || props.card.note),
+)
 
 defineEmits<{
   edit: []
@@ -20,14 +25,22 @@ defineEmits<{
     </view>
     <text class="question">{{ card.question }}</text>
     <text class="answer-preview">{{ card.answer }}</text>
-    <view v-if="card.parentCardId || card.connection" class="connection-row">
-      <text class="connection-label">脉络</text>
-      <text class="connection-copy">
-        {{ card.connection || (parentQuestion ? `承接：${parentQuestion}` : '已关联前置知识') }}
-      </text>
-    </view>
     <view v-if="card.tags.length" class="tag-row">
       <text v-for="tag in card.tags" :key="tag" class="tag"># {{ tag }}</text>
+    </view>
+    <button
+      v-if="hasNote"
+      class="text-button note-toggle"
+      size="mini"
+      @click="noteVisible = !noteVisible"
+    >
+      {{ noteVisible ? '收起备注' : '查看备注' }}
+    </button>
+    <view v-if="hasNote && noteVisible" class="note-panel">
+      <text v-if="card.parentCardId || card.connection" class="note-copy">
+        {{ card.connection || (parentQuestion ? `承接：${parentQuestion}` : '已关联前置知识') }}
+      </text>
+      <text v-if="card.note" class="note-copy">{{ card.note }}</text>
     </view>
     <view class="card-actions">
       <button class="text-button" size="mini" aria-label="编辑知识卡" @click="$emit('edit')">编辑</button>
@@ -96,31 +109,28 @@ defineEmits<{
   margin-top: 18rpx;
 }
 
-.connection-row {
-  display: flex;
+.note-toggle {
   margin-top: 16rpx;
-  padding: 14rpx 16rpx;
-  gap: 12rpx;
-  border-left: 3rpx solid var(--color-primary);
-  border-radius: 8rpx;
-  background: var(--color-primary-soft);
+  padding-left: 0;
 }
 
-.connection-label {
-  flex: 0 0 auto;
-  color: var(--color-primary);
-  font-size: 20rpx;
-  font-weight: 720;
+.note-panel {
+  margin-top: 10rpx;
+  padding: 16rpx;
+  border: 1rpx solid var(--color-line);
+  border-radius: 10rpx;
+  background: var(--color-surface-strong);
 }
 
-.connection-copy {
-  display: -webkit-box;
-  overflow: hidden;
+.note-copy {
+  display: block;
   color: var(--color-muted);
   font-size: 21rpx;
-  line-height: 1.5;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
+  line-height: 1.6;
+}
+
+.note-copy + .note-copy {
+  margin-top: 10rpx;
 }
 
 .tag {

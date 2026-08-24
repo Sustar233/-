@@ -14,14 +14,15 @@ let initializationPromise: Promise<void> | null = null
 
 const ALL_PRESET_PREFIXES = [PRESET_ID_PREFIX, ...LEGACY_PRESET_ID_PREFIXES]
 
-function isPresetId(id: string): boolean {
+export function isPresetKnowledgeId(id: string): boolean {
   return ALL_PRESET_PREFIXES.some((prefix) => id.startsWith(prefix))
 }
 
-async function initializePresetKnowledge(): Promise<void> {
-  const [version, subjectsValue, chaptersValue, cardsValue, statesValue, logsValue] =
+async function initializePresetKnowledge(force = false): Promise<void> {
+  const [version, dismissed, subjectsValue, chaptersValue, cardsValue, statesValue, logsValue] =
     await Promise.all([
     getStorage<number>(STORAGE_KEYS.presetKnowledgeVersion),
+    getStorage<boolean>(STORAGE_KEYS.presetKnowledgeDismissed),
     getStorage<Subject[]>(STORAGE_KEYS.subjects),
     getStorage<Chapter[]>(STORAGE_KEYS.chapters),
     getStorage<KnowledgeCard[]>(STORAGE_KEYS.cards),
@@ -29,45 +30,48 @@ async function initializePresetKnowledge(): Promise<void> {
     getStorage<ReviewLog[]>(STORAGE_KEYS.reviewLogs),
   ])
 
-  if ((version ?? 0) >= PRESET_KNOWLEDGE_VERSION) return
-
   const subjects = subjectsValue ?? []
   const chapters = chaptersValue ?? []
   const cards = cardsValue ?? []
   const states = statesValue ?? []
   const logs = logsValue ?? []
-  const hasPresetData =
-    subjects.some((subject) => isPresetId(subject.id)) ||
-    chapters.some((chapter) => isPresetId(chapter.id)) ||
-    cards.some((card) => isPresetId(card.id))
-  const hasUserKnowledge =
-    subjects.some((subject) => !isPresetId(subject.id)) ||
-    chapters.some((chapter) => !isPresetId(chapter.id)) ||
-    cards.some((card) => !isPresetId(card.id))
+  if (dismissed && !force) return
 
-  // Preserve the legacy behavior for a store containing only user data and no
-  // evidence that a built-in preset was ever installed. Versioned installs are
-  // migrated below, including those where the user manually emptied the preset.
-  if ((version ?? 0) === 0 && hasUserKnowledge && !hasPresetData) {
+  const preset = buildPresetKnowledgeData()
+  const hasLegacyPresetData = [...subjects, ...chapters, ...cards].some((item) =>
+    LEGACY_PRESET_ID_PREFIXES.some((prefix) => item.id.startsWith(prefix)),
+  )
+  const subjectIds = new Set(subjects.map((subject) => subject.id))
+  const chapterIds = new Set(chapters.map((chapter) => chapter.id))
+  const cardIds = new Set(cards.map((card) => card.id))
+  const hasCompleteCurrentPreset =
+    subjectIds.has(preset.subject.id) &&
+    preset.chapters.every((chapter) => chapterIds.has(chapter.id)) &&
+    preset.cards.every((card) => cardIds.has(card.id))
+
+  // The version-4 migration repairs WeChat stores that were incorrectly marked
+  // as initialized without receiving the preset. A complete preset only needs
+  // the marker update, so its learning progress remains untouched.
+  if (hasCompleteCurrentPreset && !hasLegacyPresetData) {
     await setStorageBatch([
       {
         type: 'set',
         key: STORAGE_KEYS.presetKnowledgeVersion,
         value: PRESET_KNOWLEDGE_VERSION,
       },
+      { type: 'set', key: STORAGE_KEYS.presetKnowledgeDismissed, value: false },
     ])
     return
   }
 
-  const preset = buildPresetKnowledgeData()
   const removedPresetCardIds = new Set(
-    cards.filter((card) => isPresetId(card.id)).map((card) => card.id),
+    cards.filter((card) => isPresetKnowledgeId(card.id)).map((card) => card.id),
   )
   const userCards = cards
-    .filter((card) => !isPresetId(card.id))
+    .filter((card) => !isPresetKnowledgeId(card.id))
     .map((card) =>
       card.parentCardId &&
-      (removedPresetCardIds.has(card.parentCardId) || isPresetId(card.parentCardId))
+      (removedPresetCardIds.has(card.parentCardId) || isPresetKnowledgeId(card.parentCardId))
         ? { ...card, parentCardId: undefined, updatedAt: Date.now() }
         : card,
     )
@@ -76,30 +80,38 @@ async function initializePresetKnowledge(): Promise<void> {
     {
       type: 'set',
       key: STORAGE_KEYS.subjects,
-      value: [...subjects.filter((subject) => !isPresetId(subject.id)), preset.subject],
+      value: [
+        ...subjects.filter((subject) => !isPresetKnowledgeId(subject.id)),
+        preset.subject,
+      ],
     },
     {
       type: 'set',
       key: STORAGE_KEYS.chapters,
-      value: [...chapters.filter((chapter) => !isPresetId(chapter.id)), ...preset.chapters],
+      value: [
+        ...chapters.filter((chapter) => !isPresetKnowledgeId(chapter.id)),
+        ...preset.chapters,
+      ],
     },
     { type: 'set', key: STORAGE_KEYS.cards, value: [...userCards, ...preset.cards] },
     {
       type: 'set',
       key: STORAGE_KEYS.reviewStates,
       value: states.filter(
-        (state) => !removedPresetCardIds.has(state.cardId) && !isPresetId(state.cardId),
+        (state) =>
+          !removedPresetCardIds.has(state.cardId) && !isPresetKnowledgeId(state.cardId),
       ),
     },
     {
       type: 'set',
       key: STORAGE_KEYS.reviewLogs,
       value: logs.filter(
-        (log) => !removedPresetCardIds.has(log.cardId) && !isPresetId(log.cardId),
+        (log) => !removedPresetCardIds.has(log.cardId) && !isPresetKnowledgeId(log.cardId),
       ),
     },
     { type: 'remove', key: STORAGE_KEYS.reviewSession },
     { type: 'set', key: STORAGE_KEYS.presetKnowledgeVersion, value: PRESET_KNOWLEDGE_VERSION },
+    { type: 'set', key: STORAGE_KEYS.presetKnowledgeDismissed, value: false },
   ])
 }
 
@@ -109,5 +121,13 @@ export function ensurePresetKnowledge(): Promise<void> {
       initializationPromise = null
     })
   }
+  return initializationPromise
+}
+
+export async function restorePresetKnowledge(): Promise<void> {
+  if (initializationPromise) await initializationPromise
+  initializationPromise = initializePresetKnowledge(true).finally(() => {
+    initializationPromise = null
+  })
   return initializationPromise
 }

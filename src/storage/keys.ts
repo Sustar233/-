@@ -8,4 +8,5 @@ export const STORAGE_KEYS = {
   reviewSession: 'recalllab:reviewSession',
   automaticBackup: 'recalllab:automaticBackup',
   presetKnowledgeVersion: 'recalllab:presetKnowledgeVersion',
+  presetKnowledgeDismissed: 'recalllab:presetKnowledgeDismissed',
 } as const

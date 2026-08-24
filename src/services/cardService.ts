@@ -1,9 +1,9 @@
 import { STORAGE_KEYS } from '@/storage/keys'
-import { getStorage, setStorage, setStorageBatch } from '@/storage/storage'
+import { getStorage, setStorage, setStorageBatch, type StorageMutation } from '@/storage/storage'
 import type { KnowledgeCard, KnowledgeCardInput } from '@/types/card'
 import type { ReviewLog, ReviewState } from '@/types/review'
 import { generateId } from '@/utils/id'
-import { ensurePresetKnowledge } from './presetKnowledgeService'
+import { ensurePresetKnowledge, isPresetKnowledgeId } from './presetKnowledgeService'
 
 export async function getCards(subjectId?: string): Promise<KnowledgeCard[]> {
   await ensurePresetKnowledge()
@@ -93,7 +93,7 @@ export async function deleteCard(id: string): Promise<void> {
     getStorage<ReviewState[]>(STORAGE_KEYS.reviewStates).then((value) => value ?? []),
     getStorage<ReviewLog[]>(STORAGE_KEYS.reviewLogs).then((value) => value ?? []),
   ])
-  await setStorageBatch([
+  const mutations: StorageMutation[] = [
     {
       type: 'set',
       key: STORAGE_KEYS.cards,
@@ -116,7 +116,11 @@ export async function deleteCard(id: string): Promise<void> {
       value: logs.filter((log) => log.cardId !== id),
     },
     { type: 'remove', key: STORAGE_KEYS.reviewSession },
-  ])
+  ]
+  if (isPresetKnowledgeId(id)) {
+    mutations.push({ type: 'set', key: STORAGE_KEYS.presetKnowledgeDismissed, value: true })
+  }
+  await setStorageBatch(mutations)
 }
 
 export async function setCardSuspended(id: string, suspended: boolean): Promise<void> {

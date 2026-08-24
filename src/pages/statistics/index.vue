@@ -2,24 +2,31 @@
 import { computed, ref } from 'vue'
 import { onShow } from '@dcloudio/uni-app'
 import EmptyState from '@/components/EmptyState.vue'
+import LoadErrorState from '@/components/LoadErrorState.vue'
 import StatCard from '@/components/StatCard.vue'
 import { createEmptyStatistics, getStatistics } from '@/services/statisticsService'
 
 const summary = ref(createEmptyStatistics())
 const loading = ref(false)
+const loadError = ref(false)
 
 const maximumDayCount = computed(() =>
   Math.max(1, ...summary.value.last7Days.map((day) => day.count)),
 )
 
-onShow(async () => {
+async function refresh(): Promise<void> {
   loading.value = true
+  loadError.value = false
   try {
     summary.value = await getStatistics()
+  } catch {
+    loadError.value = true
   } finally {
     loading.value = false
   }
-})
+}
+
+onShow(refresh)
 
 function barHeight(count: number): string {
   if (!count) return '10rpx'
@@ -41,6 +48,9 @@ function editWeakCard(cardId: string, subjectId: string): void {
       <text class="page-subtitle">看见节奏，也看见容易遗忘的知识。</text>
     </view>
 
+    <LoadErrorState v-if="loadError" @retry="refresh" />
+
+    <template v-else>
     <view class="stat-grid">
       <StatCard label="今日复习" :value="summary.todayReviews" hint="次回答" />
       <StatCard label="今日新卡" :value="summary.todayNewCards" hint="首次学习" />
@@ -88,6 +98,7 @@ function editWeakCard(cardId: string, subjectId: string): void {
       </view>
       <text class="chevron">›</text>
     </view>
+    </template>
   </view>
 </template>
 

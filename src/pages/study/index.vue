@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { onLoad } from '@dcloudio/uni-app'
+import LoadErrorState from '@/components/LoadErrorState.vue'
 import { getCards } from '@/services/cardService'
 import { buildReviewQueue } from '@/services/reviewService'
 import { getChapters, getSubjects } from '@/services/subjectService'
@@ -17,6 +18,9 @@ const chapterId = ref('all')
 const tag = ref('all')
 const queueCount = ref(0)
 const loading = ref(true)
+const loadError = ref(false)
+let countRequestId = 0
+let requestedSubjectId = ''
 
 const subjectOptions = computed(() => ['全部科目', ...subjects.value.map((item) => item.name)])
 const availableChapters = computed(() =>
@@ -65,23 +69,40 @@ function currentFilter(): ReviewFilter {
 
 async function refreshCount(): Promise<void> {
   if (loading.value) return
-  queueCount.value = (await buildReviewQueue(Date.now(), currentFilter())).length
+  const requestId = ++countRequestId
+  try {
+    const count = (await buildReviewQueue(Date.now(), currentFilter())).length
+    if (requestId === countRequestId) queueCount.value = count
+  } catch {
+    if (requestId === countRequestId) loadError.value = true
+  }
 }
 
 watch([subjectId, chapterId, tag], refreshCount)
 
-onLoad(async (query) => {
-  ;[subjects.value, chapters.value, cards.value] = await Promise.all([
-    getSubjects(),
-    getChapters(),
-    getCards(),
-  ])
-  const requestedSubjectId = String(query?.subjectId ?? '')
-  if (subjects.value.some((item) => item.id === requestedSubjectId)) {
-    subjectId.value = requestedSubjectId
+async function load(): Promise<void> {
+  loading.value = true
+  loadError.value = false
+  try {
+    ;[subjects.value, chapters.value, cards.value] = await Promise.all([
+      getSubjects(),
+      getChapters(),
+      getCards(),
+    ])
+    if (subjects.value.some((item) => item.id === requestedSubjectId)) {
+      subjectId.value = requestedSubjectId
+    }
+    loading.value = false
+    await refreshCount()
+  } catch {
+    loadError.value = true
+    loading.value = false
   }
-  loading.value = false
-  await refreshCount()
+}
+
+onLoad((query) => {
+  requestedSubjectId = String(query?.subjectId ?? '')
+  void load()
 })
 
 function changeSubject(event: { detail: { value: string | number } }): void {
@@ -125,6 +146,9 @@ function startStudy(): void {
       <text class="page-subtitle">按前置关系安排学习顺序：先理解上下文，再尝试独立回忆。</text>
     </view>
 
+    <LoadErrorState v-if="loadError" @retry="load" />
+
+    <template v-else>
     <view class="filter-card surface">
       <text class="field-label first-label">科目范围</text>
       <picker :range="subjectOptions" @change="changeSubject">
@@ -159,6 +183,7 @@ function startStudy(): void {
     <button class="primary-button start-button" :disabled="loading || !queueCount" @click="startStudy">
       开始路径学习
     </button>
+    </template>
   </view>
 </template>
 
