@@ -4,3 +4,4 @@ dist/
 .recalllab-data/
 *.local
 *.log
+project.private.config.json

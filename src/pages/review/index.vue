@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { onLoad } from '@dcloudio/uni-app'
 import EmptyState from '@/components/EmptyState.vue'
 import ReviewButtons from '@/components/ReviewButtons.vue'
@@ -14,6 +14,10 @@ const subjects = ref<Subject[]>([])
 const chapters = ref<Chapter[]>([])
 const rating = ref(false)
 const noteVisible = ref(false)
+const startingRecall = ref(false)
+const continuing = ref(false)
+const clock = ref(Date.now())
+let clockTimer: ReturnType<typeof setInterval> | undefined
 
 const isFocusedReview = computed(() =>
   Boolean(
@@ -37,6 +41,19 @@ const breadcrumb = computed(() => {
   const chapter = chapters.value.find((item) => item.id === card.chapterId)?.name
   return chapter ? `${subject} · ${chapter}` : `${subject} · 未分类`
 })
+const waitingForRetry = computed(
+  () => Boolean(reviewStore.currentRetryDueAt && reviewStore.currentRetryDueAt > clock.value),
+)
+
+onMounted(() => {
+  clockTimer = setInterval(() => {
+    clock.value = Date.now()
+  }, 1000)
+})
+
+onUnmounted(() => {
+  if (clockTimer) clearInterval(clockTimer)
+})
 
 watch(
   () => reviewStore.currentCard?.id,
@@ -49,6 +66,17 @@ onLoad(async (query) => {
   ;[subjects.value, chapters.value] = await Promise.all([getSubjects(), getChapters()])
   const filter: ReviewFilter = reviewFilterFromQuery(query)
   await reviewStore.start(filter, query?.fresh !== '1')
+  const todayMode = Array.isArray(query?.today) ? query.today[0] : query?.today
+  if (todayMode === 'all' || todayMode === 'wrong') {
+    const count = await reviewStore.startTodayReview(todayMode === 'wrong')
+    if (!count) {
+      await reviewStore.finishSession()
+      uni.showToast({
+        title: todayMode === 'wrong' ? '今天还没有背错的知识' : '今天还没有复习记录',
+        icon: 'none',
+      })
+    }
+  }
 })
 
 async function rateCard(value: ReviewRating): Promise<void> {
@@ -63,9 +91,15 @@ async function rateCard(value: ReviewRating): Promise<void> {
   }
 }
 
-async function skipCard(): Promise<void> {
-  if (!(await reviewStore.skip())) {
-    uni.showToast({ title: '当前只剩这一张卡片', icon: 'none' })
+async function startBatchRecall(): Promise<void> {
+  if (startingRecall.value) return
+  startingRecall.value = true
+  try {
+    await reviewStore.beginRecall()
+  } catch (error) {
+    uni.showToast({ title: (error as Error).message, icon: 'none' })
+  } finally {
+    startingRecall.value = false
   }
 }
 
@@ -76,6 +110,37 @@ async function undoLastRating(): Promise<void> {
     }
   } catch (error) {
     uni.showToast({ title: (error as Error).message, icon: 'none' })
+  }
+}
+
+async function learnMore(): Promise<void> {
+  if (continuing.value) return
+  continuing.value = true
+  try {
+    const count = await reviewStore.startMoreNewCards(20)
+    if (!count) uni.showToast({ title: '当前范围内没有更多新卡', icon: 'none' })
+  } catch (error) {
+    uni.showToast({ title: (error as Error).message, icon: 'none' })
+  } finally {
+    continuing.value = false
+  }
+}
+
+async function reviewToday(wrongOnly = false): Promise<void> {
+  if (continuing.value) return
+  continuing.value = true
+  try {
+    const count = await reviewStore.startTodayReview(wrongOnly)
+    if (!count) {
+      uni.showToast({
+        title: wrongOnly ? '今天还没有背错的知识' : '今天还没有复习记录',
+        icon: 'none',
+      })
+    }
+  } catch (error) {
+    uni.showToast({ title: (error as Error).message, icon: 'none' })
+  } finally {
+    continuing.value = false
   }
 }
 
@@ -108,13 +173,35 @@ async function goBack(): Promise<void> {
     <EmptyState
       v-else-if="reviewStore.finished"
       :title="isFocusedReview ? '本次路径学习已完成' : '今天的复习已经完成'"
-      :description="reviewStore.total ? `完成了 ${reviewStore.total} 张知识卡` : '当前没有到期卡片或新卡。'"
+      :description="reviewStore.sessionCardCount ? `完成了 ${reviewStore.sessionCardCount} 张知识卡` : '当前没有到期卡片或新卡。'"
     >
       <view class="finish-actions">
         <button v-if="reviewStore.canUndo" class="secondary-button" @click="undoLastRating">
           撤销上次评分
         </button>
-        <button class="primary-button" @click="goBack">完成并返回</button>
+        <button
+          class="primary-button"
+          :loading="continuing"
+          :disabled="continuing"
+          @click="learnMore"
+        >
+          继续学习 20 张
+        </button>
+        <button
+          class="secondary-button"
+          :disabled="continuing"
+          @click="reviewToday(true)"
+        >
+          复习今日错题
+        </button>
+        <button
+          class="secondary-button"
+          :disabled="continuing"
+          @click="reviewToday(false)"
+        >
+          复习今日知识
+        </button>
+        <button class="text-button" :disabled="continuing" @click="goBack">完成并返回</button>
       </view>
     </EmptyState>
 
@@ -122,87 +209,59 @@ async function goBack(): Promise<void> {
       <view v-if="reviewStore.resumed" class="resume-notice">已恢复上次复习进度</view>
       <text class="breadcrumb">{{ breadcrumb }}</text>
 
-      <view class="phase-track" :class="{ 'review-only': !reviewStore.currentIsNew }">
-        <view class="phase-item" :class="{ active: reviewStore.learning, done: !reviewStore.learning }">
-          <text class="phase-number">1</text>
-          <text>理解</text>
-        </view>
-        <view class="phase-line" />
-        <view
-          class="phase-item"
-          :class="{ active: !reviewStore.learning && !reviewStore.revealed, done: reviewStore.revealed }"
-        >
-          <text class="phase-number">2</text>
-          <text>回忆</text>
-        </view>
-        <view class="phase-line" />
-        <view class="phase-item" :class="{ active: reviewStore.revealed }">
-          <text class="phase-number">3</text>
-          <text>校准</text>
+      <view v-if="waitingForRetry" class="retry-wait surface">
+        <text class="retry-label">当前卡片正在巩固间隔中</text>
+        <text class="retry-note">
+          到期后会自动再次出现；现在也可以继续学习后面的知识，或主动复习今天的内容。
+        </text>
+        <view class="retry-actions">
+          <button
+            class="primary-button"
+            :loading="continuing"
+            :disabled="continuing"
+            @click="learnMore"
+          >
+            继续学习 20 张
+          </button>
+          <button class="secondary-button" :disabled="continuing" @click="reviewToday(true)">
+            复习今日错题
+          </button>
+          <button class="secondary-button" :disabled="continuing" @click="reviewToday(false)">
+            复习今日知识
+          </button>
+          <button class="text-button" :disabled="continuing" @click="goBack">暂时返回</button>
         </view>
       </view>
 
-      <template v-if="reviewStore.learning">
+      <template v-else-if="reviewStore.learning">
         <view class="learning-notice surface">
           <text class="learning-label">新知识 · 先学后背</text>
-          <text class="learning-copy">先弄清它从哪里来、与什么相关，再进入遮住答案的主动回忆。</text>
+          <button class="text-button skip-preview" :disabled="startingRecall" @click="startBatchRecall">
+            跳过预览
+          </button>
         </view>
 
-        <view v-if="reviewStore.contextCards.length" class="context-panel surface">
-          <view class="context-heading">
-            <text class="context-title">
-              {{ reviewStore.currentCard.parentCardId ? '前置知识路径' : '章节上下文' }}
-            </text>
-            <text class="context-count">{{ reviewStore.contextCards.length }} 个节点</text>
-          </view>
+        <view class="learning-list">
           <view
-            v-for="(contextCard, index) in reviewStore.contextCards"
-            :key="contextCard.id"
-            class="context-node"
+            v-for="(card, index) in reviewStore.learningBatch"
+            :key="card.id"
+            class="learning-item surface"
           >
-            <view class="node-rail">
-              <text class="node-dot">{{ index + 1 }}</text>
-              <view v-if="index < reviewStore.contextCards.length - 1" class="node-line" />
-            </view>
-            <view class="node-copy">
-              <text class="node-question">{{ contextCard.question }}</text>
-              <text class="node-answer">{{ contextCard.answer }}</text>
+            <text class="learning-index">{{ index + 1 }}</text>
+            <view class="learning-copy">
+              <text class="learning-question">{{ card.question }}</text>
+              <text class="learning-answer">{{ card.answer }}</text>
             </view>
           </view>
         </view>
 
-        <view class="review-card learning-card surface">
-          <text class="card-kicker">当前知识</text>
-          <text class="review-question">{{ reviewStore.currentCard.question }}</text>
-          <view class="answer-block learning-answer">
-            <view class="divider" />
-            <text class="card-kicker">理解答案</text>
-            <text class="review-answer">{{ reviewStore.currentCard.answer }}</text>
-            <button
-              v-if="reviewStore.currentCard.connection || reviewStore.currentCard.note"
-              class="note-toggle"
-              @click="noteVisible = !noteVisible"
-            >
-              {{ noteVisible ? '收起备注' : '查看备注' }}
-            </button>
-            <view
-              v-if="(reviewStore.currentCard.connection || reviewStore.currentCard.note) && noteVisible"
-              class="note-block"
-            >
-              <view v-if="reviewStore.currentCard.connection" class="note-item">
-                <text class="note-label">知识关联</text>
-                <text class="note-copy">{{ reviewStore.currentCard.connection }}</text>
-              </view>
-              <view v-if="reviewStore.currentCard.note" class="note-item">
-                <text class="note-label">其他备注</text>
-                <text class="note-copy">{{ reviewStore.currentCard.note }}</text>
-              </view>
-            </view>
-          </view>
-        </view>
-
-        <button class="primary-button reveal-button" @click="reviewStore.beginRecall">
-          我已理解，开始回忆
+        <button
+          class="primary-button reveal-button"
+          :loading="startingRecall"
+          :disabled="startingRecall"
+          @click="startBatchRecall"
+        >
+          开始背记这 {{ reviewStore.learningBatch.length }} 个知识点
         </button>
       </template>
 
@@ -227,13 +286,6 @@ async function goBack(): Promise<void> {
             <view class="divider" />
             <text class="card-kicker">标准答案</text>
             <text class="review-answer">{{ reviewStore.currentCard.answer }}</text>
-            <button
-              v-if="reviewStore.currentCard.connection || reviewStore.currentCard.note"
-              class="note-toggle"
-              @click="noteVisible = !noteVisible"
-            >
-              {{ noteVisible ? '收起备注' : '查看备注' }}
-            </button>
             <view
               v-if="(reviewStore.currentCard.connection || reviewStore.currentCard.note) && noteVisible"
               class="note-block"
@@ -247,6 +299,13 @@ async function goBack(): Promise<void> {
                 <text class="note-copy">{{ reviewStore.currentCard.note }}</text>
               </view>
             </view>
+            <button
+              v-if="reviewStore.currentCard.connection || reviewStore.currentCard.note"
+              class="note-toggle"
+              @click="noteVisible = !noteVisible"
+            >
+              {{ noteVisible ? '收起路径' : '路径' }}
+            </button>
           </view>
         </view>
 
@@ -255,7 +314,7 @@ async function goBack(): Promise<void> {
           class="secondary-button context-button"
           @click="reviewStore.showContext"
         >
-          想不起上文？查看脉络提示
+          查看上文提示
         </button>
         <text v-if="!reviewStore.revealed && reviewStore.contextRevealed" class="hint-advice">
           已使用提示；评分时请如实选择“重来”或“困难”。
@@ -268,7 +327,6 @@ async function goBack(): Promise<void> {
           显示答案
         </button>
         <view v-if="!reviewStore.revealed" class="session-actions">
-          <button class="text-button" @click="skipCard">稍后再答</button>
           <button v-if="reviewStore.canUndo" class="text-button" @click="undoLastRating">
             撤销上次评分
           </button>
@@ -389,6 +447,44 @@ async function goBack(): Promise<void> {
   gap: 14rpx;
 }
 
+.retry-wait {
+  display: flex;
+  min-height: 460rpx;
+  padding: 54rpx 36rpx;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  text-align: center;
+}
+
+.retry-label,
+.retry-note {
+  display: block;
+}
+
+.retry-label {
+  color: var(--color-text);
+  font-size: 30rpx;
+  font-weight: 760;
+}
+
+.retry-note {
+  max-width: 520rpx;
+  margin-top: 18rpx;
+  color: var(--color-subtle);
+  font-size: 22rpx;
+  line-height: 1.65;
+}
+
+.retry-actions {
+  display: flex;
+  width: 100%;
+  max-width: 520rpx;
+  margin-top: 32rpx;
+  flex-direction: column;
+  gap: 14rpx;
+}
+
 .card-stage {
   padding-top: 24rpx;
 }
@@ -401,72 +497,16 @@ async function goBack(): Promise<void> {
   text-align: center;
 }
 
-.phase-track {
-  display: flex;
-  max-width: 600rpx;
-  margin: 0 auto 24rpx;
-  align-items: center;
-  justify-content: center;
-}
-
-.phase-item {
-  display: flex;
-  flex: 0 0 auto;
-  align-items: center;
-  gap: 8rpx;
-  color: var(--color-subtle);
-  font-size: 20rpx;
-}
-
-.phase-number {
-  display: flex;
-  width: 34rpx;
-  height: 34rpx;
-  align-items: center;
-  justify-content: center;
-  border: 1rpx solid var(--color-line);
-  border-radius: 50%;
-  font-size: 18rpx;
-}
-
-.phase-item.active {
-  color: var(--color-primary);
-  font-weight: 720;
-}
-
-.phase-item.active .phase-number {
-  border-color: var(--color-primary);
-  background: var(--color-primary-soft);
-}
-
-.phase-item.done {
-  color: var(--color-accent);
-}
-
-.phase-item.done .phase-number {
-  border-color: #d9bda9;
-  background: var(--color-accent-soft);
-}
-
-.phase-line {
-  width: 46rpx;
-  height: 1rpx;
-  margin: 0 12rpx;
-  background: var(--color-line);
-}
-
-.review-only .phase-item:first-child {
-  opacity: 0.62;
-}
-
 .learning-notice {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   margin-bottom: 20rpx;
   padding: 22rpx 24rpx;
   border-left: 5rpx solid var(--color-primary);
 }
 
-.learning-label,
-.learning-copy {
+.learning-label {
   display: block;
 }
 
@@ -476,111 +516,67 @@ async function goBack(): Promise<void> {
   font-weight: 750;
 }
 
-.learning-copy {
-  margin-top: 8rpx;
-  color: var(--color-muted);
-  font-size: 22rpx;
-  line-height: 1.65;
-}
-
-.context-panel {
-  margin-bottom: 20rpx;
-  padding: 26rpx 24rpx 18rpx;
-}
-
-.context-heading {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 22rpx;
-}
-
-.context-title {
-  color: var(--color-accent);
-  font-size: 25rpx;
-  font-weight: 740;
-}
-
-.context-count {
+.skip-preview {
+  padding: 4rpx 0;
   color: var(--color-subtle);
-  font-size: 20rpx;
+  font-size: 21rpx;
 }
 
-.context-node {
+.learning-list {
   display: flex;
-  gap: 16rpx;
-}
-
-.node-rail {
-  display: flex;
-  width: 34rpx;
-  flex: 0 0 34rpx;
-  align-items: center;
   flex-direction: column;
+  gap: 14rpx;
 }
 
-.node-dot {
+.learning-item {
   display: flex;
-  width: 30rpx;
-  height: 30rpx;
-  flex: 0 0 30rpx;
+  gap: 18rpx;
+  padding: 26rpx;
+}
+
+.learning-index {
+  display: flex;
+  width: 38rpx;
+  height: 38rpx;
+  flex: 0 0 38rpx;
   align-items: center;
   justify-content: center;
-  border: 1rpx solid #dec5b4;
   border-radius: 50%;
-  background: var(--color-accent-soft);
-  color: var(--color-accent);
-  font-size: 17rpx;
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+  font-size: 19rpx;
+  font-weight: 720;
 }
 
-.node-line {
-  width: 1rpx;
-  min-height: 50rpx;
-  flex: 1;
-  background: #e6d4c8;
-}
-
-.node-copy {
+.learning-copy {
   min-width: 0;
-  padding-bottom: 22rpx;
+  flex: 1;
 }
 
-.node-question,
-.node-answer {
+.learning-question,
+.learning-answer {
   display: block;
+  white-space: pre-wrap;
 }
 
-.node-question {
+.learning-question {
   color: var(--color-text);
-  font-size: 23rpx;
-  font-weight: 680;
-  line-height: 1.5;
+  font-size: 27rpx;
+  font-weight: 720;
+  line-height: 1.55;
 }
 
-.node-answer {
-  display: -webkit-box;
-  overflow: hidden;
-  margin-top: 6rpx;
+.learning-answer {
+  margin-top: 12rpx;
   color: var(--color-muted);
-  font-size: 21rpx;
-  line-height: 1.55;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 3;
+  font-size: 24rpx;
+  line-height: 1.7;
 }
 
 .review-card {
   min-height: 570rpx;
   padding: 48rpx 38rpx;
   border-top: 4rpx solid var(--color-accent);
-}
-
-.learning-card {
-  min-height: 0;
-  border-top-color: var(--color-primary);
-}
-
-.learning-answer {
-  margin-top: 34rpx;
 }
 
 .card-kicker {
@@ -665,12 +661,12 @@ async function goBack(): Promise<void> {
 }
 
 .note-toggle {
-  margin-top: 20rpx;
+  margin: 20rpx 0 0 auto;
   padding: 10rpx 0;
   background: transparent;
   color: var(--color-subtle);
   font-size: 22rpx;
-  text-align: left;
+  text-align: right;
 }
 
 .note-block {

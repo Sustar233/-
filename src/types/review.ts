@@ -41,5 +41,7 @@ export interface ReviewSession {
   currentIndex: number
   startedAt: number
   filter: ReviewFilter
+  previewedCardIds?: string[]
+  retryDueAtByCardId?: Record<string, number>
   lastCommit?: ReviewCommit
 }

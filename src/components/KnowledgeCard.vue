@@ -28,20 +28,20 @@ defineEmits<{
     <view v-if="card.tags.length" class="tag-row">
       <text v-for="tag in card.tags" :key="tag" class="tag"># {{ tag }}</text>
     </view>
-    <button
-      v-if="hasNote"
-      class="text-button note-toggle"
-      size="mini"
-      @click="noteVisible = !noteVisible"
-    >
-      {{ noteVisible ? '收起备注' : '查看备注' }}
-    </button>
     <view v-if="hasNote && noteVisible" class="note-panel">
       <text v-if="card.parentCardId || card.connection" class="note-copy">
         {{ card.connection || (parentQuestion ? `承接：${parentQuestion}` : '已关联前置知识') }}
       </text>
       <text v-if="card.note" class="note-copy">{{ card.note }}</text>
     </view>
+    <button
+      v-if="hasNote"
+      class="text-button note-toggle"
+      size="mini"
+      @click="noteVisible = !noteVisible"
+    >
+      {{ noteVisible ? '收起路径' : '路径' }}
+    </button>
     <view class="card-actions">
       <button class="text-button" size="mini" aria-label="编辑知识卡" @click="$emit('edit')">编辑</button>
       <button class="text-button" size="mini" aria-label="切换知识卡状态" @click="$emit('toggle')">
@@ -110,8 +110,9 @@ defineEmits<{
 }
 
 .note-toggle {
-  margin-top: 16rpx;
-  padding-left: 0;
+  margin: 16rpx 0 0 auto;
+  padding-right: 0;
+  text-align: right;
 }
 
 .note-panel {

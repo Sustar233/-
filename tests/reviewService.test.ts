@@ -1,13 +1,16 @@
 import assert from 'node:assert/strict'
 import { beforeEach, test } from 'node:test'
-import { createReviewState } from '../src/scheduler/fsrs'
+import { applyReview, createReviewState } from '../src/scheduler/fsrs'
 import {
+  buildLearningPreviewBatch,
   buildReviewQueue,
+  buildTodayReviewQueue,
   clearReviewSession,
   commitReview,
   getReviewSession,
   reviewCard,
   saveReviewSession,
+  shouldRepeatInCurrentSession,
   undoReview,
 } from '../src/services/reviewService'
 import { STORAGE_KEYS } from '../src/storage/keys'
@@ -69,6 +72,123 @@ test('review queue places a prerequisite before its dependent card', async () =>
   assert.deepEqual(
     (await buildReviewQueue(now, { subjectId: 'subject_1' })).map((item) => item.id),
     ['prerequisite', 'dependent'],
+  )
+})
+
+test('learning preview batches consecutive new cards from one chapter', () => {
+  const cards = Array.from({ length: 10 }, (_, index) => ({
+    ...card(`chapter-card-${index + 1}`, index),
+    chapterId: 'chapter_1',
+  }))
+  const otherChapter = { ...card('other-chapter', 11), chapterId: 'chapter_2' }
+  const queue = [...cards, otherChapter]
+  const newCardIds = queue.map((item) => item.id)
+
+  assert.deepEqual(
+    buildLearningPreviewBatch(queue, 0, newCardIds, []).map((item) => item.id),
+    cards.slice(0, 8).map((item) => item.id),
+  )
+  assert.deepEqual(
+    buildLearningPreviewBatch(queue, 8, newCardIds, cards.slice(0, 8).map((item) => item.id)).map(
+      (item) => item.id,
+    ),
+    cards.slice(8).map((item) => item.id),
+  )
+  assert.deepEqual(
+    buildLearningPreviewBatch(queue, 10, newCardIds, []).map((item) => item.id),
+    [otherChapter.id],
+  )
+})
+
+test('FSRS learning steps repeat in the current session, including across midnight', () => {
+  const now = new Date('2026-07-30T08:00:00.000Z').getTime()
+  const initial = createReviewState('card_1', now)
+
+  assert.equal(shouldRepeatInCurrentSession(applyReview(initial, 1, now), now), true)
+  assert.equal(shouldRepeatInCurrentSession(applyReview(initial, 2, now), now), true)
+  assert.equal(shouldRepeatInCurrentSession(applyReview(initial, 3, now), now), true)
+  assert.equal(shouldRepeatInCurrentSession(applyReview(initial, 4, now), now), false)
+
+  const nearMidnight = new Date(2026, 6, 30, 23, 59, 30).getTime()
+  const midnightInitial = createReviewState('midnight-card', nearMidnight)
+  assert.equal(
+    shouldRepeatInCurrentSession(applyReview(midnightInitial, 1, nearMidnight), nearMidnight),
+    true,
+  )
+})
+
+test('explicit new-card limit loads another batch without due cards', async () => {
+  const now = new Date('2026-07-30T08:00:00.000Z').getTime()
+  const due = card('due', now - 100)
+  const dueState = createReviewState(due.id, now - 1000)
+  dueState.dueAt = now - 1
+  const newCards = Array.from({ length: 25 }, (_, index) => card(`new-${index + 1}`, index))
+  await Promise.all([
+    setStorage(STORAGE_KEYS.cards, [due, ...newCards]),
+    setStorage(STORAGE_KEYS.reviewStates, [dueState]),
+    setStorage(STORAGE_KEYS.settings, { dailyNewCards: 0 }),
+  ])
+
+  const queue = await buildReviewQueue(now, {}, { includeDueCards: false, newCardLimit: 20 })
+  assert.equal(queue.length, 20)
+  assert.equal(queue.some((item) => item.id === due.id), false)
+})
+
+test('today review can include all reviewed cards or only cards answered incorrectly', async () => {
+  const now = new Date(2026, 6, 30, 12).getTime()
+  const correct = card('correct-today', now)
+  const wrong = card('wrong-today', now + 1)
+  const yesterday = card('reviewed-yesterday', now + 2)
+  const inactive = { ...card('inactive-today', now + 3), status: 'archived' as const }
+
+  await Promise.all([
+    setStorage(STORAGE_KEYS.cards, [correct, wrong, yesterday, inactive]),
+    setStorage(STORAGE_KEYS.reviewLogs, [
+      {
+        id: 'log-correct',
+        cardId: correct.id,
+        subjectId: correct.subjectId,
+        rating: 3,
+        reviewedAt: now,
+      },
+      {
+        id: 'log-wrong',
+        cardId: wrong.id,
+        subjectId: wrong.subjectId,
+        rating: 1,
+        reviewedAt: now + 1,
+      },
+      {
+        id: 'log-recovered',
+        cardId: wrong.id,
+        subjectId: wrong.subjectId,
+        rating: 3,
+        reviewedAt: now + 2,
+      },
+      {
+        id: 'log-yesterday',
+        cardId: yesterday.id,
+        subjectId: yesterday.subjectId,
+        rating: 1,
+        reviewedAt: now - 86_400_000,
+      },
+      {
+        id: 'log-inactive',
+        cardId: inactive.id,
+        subjectId: inactive.subjectId,
+        rating: 1,
+        reviewedAt: now,
+      },
+    ]),
+  ])
+
+  assert.deepEqual(
+    (await buildTodayReviewQueue(now)).map((item) => item.id),
+    [wrong.id, correct.id],
+  )
+  assert.deepEqual(
+    (await buildTodayReviewQueue(now, {}, true)).map((item) => item.id),
+    [wrong.id],
   )
 })
 
@@ -189,6 +309,8 @@ test('review session can be persisted and cleared', async () => {
     currentIndex: 1,
     startedAt: Date.now(),
     filter: { subjectId: 'subject_1' },
+    previewedCardIds: ['card_1'],
+    retryDueAtByCardId: { card_2: Date.now() + 60_000 },
   }
 
   await saveReviewSession(session)

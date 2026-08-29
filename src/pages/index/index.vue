@@ -5,7 +5,11 @@ import EmptyState from '@/components/EmptyState.vue'
 import LoadErrorState from '@/components/LoadErrorState.vue'
 import StatCard from '@/components/StatCard.vue'
 import { getCards } from '@/services/cardService'
-import { buildReviewQueue, getReviewSession } from '@/services/reviewService'
+import {
+  buildReviewQueue,
+  buildTodayReviewQueue,
+  getReviewSession,
+} from '@/services/reviewService'
 import { createEmptyStatistics, getStatistics } from '@/services/statisticsService'
 import { getSubjects } from '@/services/subjectService'
 import type { KnowledgeCard } from '@/types/card'
@@ -21,6 +25,7 @@ const resumableSession = ref<ReviewSession | null>(null)
 const loading = ref(false)
 const loadError = ref(false)
 const summary = ref(createEmptyStatistics())
+const todayWrongCount = ref(0)
 
 const recentSubjects = computed(() =>
   [...subjects.value].sort((first, second) => second.updatedAt - first.updatedAt).slice(0, 3),
@@ -42,17 +47,19 @@ async function refresh(): Promise<void> {
   loading.value = true
   loadError.value = false
   try {
-    const [subjectData, cardData, queue, statistics, session] = await Promise.all([
+    const [subjectData, cardData, queue, statistics, session, todayWrongCards] = await Promise.all([
       getSubjects(),
       getCards(),
       buildReviewQueue(),
       getStatistics(),
       getReviewSession(),
+      buildTodayReviewQueue(Date.now(), {}, true),
     ])
     subjects.value = subjectData
     cards.value = cardData
     dueCount.value = queue.length
     summary.value = statistics
+    todayWrongCount.value = todayWrongCards.length
     resumableSession.value =
       session &&
       startOfDay(session.startedAt) === startOfDay(Date.now()) &&
@@ -87,6 +94,19 @@ function openLibrary(): void {
 function openStudy(): void {
   uni.navigateTo({ url: '/pages/study/index' })
 }
+
+function openTodayReview(wrongOnly = false): void {
+  if (!summary.value.todayReviews || (wrongOnly && !todayWrongCount.value)) {
+    uni.showToast({
+      title: wrongOnly ? '今天还没有背错的知识' : '今天还没有复习记录',
+      icon: 'none',
+    })
+    return
+  }
+  uni.navigateTo({
+    url: `/pages/review/index?fresh=1&today=${wrongOnly ? 'wrong' : 'all'}`,
+  })
+}
 </script>
 
 <template>
@@ -105,9 +125,6 @@ function openStudy(): void {
         <text class="hero-number">{{ reviewCount }}</text>
         <text class="hero-unit">张</text>
       </view>
-      <text class="hero-note">
-        {{ isResuming ? '从中断处继续，已完成的进度不会丢失' : reviewCount ? '到期卡片优先；新知识先理解上下文，再进入回忆' : '今天的复习已经完成。' }}
-      </text>
       <button class="primary-button hero-button" :disabled="loading" @click="startReview">
         {{ loading ? '正在准备…' : isResuming ? '继续复习' : reviewCount ? '开始今日复习' : '今日已完成' }}
       </button>
@@ -122,6 +139,14 @@ function openStudy(): void {
       <StatCard label="新学习" :value="summary.todayNewCards" hint="张新卡" />
       <StatCard label="重来" :value="summary.todayAgain" hint="次遗忘" />
       <StatCard label="连续" :value="`${summary.streakDays} 天`" hint="学习节奏" />
+    </view>
+    <view class="today-review-actions">
+      <button class="secondary-button compact-action" @click="openTodayReview(true)">
+        复习今日错题
+      </button>
+      <button class="secondary-button compact-action" @click="openTodayReview(false)">
+        复习今日知识
+      </button>
     </view>
 
     <view class="section-heading">
@@ -179,8 +204,7 @@ function openStudy(): void {
   padding: 34rpx;
 }
 
-.hero-label,
-.hero-note {
+.hero-label {
   display: block;
 }
 
@@ -209,13 +233,6 @@ function openStudy(): void {
   font-size: 24rpx;
 }
 
-.hero-note {
-  margin-top: 8rpx;
-  color: var(--color-muted);
-  font-size: 22rpx;
-  line-height: 1.55;
-}
-
 .hero-button {
   width: 100%;
   margin-top: 28rpx;
@@ -225,6 +242,19 @@ function openStudy(): void {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 14rpx;
+}
+
+.today-review-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14rpx;
+  margin-top: 14rpx;
+}
+
+.compact-action {
+  padding-right: 12rpx;
+  padding-left: 12rpx;
+  font-size: 23rpx;
 }
 
 .section-link {

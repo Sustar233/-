@@ -23,6 +23,13 @@ import { startOfDay } from '@/utils/date'
 import { generateId } from '@/utils/id'
 import { getCards, orderCardsByKnowledgePath } from './cardService'
 
+export const LEARNING_PREVIEW_BATCH_SIZE = 8
+
+export interface ReviewQueueOptions {
+  includeDueCards?: boolean
+  newCardLimit?: number
+}
+
 export async function getReviewStates(): Promise<ReviewState[]> {
   return (await getStorage<ReviewState[]>(STORAGE_KEYS.reviewStates)) ?? []
 }
@@ -48,9 +55,41 @@ export function reviewFiltersEqual(first: ReviewFilter, second: ReviewFilter): b
   )
 }
 
+export function buildLearningPreviewBatch(
+  queue: KnowledgeCard[],
+  startIndex: number,
+  newCardIds: Iterable<string>,
+  previewedCardIds: Iterable<string>,
+  limit = LEARNING_PREVIEW_BATCH_SIZE,
+): KnowledgeCard[] {
+  const first = queue[startIndex]
+  if (!first || limit <= 0) return []
+
+  const newIds = new Set(newCardIds)
+  const previewedIds = new Set(previewedCardIds)
+  if (!newIds.has(first.id) || previewedIds.has(first.id)) return []
+
+  const batch: KnowledgeCard[] = []
+  for (let index = startIndex; index < queue.length && batch.length < limit; index += 1) {
+    const card = queue[index]
+    if (
+      !card ||
+      card.subjectId !== first.subjectId ||
+      card.chapterId !== first.chapterId ||
+      !newIds.has(card.id) ||
+      previewedIds.has(card.id)
+    ) {
+      break
+    }
+    batch.push(card)
+  }
+  return batch
+}
+
 export async function buildReviewQueue(
   now = Date.now(),
   filter: ReviewFilter = {},
+  options: ReviewQueueOptions = {},
 ): Promise<KnowledgeCard[]> {
   const [cards, states, logs, settings] = await Promise.all([
     getCards(),
@@ -62,15 +101,21 @@ export async function buildReviewQueue(
     (card) => card.status === 'active' && matchesFilter(card, filter),
   )
   const stateByCard = new Map(states.map((state) => [state.cardId, state]))
-  const dueCards = orderCardsByKnowledgePath(
-    activeCards
-      .filter((card) => {
-        const state = stateByCard.get(card.id)
-        return state && state.dueAt <= now
-      })
-      .sort((first, second) => stateByCard.get(first.id)!.dueAt - stateByCard.get(second.id)!.dueAt),
-    cards,
-  )
+  const dueCards =
+    options.includeDueCards === false
+      ? []
+      : orderCardsByKnowledgePath(
+          activeCards
+            .filter((card) => {
+              const state = stateByCard.get(card.id)
+              return state && state.dueAt <= now
+            })
+            .sort(
+              (first, second) =>
+                stateByCard.get(first.id)!.dueAt - stateByCard.get(second.id)!.dueAt,
+            ),
+          cards,
+        )
   const firstReviewByCard = new Map<string, number>()
   for (const log of logs) {
     const firstReviewAt = firstReviewByCard.get(log.cardId)
@@ -83,10 +128,10 @@ export async function buildReviewQueue(
     (reviewedAt) => startOfDay(reviewedAt) === today,
   ).length
   const normalizedSettings = normalizeSettings(settings)
-  const remainingNewCardLimit = Math.max(
-    0,
-    normalizedSettings.dailyNewCards - studiedNewCardsToday,
-  )
+  const remainingNewCardLimit =
+    options.newCardLimit === undefined
+      ? Math.max(0, normalizedSettings.dailyNewCards - studiedNewCardsToday)
+      : Math.max(0, Math.floor(options.newCardLimit))
   const newCards = orderCardsByKnowledgePath(
     activeCards
       .filter((card) => !stateByCard.has(card.id))
@@ -94,6 +139,50 @@ export async function buildReviewQueue(
     cards,
   ).slice(0, remainingNewCardLimit)
   return [...dueCards, ...newCards]
+}
+
+export async function buildTodayReviewQueue(
+  now = Date.now(),
+  filter: ReviewFilter = {},
+  wrongOnly = false,
+): Promise<KnowledgeCard[]> {
+  const [cards, logs] = await Promise.all([getCards(), getReviewLogs()])
+  const today = startOfDay(now)
+  const activityByCard = new Map<string, { firstReviewedAt: number; wasWrong: boolean }>()
+
+  for (const log of logs) {
+    if (startOfDay(log.reviewedAt) !== today) continue
+    const previous = activityByCard.get(log.cardId)
+    activityByCard.set(log.cardId, {
+      firstReviewedAt: Math.min(previous?.firstReviewedAt ?? log.reviewedAt, log.reviewedAt),
+      wasWrong: Boolean(previous?.wasWrong) || log.rating <= 2,
+    })
+  }
+
+  return cards
+    .filter((card) => {
+      const activity = activityByCard.get(card.id)
+      return (
+        card.status === 'active' &&
+        matchesFilter(card, filter) &&
+        Boolean(activity) &&
+        (!wrongOnly || activity?.wasWrong)
+      )
+    })
+    .sort((first, second) => {
+      const firstActivity = activityByCard.get(first.id)!
+      const secondActivity = activityByCard.get(second.id)!
+      if (firstActivity.wasWrong !== secondActivity.wasWrong) {
+        return firstActivity.wasWrong ? -1 : 1
+      }
+      return firstActivity.firstReviewedAt - secondActivity.firstReviewedAt
+    })
+}
+
+export function shouldRepeatInCurrentSession(state: ReviewState, _reviewedAt: number): boolean {
+  if (!state.fsrsData || typeof state.fsrsData !== 'object') return false
+  const fsrsState = (state.fsrsData as Record<string, unknown>).state
+  return fsrsState === 1 || fsrsState === 3
 }
 
 export async function previewCard(cardId: string, now = Date.now()): Promise<ReviewPreview[]> {
@@ -109,7 +198,7 @@ export async function commitReview(
   card: KnowledgeCard,
   rating: ReviewRating,
   now = Date.now(),
-  session?: ReviewSession,
+  session?: ReviewSession | ((commit: ReviewCommit) => ReviewSession),
 ): Promise<ReviewCommit> {
   const [states, logs, settingsValue] = await Promise.all([
     getReviewStates(),
@@ -135,10 +224,11 @@ export async function commitReview(
     { type: 'set', key: STORAGE_KEYS.reviewLogs, value: [...logs, log] },
   ]
   if (session) {
+    const nextSession = typeof session === 'function' ? session(commit) : session
     mutations.push({
       type: 'set',
       key: STORAGE_KEYS.reviewSession,
-      value: { ...session, lastCommit: commit },
+      value: { ...nextSession, lastCommit: commit },
     })
   }
   await setStorageBatch(mutations)
@@ -189,7 +279,17 @@ export async function getReviewSession(): Promise<ReviewSession | null> {
     !Number.isInteger(session.currentIndex) ||
     session.currentIndex < 0 ||
     typeof session.startedAt !== 'number' ||
-    !session.filter
+    !session.filter ||
+    (session.previewedCardIds !== undefined &&
+      (!Array.isArray(session.previewedCardIds) ||
+        !session.previewedCardIds.every((cardId) => typeof cardId === 'string'))) ||
+    (session.retryDueAtByCardId !== undefined &&
+      (!session.retryDueAtByCardId ||
+        typeof session.retryDueAtByCardId !== 'object' ||
+        Array.isArray(session.retryDueAtByCardId) ||
+        !Object.values(session.retryDueAtByCardId).every(
+          (dueAt) => typeof dueAt === 'number' && Number.isFinite(dueAt),
+        )))
   ) {
     return null
   }
