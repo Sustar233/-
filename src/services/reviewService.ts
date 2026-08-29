@@ -30,6 +30,13 @@ export interface ReviewQueueOptions {
   newCardLimit?: number
 }
 
+export interface ReviewQueueData {
+  cards: KnowledgeCard[]
+  states: ReviewState[]
+  logs: ReviewLog[]
+  settings?: Settings | null
+}
+
 export async function getReviewStates(): Promise<ReviewState[]> {
   return (await getStorage<ReviewState[]>(STORAGE_KEYS.reviewStates)) ?? []
 }
@@ -86,17 +93,13 @@ export function buildLearningPreviewBatch(
   return batch
 }
 
-export async function buildReviewQueue(
-  now = Date.now(),
+export function buildReviewQueueFromData(
+  data: ReviewQueueData,
+  now: number,
   filter: ReviewFilter = {},
   options: ReviewQueueOptions = {},
-): Promise<KnowledgeCard[]> {
-  const [cards, states, logs, settings] = await Promise.all([
-    getCards(),
-    getReviewStates(),
-    getReviewLogs(),
-    getStorage<Settings>(STORAGE_KEYS.settings),
-  ])
+): KnowledgeCard[] {
+  const { cards, states, logs, settings } = data
   const activeCards = cards.filter(
     (card) => card.status === 'active' && matchesFilter(card, filter),
   )
@@ -141,12 +144,27 @@ export async function buildReviewQueue(
   return [...dueCards, ...newCards]
 }
 
-export async function buildTodayReviewQueue(
+export async function buildReviewQueue(
   now = Date.now(),
   filter: ReviewFilter = {},
-  wrongOnly = false,
+  options: ReviewQueueOptions = {},
 ): Promise<KnowledgeCard[]> {
-  const [cards, logs] = await Promise.all([getCards(), getReviewLogs()])
+  const cards = await getCards()
+  const [states, logs, settings] = await Promise.all([
+    getReviewStates(),
+    getReviewLogs(),
+    getStorage<Settings>(STORAGE_KEYS.settings),
+  ])
+  return buildReviewQueueFromData({ cards, states, logs, settings }, now, filter, options)
+}
+
+export function buildTodayReviewQueueFromData(
+  cards: KnowledgeCard[],
+  logs: ReviewLog[],
+  now: number,
+  filter: ReviewFilter = {},
+  wrongOnly = false,
+): KnowledgeCard[] {
   const today = startOfDay(now)
   const activityByCard = new Map<string, { firstReviewedAt: number; wasWrong: boolean }>()
 
@@ -155,7 +173,7 @@ export async function buildTodayReviewQueue(
     const previous = activityByCard.get(log.cardId)
     activityByCard.set(log.cardId, {
       firstReviewedAt: Math.min(previous?.firstReviewedAt ?? log.reviewedAt, log.reviewedAt),
-      wasWrong: Boolean(previous?.wasWrong) || log.rating <= 2,
+      wasWrong: Boolean(previous?.wasWrong) || log.rating === 1,
     })
   }
 
@@ -177,6 +195,16 @@ export async function buildTodayReviewQueue(
       }
       return firstActivity.firstReviewedAt - secondActivity.firstReviewedAt
     })
+}
+
+export async function buildTodayReviewQueue(
+  now = Date.now(),
+  filter: ReviewFilter = {},
+  wrongOnly = false,
+): Promise<KnowledgeCard[]> {
+  const cards = await getCards()
+  const logs = await getReviewLogs()
+  return buildTodayReviewQueueFromData(cards, logs, now, filter, wrongOnly)
 }
 
 export function shouldRepeatInCurrentSession(state: ReviewState, _reviewedAt: number): boolean {
@@ -214,6 +242,7 @@ export async function commitReview(
     subjectId: card.subjectId,
     rating,
     reviewedAt: now,
+    mode: 'scheduled',
   }
   const commit: ReviewCommit = { cardId: card.id, previousState, nextState: next, log }
   const mutations: StorageMutation[] = [
@@ -221,6 +250,44 @@ export async function commitReview(
       ...states.filter((state) => state.cardId !== card.id),
       next,
     ] },
+    { type: 'set', key: STORAGE_KEYS.reviewLogs, value: [...logs, log] },
+  ]
+  if (session) {
+    const nextSession = typeof session === 'function' ? session(commit) : session
+    mutations.push({
+      type: 'set',
+      key: STORAGE_KEYS.reviewSession,
+      value: { ...nextSession, lastCommit: commit },
+    })
+  }
+  await setStorageBatch(mutations)
+  return commit
+}
+
+export async function commitPracticeReview(
+  card: KnowledgeCard,
+  rating: ReviewRating,
+  now = Date.now(),
+  session?: ReviewSession | ((commit: ReviewCommit) => ReviewSession),
+): Promise<ReviewCommit> {
+  const [states, logs] = await Promise.all([getReviewStates(), getReviewLogs()])
+  const previousState = states.find((state) => state.cardId === card.id)
+  const unchangedState = previousState ?? createReviewState(card.id, now)
+  const log: ReviewLog = {
+    id: generateId('review'),
+    cardId: card.id,
+    subjectId: card.subjectId,
+    rating,
+    reviewedAt: now,
+    mode: 'practice',
+  }
+  const commit: ReviewCommit = {
+    cardId: card.id,
+    previousState,
+    nextState: unchangedState,
+    log,
+  }
+  const mutations: StorageMutation[] = [
     { type: 'set', key: STORAGE_KEYS.reviewLogs, value: [...logs, log] },
   ]
   if (session) {
@@ -249,12 +316,15 @@ export async function undoReview(commit: ReviewCommit, session?: ReviewSession):
     throw new Error('上一次评分已无法撤销')
   }
 
-  const restoredStates = commit.previousState
-    ? [
-        ...states.filter((state) => state.cardId !== commit.cardId),
-        commit.previousState,
-      ]
-    : states.filter((state) => state.cardId !== commit.cardId)
+  const restoredStates =
+    commit.log.mode === 'practice'
+      ? states
+      : commit.previousState
+        ? [
+            ...states.filter((state) => state.cardId !== commit.cardId),
+            commit.previousState,
+          ]
+        : states.filter((state) => state.cardId !== commit.cardId)
 
   const mutations: StorageMutation[] = [
     { type: 'set', key: STORAGE_KEYS.reviewStates, value: restoredStates },
@@ -280,6 +350,7 @@ export async function getReviewSession(): Promise<ReviewSession | null> {
     session.currentIndex < 0 ||
     typeof session.startedAt !== 'number' ||
     !session.filter ||
+    (session.mode !== undefined && !['scheduled', 'practice'].includes(session.mode)) ||
     (session.previewedCardIds !== undefined &&
       (!Array.isArray(session.previewedCardIds) ||
         !session.previewedCardIds.every((cardId) => typeof cardId === 'string'))) ||

@@ -1,7 +1,10 @@
 <script setup lang="ts">
 import type { ReviewPreview, ReviewRating } from '@/types/review'
 
-const props = defineProps<{ previews: ReviewPreview[] }>()
+const props = withDefaults(
+  defineProps<{ previews: ReviewPreview[]; showIntervals?: boolean }>(),
+  { showIntervals: true },
+)
 const emit = defineEmits<{ rate: [rating: ReviewRating] }>()
 
 const options: Array<{ rating: ReviewRating; label: string; className: string }> = [
@@ -26,7 +29,7 @@ function intervalFor(rating: ReviewRating): string {
       @click="emit('rate', option.rating)"
     >
       <text class="rating-label">{{ option.label }}</text>
-      <text class="rating-interval">{{ intervalFor(option.rating) }}</text>
+      <text v-if="showIntervals" class="rating-interval">{{ intervalFor(option.rating) }}</text>
     </button>
   </view>
 </template>

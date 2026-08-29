@@ -2,6 +2,7 @@ import { spawn } from 'node:child_process'
 import {
   copyFile,
   mkdir,
+  readFile,
   readdir,
   rename,
   rm,
@@ -22,6 +23,20 @@ const uniCli = path.join(
   'uni.js',
 )
 const preservedOutputFiles = new Set(['project.private.config.json'])
+
+async function validateAppIdConfiguration() {
+  const [manifest, projectConfig] = await Promise.all([
+    readFile(path.join(projectRoot, 'src', 'manifest.json'), 'utf8').then(JSON.parse),
+    readFile(path.join(projectRoot, 'project.config.json'), 'utf8').then(JSON.parse),
+  ])
+  const manifestAppId = manifest['mp-weixin']?.appid
+  const projectAppId = projectConfig.appid
+  if (!manifestAppId || !projectAppId || manifestAppId !== projectAppId) {
+    throw new Error(
+      '微信 AppID 配置不一致：请检查 src/manifest.json 与 project.config.json',
+    )
+  }
+}
 
 function runUniBuild() {
   return new Promise((resolve, reject) => {
@@ -92,6 +107,7 @@ async function publishStagedBuild() {
   await removeEmptyDirectories(outputDir)
 }
 
+await validateAppIdConfiguration()
 await rm(stagingDir, { recursive: true, force: true })
 try {
   await runUniBuild()

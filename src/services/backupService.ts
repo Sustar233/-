@@ -86,7 +86,8 @@ function isReviewLog(value: unknown): value is ReviewLog {
     hasString(value, 'cardId') &&
     hasString(value, 'subjectId') &&
     [1, 2, 3, 4].includes(value.rating as number) &&
-    hasNumber(value, 'reviewedAt')
+    hasNumber(value, 'reviewedAt') &&
+    (!('mode' in value) || ['scheduled', 'practice'].includes(value.mode as string))
   )
 }
 

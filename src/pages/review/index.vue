@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+import { computed, onUnmounted, ref, watch } from 'vue'
 import { onLoad } from '@dcloudio/uni-app'
 import EmptyState from '@/components/EmptyState.vue'
 import ReviewButtons from '@/components/ReviewButtons.vue'
@@ -17,7 +17,7 @@ const noteVisible = ref(false)
 const startingRecall = ref(false)
 const continuing = ref(false)
 const clock = ref(Date.now())
-let clockTimer: ReturnType<typeof setInterval> | undefined
+let retryTimer: ReturnType<typeof setTimeout> | undefined
 
 const isFocusedReview = computed(() =>
   Boolean(
@@ -27,7 +27,10 @@ const isFocusedReview = computed(() =>
       reviewStore.activeFilter.tag,
   ),
 )
-const progressLabel = computed(() => (isFocusedReview.value ? '路径学习' : '今日复习'))
+const progressLabel = computed(() => {
+  if (reviewStore.sessionMode === 'practice') return '主动练习'
+  return isFocusedReview.value ? '路径学习' : '今日复习'
+})
 
 const progress = computed(() =>
   reviewStore.total
@@ -45,15 +48,22 @@ const waitingForRetry = computed(
   () => Boolean(reviewStore.currentRetryDueAt && reviewStore.currentRetryDueAt > clock.value),
 )
 
-onMounted(() => {
-  clockTimer = setInterval(() => {
-    clock.value = Date.now()
-  }, 1000)
+onUnmounted(() => {
+  if (retryTimer) clearTimeout(retryTimer)
 })
 
-onUnmounted(() => {
-  if (clockTimer) clearInterval(clockTimer)
-})
+watch(
+  () => reviewStore.currentRetryDueAt,
+  (dueAt) => {
+    if (retryTimer) clearTimeout(retryTimer)
+    clock.value = Date.now()
+    if (!dueAt || dueAt <= clock.value) return
+    retryTimer = setTimeout(() => {
+      clock.value = Date.now()
+    }, dueAt - clock.value + 50)
+  },
+  { immediate: true },
+)
 
 watch(
   () => reviewStore.currentCard?.id,
@@ -172,7 +182,13 @@ async function goBack(): Promise<void> {
 
     <EmptyState
       v-else-if="reviewStore.finished"
-      :title="isFocusedReview ? '本次路径学习已完成' : '今天的复习已经完成'"
+      :title="
+        reviewStore.sessionMode === 'practice'
+          ? '本次主动练习已完成'
+          : isFocusedReview
+            ? '本次路径学习已完成'
+            : '今天的复习已经完成'
+      "
       :description="reviewStore.sessionCardCount ? `完成了 ${reviewStore.sessionCardCount} 张知识卡` : '当前没有到期卡片或新卡。'"
     >
       <view class="finish-actions">
@@ -334,9 +350,16 @@ async function goBack(): Promise<void> {
         <ReviewButtons
           v-else
           :previews="reviewStore.previews"
+          :show-intervals="reviewStore.sessionMode !== 'practice'"
           :class="{ disabled: rating }"
           @rate="rateCard"
         />
+        <text
+          v-if="reviewStore.revealed && reviewStore.sessionMode === 'practice'"
+          class="practice-note"
+        >
+          主动练习只记录结果，不改变原复习时间。
+        </text>
         <view v-if="reviewStore.revealed && reviewStore.canUndo" class="session-actions">
           <button class="text-button" @click="undoLastRating">撤销上次评分</button>
         </view>
@@ -727,6 +750,14 @@ async function goBack(): Promise<void> {
 
 .review-buttons {
   margin-top: 24rpx;
+}
+
+.practice-note {
+  display: block;
+  margin-top: 16rpx;
+  color: var(--color-subtle);
+  font-size: 21rpx;
+  text-align: center;
 }
 
 .session-actions {

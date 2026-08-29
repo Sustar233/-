@@ -1,4 +1,5 @@
 export type ReviewRating = 1 | 2 | 3 | 4
+export type ReviewMode = 'scheduled' | 'practice'
 
 export interface ReviewState {
   cardId: string
@@ -13,6 +14,7 @@ export interface ReviewLog {
   subjectId: string
   rating: ReviewRating
   reviewedAt: number
+  mode?: ReviewMode
 }
 
 export interface ReviewPreview {
@@ -41,6 +43,7 @@ export interface ReviewSession {
   currentIndex: number
   startedAt: number
   filter: ReviewFilter
+  mode?: ReviewMode
   previewedCardIds?: string[]
   retryDueAtByCardId?: Record<string, number>
   lastCommit?: ReviewCommit

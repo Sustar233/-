@@ -6,6 +6,7 @@ import {
   buildReviewQueue,
   buildTodayReviewQueue,
   clearReviewSession,
+  commitPracticeReview,
   commitReview,
   getReviewSession,
   reviewCard,
@@ -139,10 +140,11 @@ test('today review can include all reviewed cards or only cards answered incorre
   const correct = card('correct-today', now)
   const wrong = card('wrong-today', now + 1)
   const yesterday = card('reviewed-yesterday', now + 2)
-  const inactive = { ...card('inactive-today', now + 3), status: 'archived' as const }
+  const difficult = card('difficult-today', now + 3)
+  const inactive = { ...card('inactive-today', now + 4), status: 'archived' as const }
 
   await Promise.all([
-    setStorage(STORAGE_KEYS.cards, [correct, wrong, yesterday, inactive]),
+    setStorage(STORAGE_KEYS.cards, [correct, wrong, yesterday, difficult, inactive]),
     setStorage(STORAGE_KEYS.reviewLogs, [
       {
         id: 'log-correct',
@@ -173,6 +175,13 @@ test('today review can include all reviewed cards or only cards answered incorre
         reviewedAt: now - 86_400_000,
       },
       {
+        id: 'log-difficult',
+        cardId: difficult.id,
+        subjectId: difficult.subjectId,
+        rating: 2,
+        reviewedAt: now + 3,
+      },
+      {
         id: 'log-inactive',
         cardId: inactive.id,
         subjectId: inactive.subjectId,
@@ -184,7 +193,7 @@ test('today review can include all reviewed cards or only cards answered incorre
 
   assert.deepEqual(
     (await buildTodayReviewQueue(now)).map((item) => item.id),
-    [wrong.id, correct.id],
+    [wrong.id, correct.id, difficult.id],
   )
   assert.deepEqual(
     (await buildTodayReviewQueue(now, {}, true)).map((item) => item.id),
@@ -253,6 +262,24 @@ test('reviewing a card commits its state, log, and session together', async () =
   assert.equal(storedSession?.lastCommit?.nextState.cardId, target.id)
 })
 
+test('practice review records an answer without changing the FSRS state', async () => {
+  const firstReviewAt = new Date('2026-07-30T08:00:00.000Z').getTime()
+  const practiceAt = firstReviewAt + 30 * 60_000
+  const target = card('card_practice', firstReviewAt)
+  await setStorage(STORAGE_KEYS.cards, [target])
+  const scheduledState = await reviewCard(target, 3, firstReviewAt)
+
+  const commit = await commitPracticeReview(target, 1, practiceAt)
+
+  assert.deepEqual(readStored(STORAGE_KEYS.reviewStates), [scheduledState])
+  assert.equal(commit.log.mode, 'practice')
+  assert.deepEqual(commit.nextState, scheduledState)
+
+  await undoReview(commit)
+  assert.deepEqual(readStored(STORAGE_KEYS.reviewStates), [scheduledState])
+  assert.equal((readStored<Array<{ mode?: string }>>(STORAGE_KEYS.reviewLogs) ?? []).length, 1)
+})
+
 test('review queue can be narrowed by subject, chapter, uncategorized cards, and tag', async () => {
   const now = new Date('2026-07-30T08:00:00.000Z').getTime()
   const chapterCard = { ...card('chapter', now), chapterId: 'chapter_1', tags: ['重点'] }
@@ -315,6 +342,8 @@ test('review session can be persisted and cleared', async () => {
 
   await saveReviewSession(session)
   assert.deepEqual(await getReviewSession(), session)
+  await saveReviewSession({ ...session, mode: 'practice' })
+  assert.equal((await getReviewSession())?.mode, 'practice')
   await clearReviewSession()
   assert.equal(await getReviewSession(), null)
 })

@@ -5,7 +5,7 @@ import { useReviewStore } from '../src/stores/review'
 import { STORAGE_KEYS } from '../src/storage/keys'
 import { setStorage } from '../src/storage/storage'
 import type { KnowledgeCard } from '../src/types/card'
-import type { ReviewSession } from '../src/types/review'
+import type { ReviewLog, ReviewSession, ReviewState } from '../src/types/review'
 import { installStorageMock, readStored, resetStorage } from './helpers/storageMock'
 
 installStorageMock()
@@ -117,10 +117,21 @@ test('a finished session can load another 20 new cards or review today\'s knowle
     await store.reveal()
     await store.rate(4)
   }
+  const scheduledStates = readStored<ReviewState[]>(STORAGE_KEYS.reviewStates)
   assert.equal(await store.startTodayReview(), 25)
   assert.equal(store.total, 25)
   assert.equal(store.currentIndex, 0)
   assert.equal(store.learning, false)
+  assert.equal(store.sessionMode, 'practice')
+
+  await store.reveal()
+  assert.deepEqual(store.previews, [])
+  await store.rate(1)
+  assert.deepEqual(readStored<ReviewState[]>(STORAGE_KEYS.reviewStates), scheduledStates)
+  assert.equal(
+    readStored<ReviewLog[]>(STORAGE_KEYS.reviewLogs)?.at(-1)?.mode,
+    'practice',
+  )
 })
 
 test('continuing with new cards keeps a waiting learning-step card in the session', async () => {

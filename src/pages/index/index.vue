@@ -4,14 +4,8 @@ import { onShow } from '@dcloudio/uni-app'
 import EmptyState from '@/components/EmptyState.vue'
 import LoadErrorState from '@/components/LoadErrorState.vue'
 import StatCard from '@/components/StatCard.vue'
-import { getCards } from '@/services/cardService'
-import {
-  buildReviewQueue,
-  buildTodayReviewQueue,
-  getReviewSession,
-} from '@/services/reviewService'
-import { createEmptyStatistics, getStatistics } from '@/services/statisticsService'
-import { getSubjects } from '@/services/subjectService'
+import { getDashboardSnapshot } from '@/services/dashboardService'
+import { createEmptyStatistics } from '@/services/statisticsService'
 import type { KnowledgeCard } from '@/types/card'
 import type { ReviewSession } from '@/types/review'
 import type { Subject } from '@/types/subject'
@@ -47,24 +41,18 @@ async function refresh(): Promise<void> {
   loading.value = true
   loadError.value = false
   try {
-    const [subjectData, cardData, queue, statistics, session, todayWrongCards] = await Promise.all([
-      getSubjects(),
-      getCards(),
-      buildReviewQueue(),
-      getStatistics(),
-      getReviewSession(),
-      buildTodayReviewQueue(Date.now(), {}, true),
-    ])
-    subjects.value = subjectData
-    cards.value = cardData
-    dueCount.value = queue.length
-    summary.value = statistics
-    todayWrongCount.value = todayWrongCards.length
+    const now = Date.now()
+    const snapshot = await getDashboardSnapshot(now)
+    subjects.value = snapshot.subjects
+    cards.value = snapshot.cards
+    dueCount.value = snapshot.dueCount
+    summary.value = snapshot.statistics
+    todayWrongCount.value = snapshot.todayWrongCount
     resumableSession.value =
-      session &&
-      startOfDay(session.startedAt) === startOfDay(Date.now()) &&
-      session.currentIndex < session.cardIds.length
-        ? session
+      snapshot.session &&
+      startOfDay(snapshot.session.startedAt) === startOfDay(now) &&
+      snapshot.session.currentIndex < snapshot.session.cardIds.length
+        ? snapshot.session
         : null
   } catch {
     loadError.value = true
