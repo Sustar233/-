@@ -460,7 +460,13 @@ export async function getReviewSession(): Promise<ReviewSession | null> {
     (session.mode !== undefined && !['scheduled', 'practice'].includes(session.mode)) ||
     (session.previewedCardIds !== undefined &&
       (!Array.isArray(session.previewedCardIds) ||
-        !session.previewedCardIds.every((cardId) => typeof cardId === 'string')))
+        !session.previewedCardIds.every((cardId) => typeof cardId === 'string'))) ||
+    (session.forgottenCardIds !== undefined &&
+      (!Array.isArray(session.forgottenCardIds) ||
+        !session.forgottenCardIds.every((cardId) => typeof cardId === 'string'))) ||
+    (session.previousForgottenCardIds !== undefined &&
+      (!Array.isArray(session.previousForgottenCardIds) ||
+        !session.previousForgottenCardIds.every((cardId) => typeof cardId === 'string')))
   ) {
     return null
   }

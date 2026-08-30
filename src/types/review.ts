@@ -43,5 +43,7 @@ export interface ReviewSession {
   filter: ReviewFilter
   mode?: ReviewMode
   previewedCardIds?: string[]
+  forgottenCardIds?: string[]
+  previousForgottenCardIds?: string[]
   lastCommit?: ReviewCommit
 }

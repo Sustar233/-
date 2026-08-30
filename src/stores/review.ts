@@ -34,6 +34,8 @@ interface StudyContinuation {
   kind: 'chapter' | 'section'
 }
 
+export type ReviewProgressStatus = 'pending' | 'forgotten' | 'remembered'
+
 export const useReviewStore = defineStore('review', () => {
   const queue = ref<KnowledgeCard[]>([])
   const currentIndex = ref(0)
@@ -52,6 +54,8 @@ export const useReviewStore = defineStore('review', () => {
   const previewedCardIds = ref<string[]>([])
   const learningBatch = ref<KnowledgeCard[]>([])
   const seenCardIds = ref<string[]>([])
+  const forgottenCardIds = ref<string[]>([])
+  const previousForgottenCardIds = ref<string[]>([])
   const sessionMode = ref<ReviewMode>('scheduled')
   const nextStudy = ref<StudyContinuation>()
 
@@ -67,6 +71,24 @@ export const useReviewStore = defineStore('review', () => {
   const finished = computed(() => !loading.value && currentIndex.value >= queue.value.length)
   const canUndo = computed(() => Boolean(lastCommit.value))
   const sessionCardCount = computed(() => total.value)
+  const forgottenCount = computed(() => forgottenCardIds.value.length)
+  const progressSegments = computed(() => {
+    const uniqueCardIds = [...new Set(queue.value.map((card) => card.id))]
+    const attemptedCardIds = new Set(
+      queue.value.slice(0, currentIndex.value).map((card) => card.id),
+    )
+    const forgottenIds = new Set(forgottenCardIds.value)
+    return uniqueCardIds.map((cardId) => ({
+      cardId,
+      status: (
+        forgottenIds.has(cardId)
+          ? 'forgotten'
+          : attemptedCardIds.has(cardId)
+            ? 'remembered'
+            : 'pending'
+      ) as ReviewProgressStatus,
+    }))
+  })
   const nextStudyLabel = computed(() =>
     nextStudy.value?.kind === 'chapter'
       ? '学习下一章'
@@ -115,6 +137,8 @@ export const useReviewStore = defineStore('review', () => {
       filter: { ...activeFilter.value },
       mode: sessionMode.value,
       previewedCardIds: [...previewedCardIds.value],
+      forgottenCardIds: [...forgottenCardIds.value],
+      previousForgottenCardIds: [...previousForgottenCardIds.value],
       lastCommit: lastCommit.value,
     }
   }
@@ -210,6 +234,14 @@ export const useReviewStore = defineStore('review', () => {
           startedAt.value = existing.startedAt
           lastCommit.value = existing.lastCommit
           previewedCardIds.value = [...(existing.previewedCardIds ?? [])]
+          forgottenCardIds.value = [
+            ...new Set((existing.forgottenCardIds ?? []).filter((cardId) => cardById.has(cardId))),
+          ]
+          previousForgottenCardIds.value = [
+            ...new Set(
+              (existing.previousForgottenCardIds ?? []).filter((cardId) => cardById.has(cardId)),
+            ),
+          ]
           prepareCurrent()
           if (currentIndex.value >= queue.value.length) await refreshStudyContinuation()
           resumed.value = currentIndex.value > 0 || currentIndex.value < queue.value.length
@@ -224,6 +256,8 @@ export const useReviewStore = defineStore('review', () => {
       startedAt.value = now
       lastCommit.value = undefined
       previewedCardIds.value = []
+      forgottenCardIds.value = []
+      previousForgottenCardIds.value = []
       prepareCurrent()
       resumed.value = false
       await persist()
@@ -276,6 +310,11 @@ export const useReviewStore = defineStore('review', () => {
     const reviewedAt = Date.now()
     const nextQueue = [...queue.value]
     const session = sessionSnapshot()
+    const previousForgotten = [...forgottenCardIds.value]
+    const nextForgotten =
+      rating === 1
+        ? [...new Set([...previousForgotten, card.id])]
+        : previousForgotten.filter((cardId) => cardId !== card.id)
     const commit = sessionMode.value === 'practice' ? commitPracticeReview : commitReview
     lastCommit.value = await commit(card, rating, reviewedAt, (reviewCommit) => {
       if (shouldRepeatInCurrentSession(reviewCommit.nextState, reviewCommit.log.rating)) {
@@ -285,9 +324,13 @@ export const useReviewStore = defineStore('review', () => {
         ...session,
         cardIds: nextQueue.map((item) => item.id),
         currentIndex: currentIndex.value + 1,
+        forgottenCardIds: nextForgotten,
+        previousForgottenCardIds: previousForgotten,
       }
     })
     queue.value = nextQueue
+    forgottenCardIds.value = nextForgotten
+    previousForgottenCardIds.value = previousForgotten
     if (!seenCardIds.value.includes(card.id)) seenCardIds.value = [...seenCardIds.value, card.id]
     currentIndex.value += 1
     prepareCurrent()
@@ -307,6 +350,8 @@ export const useReviewStore = defineStore('review', () => {
       ...sessionSnapshot(),
       cardIds: restoredQueue.map((card) => card.id),
       currentIndex: Math.max(0, currentIndex.value - 1),
+      forgottenCardIds: [...previousForgottenCardIds.value],
+      previousForgottenCardIds: [],
       lastCommit: undefined,
     }
     await undoReview(commit, restoredSession)
@@ -315,6 +360,8 @@ export const useReviewStore = defineStore('review', () => {
       seenCardIds.value = seenCardIds.value.filter((cardId) => cardId !== commit.cardId)
     }
     currentIndex.value = Math.max(0, currentIndex.value - 1)
+    forgottenCardIds.value = [...previousForgottenCardIds.value]
+    previousForgottenCardIds.value = []
     lastCommit.value = undefined
     prepareCurrent()
     learning.value = false
@@ -346,6 +393,8 @@ export const useReviewStore = defineStore('review', () => {
       currentIndex.value = 0
       startedAt.value = now
       previewedCardIds.value = []
+      forgottenCardIds.value = []
+      previousForgottenCardIds.value = []
       lastCommit.value = undefined
       prepareCurrent()
       resumed.value = false
@@ -370,6 +419,8 @@ export const useReviewStore = defineStore('review', () => {
       startedAt.value = now
       lastCommit.value = undefined
       previewedCardIds.value = reviewQueue.map((card) => card.id)
+      forgottenCardIds.value = []
+      previousForgottenCardIds.value = []
       prepareCurrent()
       resumed.value = false
       await persist()
@@ -389,6 +440,8 @@ export const useReviewStore = defineStore('review', () => {
     learning.value = false
     learningBatch.value = []
     previewedCardIds.value = []
+    forgottenCardIds.value = []
+    previousForgottenCardIds.value = []
     seenCardIds.value = []
     sessionMode.value = 'scheduled'
     contextRevealed.value = false
@@ -415,6 +468,8 @@ export const useReviewStore = defineStore('review', () => {
     currentCard,
     progressCurrent,
     total,
+    forgottenCount,
+    progressSegments,
     sessionCardCount,
     finished,
     canUndo,

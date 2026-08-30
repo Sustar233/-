@@ -86,6 +86,10 @@ test('forgot moves to the section tail immediately and remains until remembered'
   assert.equal(store.total, 1)
   assert.equal(store.progressCurrent, 1)
   assert.equal(store.isReinforcement, true)
+  assert.equal(store.forgottenCount, 1)
+  assert.deepEqual(store.progressSegments, [
+    { cardId: target.id, status: 'forgotten' },
+  ])
 
   await store.reveal()
   await store.rate(1)
@@ -95,10 +99,46 @@ test('forgot moves to the section tail immediately and remains until remembered'
   await store.reveal()
   await store.rate(3)
   assert.equal(store.finished, true)
+  assert.equal(store.forgottenCount, 0)
+  assert.deepEqual(store.progressSegments, [
+    { cardId: target.id, status: 'remembered' },
+  ])
 
   await store.undoLast()
   assert.equal(store.total, 1)
   assert.equal(store.currentIndex, 2)
+  assert.equal(store.forgottenCount, 1)
+  assert.equal(store.progressSegments[0]?.status, 'forgotten')
+})
+
+test('forgotten progress survives a session resume and keeps the total card count fixed', async () => {
+  const cards = [newCard('forgotten-card', 1), newCard('pending-card', 2)]
+  await Promise.all([
+    setStorage(STORAGE_KEYS.cards, cards),
+    setStorage(STORAGE_KEYS.settings, { dailyNewCards: 20 }),
+  ])
+
+  const store = useReviewStore()
+  await store.start({ subjectId: 'subject_batch' }, false)
+  await store.beginRecall()
+  await store.reveal()
+  await store.rate(1)
+
+  assert.equal(store.total, 2)
+  assert.deepEqual(
+    store.progressSegments.map((segment) => segment.status),
+    ['forgotten', 'pending'],
+  )
+
+  setActivePinia(createPinia())
+  const resumedStore = useReviewStore()
+  await resumedStore.start({ subjectId: 'subject_batch' }, true)
+  assert.equal(resumedStore.total, 2)
+  assert.equal(resumedStore.forgottenCount, 1)
+  assert.deepEqual(
+    resumedStore.progressSegments.map((segment) => segment.status),
+    ['forgotten', 'pending'],
+  )
 })
 
 test('simple is available only on first sight and undo restores that state', async () => {

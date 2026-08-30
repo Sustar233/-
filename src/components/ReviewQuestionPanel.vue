@@ -35,14 +35,6 @@ watch(
 <template>
   <view class="question-panel">
     <view class="review-card surface">
-      <button
-        v-if="revealed && showSimple"
-        class="text-button simple-rating"
-        :disabled="rating"
-        @click="emit('rate', 4)"
-      >
-        简单
-      </button>
       <text class="card-kicker">问题</text>
       <text class="review-question">{{ card.question }}</text>
 
@@ -78,20 +70,26 @@ watch(
       </view>
     </view>
 
-    <button
+    <view
       v-if="!revealed && contextCards.length && !contextRevealed"
-      class="secondary-button context-button"
-      @click="emit('showContext')"
+      class="context-action-row"
     >
-      查看关联知识
-    </button>
+      <button class="context-button" @click="emit('showContext')">
+        查看关联知识
+      </button>
+    </view>
     <button v-if="!revealed" class="primary-button reveal-button" @click="emit('reveal')">
       显示答案
     </button>
     <view v-if="!revealed && canUndo" class="session-actions">
       <button class="text-button undo-button" :disabled="rating" @click="emit('undo')">撤销</button>
     </view>
-    <ReviewButtons v-if="revealed" :class="{ disabled: rating }" @rate="emit('rate', $event)" />
+    <ReviewButtons
+      v-if="revealed"
+      :class="{ disabled: rating }"
+      :show-simple="showSimple"
+      @rate="emit('rate', $event)"
+    />
     <text v-if="revealed && practice" class="practice-note">
       主动练习只记录结果，不改变原复习时间。
     </text>
@@ -107,15 +105,6 @@ watch(
   min-height: 570rpx;
   padding: 48rpx 38rpx;
   border-top: 4rpx solid var(--color-accent);
-}
-
-.simple-rating {
-  position: absolute;
-  top: 28rpx;
-  right: 30rpx;
-  padding: 8rpx 12rpx;
-  color: #466b83;
-  font-size: 22rpx;
 }
 
 .card-kicker {
@@ -239,24 +228,36 @@ watch(
   line-height: 1.65;
 }
 
-.reveal-button,
-.context-button {
+.reveal-button {
   width: 100%;
   margin-top: 26rpx;
 }
 
-.context-button {
+.context-action-row {
+  display: flex;
+  justify-content: center;
   margin-top: 22rpx;
 }
 
-.disabled {
-  margin-top: 24rpx;
-  opacity: 0.55;
-  pointer-events: none;
+.context-button {
+  display: inline-flex;
+  width: auto;
+  min-height: 54rpx;
+  margin: 0;
+  padding: 12rpx 22rpx;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  border: 1rpx solid #d7dfda;
+  border-radius: 999rpx;
+  background: transparent;
+  color: var(--color-primary);
+  font-size: 22rpx;
 }
 
-.review-buttons {
-  margin-top: 24rpx;
+.disabled {
+  opacity: 0.55;
+  pointer-events: none;
 }
 
 .practice-note {

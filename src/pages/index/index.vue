@@ -153,7 +153,7 @@ function openTodayReview(): void {
 
     <view class="section-heading">
       <text class="section-title">今天</text>
-      <text class="section-link" @click="openStudy">路径学习 ›</text>
+      <text class="section-link" @click="openStudy">自定义学习 ›</text>
     </view>
     <view class="stat-grid">
       <StatCard label="已复习" :value="summary.todayReviews" hint="次回答" />

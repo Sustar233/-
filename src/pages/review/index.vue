@@ -40,11 +40,6 @@ const progressLabel = computed(() => {
   return isFocusedReview.value ? '路径学习' : '今日复习'
 })
 
-const progress = computed(() =>
-  reviewStore.total
-    ? Math.round((reviewStore.progressCurrent / reviewStore.total) * 100)
-    : 0,
-)
 const breadcrumb = computed(() => {
   const card = reviewStore.currentCard
   if (!card) return ''
@@ -148,13 +143,26 @@ async function goBack(): Promise<void> {
       <button class="close-button" aria-label="退出复习" @click="goBack">×</button>
       <view class="progress-copy">
         <view class="progress-meta">
-          <text class="progress-label">{{ progressLabel }}</text>
+          <view class="progress-status">
+            <text class="progress-label">{{ progressLabel }}</text>
+            <text v-if="reviewStore.forgottenCount" class="forgotten-label">
+              待巩固 {{ reviewStore.forgottenCount }}
+            </text>
+          </view>
           <text class="progress-count">
             {{ reviewStore.progressCurrent }} / {{ reviewStore.total }}
           </text>
         </view>
-        <view class="progress-track">
-          <view class="progress-fill" :style="{ width: `${progress}%` }" />
+        <view
+          class="progress-track"
+          :class="{ dense: reviewStore.progressSegments.length > 24 }"
+        >
+          <view
+            v-for="segment in reviewStore.progressSegments"
+            :key="segment.cardId"
+            class="progress-segment"
+            :class="segment.status"
+          />
         </view>
       </view>
       <view class="header-space" />
@@ -269,6 +277,13 @@ async function goBack(): Promise<void> {
   justify-content: space-between;
 }
 
+.progress-status {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 10rpx;
+}
+
 .progress-label {
   color: var(--color-muted);
   font-size: 21rpx;
@@ -280,19 +295,45 @@ async function goBack(): Promise<void> {
   font-weight: 720;
 }
 
+.forgotten-label {
+  padding: 3rpx 8rpx;
+  border-radius: 999rpx;
+  background: #fff1e3;
+  color: #c97828;
+  font-size: 18rpx;
+  font-weight: 680;
+  line-height: 1.2;
+}
+
 .progress-track {
+  display: flex;
   width: 100%;
   height: 8rpx;
   overflow: hidden;
+  gap: 3rpx;
   border-radius: 999rpx;
-  background: #e4e7e3;
+  background: transparent;
 }
 
-.progress-fill {
+.progress-track.dense {
+  gap: 1rpx;
+}
+
+.progress-segment {
   height: 100%;
+  min-width: 1rpx;
+  flex: 1;
   border-radius: inherit;
+  background: #e4e7e3;
+  transition: background-color 180ms ease;
+}
+
+.progress-segment.remembered {
   background: var(--color-primary);
-  transition: width 180ms ease;
+}
+
+.progress-segment.forgotten {
+  background: #d88a32;
 }
 
 .header-space {
