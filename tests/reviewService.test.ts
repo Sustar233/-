@@ -11,6 +11,7 @@ import {
   commitReview,
   FORGOT_RETRY_MS,
   getReviewSession,
+  getReviewQueueProgress,
   restoreMasteredCard,
   reviewCard,
   saveReviewSession,
@@ -139,6 +140,21 @@ test('forgot repeats after ten minutes while remembered and simple leave the ses
   assert.equal(recovered.rememberedDayStreak, 0)
   assert.equal(shouldRepeatInCurrentSession(recovered, 3), false)
   assert.equal(shouldRepeatInCurrentSession(applyKnowledgeReview(initial, 4, now, DEFAULT_SETTINGS), 4), false)
+})
+
+test('review progress counts repeated cards only once', () => {
+  assert.deepEqual(getReviewQueueProgress(['a', 'b', 'c', 'a'], 1), {
+    completed: 0,
+    current: 1,
+    remaining: 3,
+    total: 3,
+  })
+  assert.deepEqual(getReviewQueueProgress(['a', 'b', 'c', 'a'], 3), {
+    completed: 2,
+    current: 3,
+    remaining: 1,
+    total: 3,
+  })
 })
 
 test('three remembered reviews on different clean days automatically master a card', () => {

@@ -83,16 +83,22 @@ test('forgot moves to the section tail immediately and remains until remembered'
 
   assert.equal(store.finished, false)
   assert.equal(store.currentCard?.id, target.id)
-  assert.equal(store.total, 2)
+  assert.equal(store.total, 1)
+  assert.equal(store.progressCurrent, 1)
   assert.equal(store.isReinforcement, true)
+
+  await store.reveal()
+  await store.rate(1)
+  assert.equal(store.total, 1)
+  assert.equal(store.progressCurrent, 1)
 
   await store.reveal()
   await store.rate(3)
   assert.equal(store.finished, true)
 
   await store.undoLast()
-  assert.equal(store.total, 2)
-  assert.equal(store.currentIndex, 1)
+  assert.equal(store.total, 1)
+  assert.equal(store.currentIndex, 2)
 })
 
 test('simple is available only on first sight and undo restores that state', async () => {
@@ -137,8 +143,9 @@ test('a finished section can load the next section or review today\'s knowledge'
     await store.rate(4)
   }
   assert.equal(store.sessionCardCount, 5)
+  assert.equal(store.nextStudyLabel, '学习下一小节')
 
-  const nextCount = await store.startNextSection()
+  const nextCount = await store.startNextStudy()
   assert.equal(nextCount, 5)
   assert.equal(store.learningBatch.length, 5)
 
@@ -147,6 +154,7 @@ test('a finished section can load the next section or review today\'s knowledge'
     await store.reveal()
     await store.rate(4)
   }
+  assert.equal(store.nextStudyLabel, '')
   const scheduledStates = readStored<ReviewState[]>(STORAGE_KEYS.reviewStates)
   assert.equal(await store.startTodayReview(), 10)
   assert.equal(store.total, 10)
@@ -156,12 +164,51 @@ test('a finished section can load the next section or review today\'s knowledge'
 
   await store.reveal()
   await store.rate(1)
-  assert.equal(store.total, 11)
+  assert.equal(store.total, 10)
   assert.deepEqual(readStored<ReviewState[]>(STORAGE_KEYS.reviewStates), scheduledStates)
   assert.equal(
     readStored<ReviewLog[]>(STORAGE_KEYS.reviewLogs)?.at(-1)?.mode,
     'practice',
   )
+})
+
+test('a chapter-scoped session continues into the next chapter without an empty action', async () => {
+  const first = {
+    ...newCard('chapter-one-card', 1),
+    chapterId: 'chapter_1',
+    sectionId: 'section_1',
+    sectionTitle: '第一节',
+  }
+  const second = {
+    ...newCard('chapter-two-card', 2),
+    chapterId: 'chapter_2',
+    sectionId: 'section_2',
+    sectionTitle: '第二节',
+  }
+  await Promise.all([
+    setStorage(STORAGE_KEYS.subjects, [
+      { id: first.subjectId, name: '测试知识库', createdAt: 1, updatedAt: 1 },
+    ]),
+    setStorage(STORAGE_KEYS.chapters, [
+      { id: 'chapter_1', subjectId: first.subjectId, name: '第一章', createdAt: 1, updatedAt: 1 },
+      { id: 'chapter_2', subjectId: first.subjectId, name: '第二章', createdAt: 2, updatedAt: 2 },
+    ]),
+    setStorage(STORAGE_KEYS.cards, [first, second]),
+    setStorage(STORAGE_KEYS.settings, { dailyNewCards: 20 }),
+    setStorage(STORAGE_KEYS.presetKnowledgeDismissed, true),
+  ])
+
+  const store = useReviewStore()
+  await store.start({ subjectId: first.subjectId, chapterId: 'chapter_1' }, false)
+  await store.beginRecall()
+  await store.reveal()
+  await store.rate(4)
+
+  assert.equal(store.finished, true)
+  assert.equal(store.nextStudyLabel, '学习下一章')
+  assert.equal(await store.startNextStudy(), 1)
+  assert.equal(store.activeFilter.chapterId, 'chapter_2')
+  assert.equal(store.currentCard?.id, second.id)
 })
 
 test('the next section stays locked until every forgotten card is remembered', async () => {
@@ -183,7 +230,7 @@ test('the next section stays locked until every forgotten card is remembered', a
 
   assert.equal(store.currentCard?.id, cards[1]!.id)
   assert.deepEqual(store.queue.map((card) => card.id), [cards[0]!.id, cards[1]!.id, cards[0]!.id])
-  assert.equal(await store.startNextSection(), 0)
+  assert.equal(await store.startNextStudy(), 0)
 
   await store.reveal()
   await store.rate(3)
@@ -191,6 +238,6 @@ test('the next section stays locked until every forgotten card is remembered', a
   await store.rate(3)
   assert.equal(store.finished, true)
 
-  assert.equal(await store.startNextSection(), 1)
+  assert.equal(await store.startNextStudy(), 1)
   assert.equal(store.currentCard?.id, cards[2]!.id)
 })

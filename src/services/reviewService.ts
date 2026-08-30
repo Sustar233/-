@@ -37,6 +37,29 @@ export interface ReviewQueueData {
   states: ReviewState[]
 }
 
+export interface ReviewQueueProgress {
+  completed: number
+  current: number
+  remaining: number
+  total: number
+}
+
+export function getReviewQueueProgress(
+  cardIds: readonly string[],
+  currentIndex: number,
+): ReviewQueueProgress {
+  const safeIndex = Math.min(Math.max(0, currentIndex), cardIds.length)
+  const total = new Set(cardIds).size
+  const remaining = new Set(cardIds.slice(safeIndex)).size
+  const completed = Math.max(0, total - remaining)
+  return {
+    completed,
+    current: remaining ? Math.min(total, completed + 1) : total,
+    remaining,
+    total,
+  }
+}
+
 function withDueAt(state: ReviewState, dueAt: number): ReviewState {
   const fsrsData =
     state.fsrsData && typeof state.fsrsData === 'object' && !Array.isArray(state.fsrsData)

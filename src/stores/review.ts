@@ -9,12 +9,14 @@ import {
   commitPracticeReview,
   commitReview,
   getReviewSession,
+  getReviewQueueProgress,
   getReviewStates,
   reviewFiltersEqual,
   saveReviewSession,
   shouldRepeatInCurrentSession,
   undoReview,
 } from '@/services/reviewService'
+import { getChapters } from '@/services/subjectService'
 import type { KnowledgeCard } from '@/types/card'
 import type {
   ReviewCommit,
@@ -24,6 +26,12 @@ import type {
   ReviewSession,
 } from '@/types/review'
 import { startOfDay } from '@/utils/date'
+
+interface StudyContinuation {
+  cards: KnowledgeCard[]
+  filter: ReviewFilter
+  kind: 'chapter' | 'section'
+}
 
 export const useReviewStore = defineStore('review', () => {
   const queue = ref<KnowledgeCard[]>([])
@@ -44,13 +52,28 @@ export const useReviewStore = defineStore('review', () => {
   const learningBatch = ref<KnowledgeCard[]>([])
   const seenCardIds = ref<string[]>([])
   const sessionMode = ref<ReviewMode>('scheduled')
+  const nextStudy = ref<StudyContinuation>()
 
   const currentCard = computed(() => queue.value[currentIndex.value] ?? null)
-  const completed = computed(() => currentIndex.value)
-  const total = computed(() => queue.value.length)
+  const queueProgress = computed(() =>
+    getReviewQueueProgress(
+      queue.value.map((card) => card.id),
+      currentIndex.value,
+    ),
+  )
+  const completed = computed(() => queueProgress.value.completed)
+  const progressCurrent = computed(() => queueProgress.value.current)
+  const total = computed(() => queueProgress.value.total)
   const finished = computed(() => !loading.value && currentIndex.value >= queue.value.length)
   const canUndo = computed(() => Boolean(lastCommit.value))
-  const sessionCardCount = computed(() => new Set(queue.value.map((card) => card.id)).size)
+  const sessionCardCount = computed(() => total.value)
+  const nextStudyLabel = computed(() =>
+    nextStudy.value?.kind === 'chapter'
+      ? '学习下一章'
+      : nextStudy.value?.kind === 'section'
+        ? '学习下一小节'
+        : '',
+  )
   const isReinforcement = computed(() => {
     const card = currentCard.value
     return Boolean(
@@ -68,6 +91,7 @@ export const useReviewStore = defineStore('review', () => {
   })
 
   function prepareCurrent(): void {
+    nextStudy.value = undefined
     revealed.value = false
     contextRevealed.value = false
     const card = currentCard.value
@@ -97,6 +121,56 @@ export const useReviewStore = defineStore('review', () => {
 
   async function persist(): Promise<void> {
     await saveReviewSession(sessionSnapshot())
+  }
+
+  function currentStudyChapterId(): string | undefined {
+    const newIds = new Set(newCardIds.value)
+    return (
+      queue.value.find((card) => newIds.has(card.id))?.chapterId ??
+      activeFilter.value.chapterId ??
+      queue.value.find((card) => card.chapterId)?.chapterId
+    )
+  }
+
+  async function refreshStudyContinuation(): Promise<void> {
+    nextStudy.value = undefined
+    if (currentIndex.value < queue.value.length || !activeFilter.value.subjectId) return
+
+    const now = Date.now()
+    const currentChapterId = currentStudyChapterId()
+    const sameScopeCards = await buildReviewQueue(now, activeFilter.value, {
+      includeDueCards: false,
+    })
+    if (sameScopeCards.length) {
+      nextStudy.value = {
+        cards: sameScopeCards,
+        filter: { ...activeFilter.value },
+        kind:
+          currentChapterId &&
+          sameScopeCards[0]?.chapterId &&
+          sameScopeCards[0].chapterId !== currentChapterId
+            ? 'chapter'
+            : 'section',
+      }
+      return
+    }
+
+    if (!currentChapterId || activeFilter.value.uncategorizedOnly) return
+    const chapters = await getChapters(activeFilter.value.subjectId)
+    const currentChapterIndex = chapters.findIndex((chapter) => chapter.id === currentChapterId)
+    if (currentChapterIndex < 0) return
+
+    for (const chapter of chapters.slice(currentChapterIndex + 1)) {
+      const filter: ReviewFilter = {
+        ...activeFilter.value,
+        chapterId: chapter.id,
+        uncategorizedOnly: undefined,
+      }
+      const cards = await buildReviewQueue(now, filter, { includeDueCards: false })
+      if (!cards.length) continue
+      nextStudy.value = { cards, filter, kind: 'chapter' }
+      return
+    }
   }
 
   async function start(filter: ReviewFilter = {}, allowResume = true): Promise<void> {
@@ -132,6 +206,7 @@ export const useReviewStore = defineStore('review', () => {
           lastCommit.value = existing.lastCommit
           previewedCardIds.value = [...(existing.previewedCardIds ?? [])]
           prepareCurrent()
+          if (currentIndex.value >= queue.value.length) await refreshStudyContinuation()
           resumed.value = currentIndex.value > 0 || currentIndex.value < queue.value.length
           return
         }
@@ -211,6 +286,7 @@ export const useReviewStore = defineStore('review', () => {
     if (!seenCardIds.value.includes(card.id)) seenCardIds.value = [...seenCardIds.value, card.id]
     currentIndex.value += 1
     prepareCurrent()
+    if (currentIndex.value >= queue.value.length) await refreshStudyContinuation()
     resumed.value = false
   }
 
@@ -243,25 +319,25 @@ export const useReviewStore = defineStore('review', () => {
     return true
   }
 
-  async function startNextSection(): Promise<number> {
+  async function startNextStudy(): Promise<number> {
     if (!finished.value) return 0
     loading.value = true
     try {
       const now = Date.now()
+      await refreshStudyContinuation()
+      const continuation = nextStudy.value
+      if (!continuation) return 0
       const [cards, states] = await Promise.all([getCards(), getReviewStates()])
-      const nextQueue = await buildReviewQueue(now, activeFilter.value, {
-        includeDueCards: false,
-      })
-      if (!nextQueue.length) return 0
 
       allCards.value = cards
+      activeFilter.value = { ...continuation.filter }
       sessionMode.value = 'scheduled'
       const reviewedCardIds = new Set(states.map((state) => state.cardId))
       seenCardIds.value = [...reviewedCardIds]
       newCardIds.value = cards
         .filter((card) => !reviewedCardIds.has(card.id))
         .map((card) => card.id)
-      queue.value = nextQueue
+      queue.value = continuation.cards
       currentIndex.value = 0
       startedAt.value = now
       previewedCardIds.value = []
@@ -269,7 +345,7 @@ export const useReviewStore = defineStore('review', () => {
       prepareCurrent()
       resumed.value = false
       await persist()
-      return nextQueue.length
+      return continuation.cards.length
     } finally {
       loading.value = false
     }
@@ -283,6 +359,7 @@ export const useReviewStore = defineStore('review', () => {
       if (!reviewQueue.length) return 0
 
       queue.value = reviewQueue
+      nextStudy.value = undefined
       sessionMode.value = 'practice'
       currentIndex.value = 0
       startedAt.value = now
@@ -311,6 +388,7 @@ export const useReviewStore = defineStore('review', () => {
     sessionMode.value = 'scheduled'
     contextRevealed.value = false
     contextCards.value = []
+    nextStudy.value = undefined
   }
 
   return {
@@ -331,10 +409,12 @@ export const useReviewStore = defineStore('review', () => {
     canMarkCurrentEasy,
     currentCard,
     completed,
+    progressCurrent,
     total,
     sessionCardCount,
     finished,
     canUndo,
+    nextStudyLabel,
     start,
     previewSection,
     beginRecall,
@@ -342,7 +422,7 @@ export const useReviewStore = defineStore('review', () => {
     reveal,
     rate,
     undoLast,
-    startNextSection,
+    startNextStudy,
     startTodayReview,
     finishSession,
   }

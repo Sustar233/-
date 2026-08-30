@@ -1,14 +1,12 @@
 import type { CardImportance, KnowledgeCard } from '@/types/card'
 import type { Chapter, Subject } from '@/types/subject'
 
-export const PRESET_KNOWLEDGE_VERSION = 5
+export const PRESET_KNOWLEDGE_VERSION = 6
 export const PRESET_SUBJECT_ID = 'preset_operating_system_subject_v2'
 export const PRESET_ID_PREFIX = 'preset_operating_system_'
 export const LEGACY_PRESET_ID_PREFIXES = ['preset_food_health_'] as const
 
 const PRESET_CREATED_AT = 1_787_417_600_000
-const PRESET_SECTION_SIZE = 5
-const SECTION_TITLES = ['基础概念', '关键机制', '方法与规则', '综合应用'] as const
 
 type ChapterKey =
   | 'overview'
@@ -19,6 +17,68 @@ type ChapterKey =
   | 'fileSystem'
   | 'device'
   | 'synchronization'
+
+interface PresetSectionDefinition {
+  size: number
+  title: string
+}
+
+const SECTION_PLANS: Record<ChapterKey, readonly PresetSectionDefinition[]> = {
+  overview: [
+    { title: '系统组成与操作系统定位', size: 3 },
+    { title: '操作系统特征与核心功能', size: 6 },
+    { title: '发展历程与系统类型', size: 5 },
+    { title: '设计结构与系统启动', size: 6 },
+  ],
+  environment: [
+    { title: '硬件与处理器基础', size: 3 },
+    { title: '特权状态与存储保护', size: 5 },
+    { title: '中断机制', size: 5 },
+    { title: 'I/O控制与系统设施', size: 5 },
+    { title: '系统调用', size: 2 },
+  ],
+  processThread: [
+    { title: '程序执行与进程基础', size: 4 },
+    { title: '进程状态模型', size: 3 },
+    { title: 'PCB与进程控制', size: 5 },
+    { title: '进程系统调用', size: 2 },
+    { title: '线程模型与实现', size: 6 },
+  ],
+  scheduling: [
+    { title: '调度机制与评价指标', size: 4 },
+    { title: '经典调度算法', size: 5 },
+    { title: '优先级与公平调度', size: 3 },
+    { title: '系统与多处理器调度', size: 5 },
+    { title: '实时调度与优先级反转', size: 3 },
+  ],
+  memory: [
+    { title: '地址转换与分区管理', size: 5 },
+    { title: '分区算法与交换', size: 4 },
+    { title: '虚拟存储与分页转换', size: 5 },
+    { title: '缺页与页面置换', size: 6 },
+  ],
+  fileSystem: [
+    { title: '文件与逻辑结构', size: 3 },
+    { title: '文件分配与索引', size: 6 },
+    { title: '目录结构与实现', size: 3 },
+    { title: '磁盘空闲空间管理', size: 3 },
+    { title: '文件访问、性能与保护', size: 5 },
+  ],
+  device: [
+    { title: '设备分类与软件层次', size: 4 },
+    { title: 'I/O控制方式', size: 4 },
+    { title: '设备分配与控制结构', size: 3 },
+    { title: '磁盘访问与调度', size: 6 },
+    { title: '缓冲与虚拟设备', size: 3 },
+  ],
+  synchronization: [
+    { title: '临界区与信号量', size: 4 },
+    { title: '生产者消费者问题', size: 3 },
+    { title: '经典同步问题', size: 4 },
+    { title: '死锁原理与预防', size: 5 },
+    { title: '死锁避免、检测与应用', size: 4 },
+  ],
+}
 
 interface PresetChapterDefinition {
   key: ChapterKey
@@ -251,20 +311,32 @@ export function buildPresetKnowledgeData(): PresetKnowledgeData {
   const cards: KnowledgeCard[] = []
 
   for (const chapter of CHAPTER_DEFINITIONS) {
+    const chapterCards = CARD_GROUPS[chapter.key]
+    const sectionPlan = SECTION_PLANS[chapter.key]
+    const plannedCardCount = sectionPlan.reduce((total, section) => total + section.size, 0)
+    if (plannedCardCount !== chapterCards.length) {
+      throw new Error(`${chapter.name}的小节规划与知识卡数量不一致`)
+    }
+
     let previousCardId: string | undefined
-    for (const [chapterCardIndex, seed] of CARD_GROUPS[chapter.key].entries()) {
+    let sectionIndex = 0
+    let nextSectionStart = sectionPlan[0]?.size ?? 0
+    for (const [chapterCardIndex, seed] of chapterCards.entries()) {
+      while (chapterCardIndex >= nextSectionStart && sectionIndex < sectionPlan.length - 1) {
+        sectionIndex += 1
+        nextSectionStart += sectionPlan[sectionIndex]!.size
+      }
       const [question, answer, tags, importance = 2] = seed
       const index = cards.length + 1
       const id = `${PRESET_ID_PREFIX}card_${String(index).padStart(3, '0')}`
       const chapterDefinition = chapterByKey.get(chapter.key)!
-      const sectionIndex = Math.floor(chapterCardIndex / PRESET_SECTION_SIZE)
       const sectionNumber = String(sectionIndex + 1).padStart(2, '0')
       cards.push({
         id,
         subjectId: PRESET_SUBJECT_ID,
         chapterId: chapterDefinition.id,
         sectionId: `${chapterDefinition.id}_section_${sectionNumber}`,
-        sectionTitle: `${sectionNumber} ${SECTION_TITLES[sectionIndex] ?? '延伸知识'}`,
+        sectionTitle: `${sectionNumber} ${sectionPlan[sectionIndex]!.title}`,
         parentCardId: previousCardId,
         connection: previousCardId ? `沿“${chapterDefinition.name}”的知识脉络继续学习。` : undefined,
         question,

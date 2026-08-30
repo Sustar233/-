@@ -5,6 +5,7 @@ import EmptyState from '@/components/EmptyState.vue'
 import LoadErrorState from '@/components/LoadErrorState.vue'
 import StatCard from '@/components/StatCard.vue'
 import { getDashboardSnapshot } from '@/services/dashboardService'
+import { getReviewQueueProgress } from '@/services/reviewService'
 import { createEmptyStatistics } from '@/services/statisticsService'
 import type { KnowledgeCard } from '@/types/card'
 import type { ReviewSession } from '@/types/review'
@@ -34,7 +35,10 @@ const cardCounts = computed(() =>
 )
 const reviewCount = computed(() =>
   resumableSession.value
-    ? Math.max(0, resumableSession.value.cardIds.length - resumableSession.value.currentIndex)
+    ? getReviewQueueProgress(
+        resumableSession.value.cardIds,
+        resumableSession.value.currentIndex,
+      ).remaining
     : dueCount.value,
 )
 const heroLabel = computed(() => {

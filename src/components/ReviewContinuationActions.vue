@@ -4,16 +4,18 @@ withDefaults(
     loading: boolean
     canUndo?: boolean
     backLabel?: string
+    nextLabel?: string
   }>(),
   {
     canUndo: false,
     backLabel: '返回',
+    nextLabel: '',
   },
 )
 
 const emit = defineEmits<{
   undo: []
-  nextSection: []
+  nextStudy: []
   review: []
   back: []
 }>()
@@ -22,12 +24,13 @@ const emit = defineEmits<{
 <template>
   <view class="continuation-actions">
     <button
+      v-if="nextLabel"
       class="primary-button"
       :loading="loading"
       :disabled="loading"
-      @click="emit('nextSection')"
+      @click="emit('nextStudy')"
     >
-      学习下一小节
+      {{ nextLabel }}
     </button>
     <button class="secondary-button" :disabled="loading" @click="emit('review')">复习</button>
     <button class="text-button" :disabled="loading" @click="emit('back')">{{ backLabel }}</button>

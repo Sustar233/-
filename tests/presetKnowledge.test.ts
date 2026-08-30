@@ -19,13 +19,13 @@ import { installStorageMock, readStored, resetStorage } from './helpers/storageM
 installStorageMock()
 beforeEach(resetStorage)
 
-test('operating-system preset contains 8 chapters, 32 sections, and 160 linked cards', () => {
+test('operating-system preset contains semantic sections with variable card counts', () => {
   const data = buildPresetKnowledgeData()
   const chapterIds = new Set(data.chapters.map((chapter) => chapter.id))
 
   assert.equal(data.chapters.length, 8)
   assert.equal(data.cards.length, 160)
-  assert.equal(new Set(data.cards.map((card) => card.sectionId)).size, 32)
+  assert.equal(new Set(data.cards.map((card) => card.sectionId)).size, 38)
   assert.equal(new Set(data.cards.map((card) => card.id)).size, 160)
   assert.match(data.subject.name, /操作系统/)
   assert.equal(
@@ -48,9 +48,22 @@ test('operating-system preset contains 8 chapters, 32 sections, and 160 linked c
       assert.equal(card.parentCardId, chapterCards[index]?.id)
     })
   }
-  for (const sectionId of new Set(data.cards.map((card) => card.sectionId))) {
-    assert.equal(data.cards.filter((card) => card.sectionId === sectionId).length, 5)
-  }
+  const sectionSizes = [...new Set(data.cards.map((card) => card.sectionId))].map(
+    (sectionId) => data.cards.filter((card) => card.sectionId === sectionId).length,
+  )
+  assert.deepEqual([...new Set(sectionSizes)].sort(), [2, 3, 4, 5, 6])
+  assert.equal(Math.max(...sectionSizes), 6)
+  assert.deepEqual(
+    data.cards
+      .filter((card) => card.chapterId === data.chapters[0]?.id)
+      .reduce<number[]>((sizes, card) => {
+        const previousCard = data.cards.find((item) => item.id === card.parentCardId)
+        if (!previousCard || previousCard.sectionId !== card.sectionId) sizes.push(1)
+        else sizes[sizes.length - 1] = (sizes.at(-1) ?? 0) + 1
+        return sizes
+      }, []),
+    [3, 6, 5, 6],
+  )
 })
 
 test('empty knowledge storage is seeded and an explicit dismissal is respected', async () => {

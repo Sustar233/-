@@ -42,7 +42,7 @@ const progressLabel = computed(() => {
 
 const progress = computed(() =>
   reviewStore.total
-    ? Math.round((Math.min(reviewStore.completed + 1, reviewStore.total) / reviewStore.total) * 100)
+    ? Math.round((reviewStore.progressCurrent / reviewStore.total) * 100)
     : 0,
 )
 const breadcrumb = computed(() => {
@@ -108,12 +108,11 @@ async function undoLastRating(): Promise<void> {
   }
 }
 
-async function startNextSection(): Promise<void> {
+async function startNextStudy(): Promise<void> {
   if (continuing.value) return
   continuing.value = true
   try {
-    const count = await reviewStore.startNextSection()
-    if (!count) uni.showToast({ title: '当前范围内没有下一小节', icon: 'none' })
+    await reviewStore.startNextStudy()
   } catch (error) {
     uni.showToast({ title: (error as Error).message, icon: 'none' })
   } finally {
@@ -150,7 +149,7 @@ async function goBack(): Promise<void> {
         <view class="progress-meta">
           <text class="progress-label">{{ progressLabel }}</text>
           <text class="progress-count">
-            {{ Math.min(reviewStore.completed + 1, reviewStore.total) }} / {{ reviewStore.total }}
+            {{ reviewStore.progressCurrent }} / {{ reviewStore.total }}
           </text>
         </view>
         <view class="progress-track">
@@ -176,9 +175,10 @@ async function goBack(): Promise<void> {
       <ReviewContinuationActions
         :loading="continuing"
         :can-undo="reviewStore.canUndo"
+        :next-label="reviewStore.nextStudyLabel"
         back-label="完成并返回"
         @undo="undoLastRating"
-        @next-section="startNextSection"
+        @next-study="startNextStudy"
         @review="reviewWrongCards"
         @back="goBack"
       />

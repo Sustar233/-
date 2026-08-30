@@ -2,20 +2,16 @@
 import { computed, ref, watch } from 'vue'
 import { onLoad } from '@dcloudio/uni-app'
 import LoadErrorState from '@/components/LoadErrorState.vue'
-import { getCards } from '@/services/cardService'
 import { buildReviewQueue } from '@/services/reviewService'
 import { getChapters, getSubjects } from '@/services/subjectService'
-import type { KnowledgeCard } from '@/types/card'
 import type { ReviewFilter } from '@/types/review'
 import type { Chapter, Subject } from '@/types/subject'
 import { reviewRoute } from '@/utils/reviewFilter'
 
 const subjects = ref<Subject[]>([])
 const chapters = ref<Chapter[]>([])
-const cards = ref<KnowledgeCard[]>([])
 const subjectId = ref('')
 const chapterId = ref('all')
-const tag = ref('all')
 const queueCount = ref(0)
 const loading = ref(true)
 const loadError = ref(false)
@@ -33,18 +29,6 @@ const chapterOptions = computed(() => [
   '未分类',
   ...availableChapters.value.map((item) => item.name),
 ])
-const availableTags = computed(() => {
-  const values = cards.value
-    .filter((card) => card.subjectId === subjectId.value)
-    .filter((card) => {
-      if (chapterId.value === 'all') return true
-      if (chapterId.value === 'uncategorized') return !card.chapterId
-      return card.chapterId === chapterId.value
-    })
-    .flatMap((card) => card.tags)
-  return [...new Set(values)].sort((first, second) => first.localeCompare(second, 'zh-CN'))
-})
-const tagOptions = computed(() => ['全部标签', ...availableTags.value])
 const selectedSubjectName = computed(() =>
   subjects.value.find((item) => item.id === subjectId.value)?.name ?? '请选择知识库',
 )
@@ -53,15 +37,12 @@ const selectedChapterName = computed(() => {
   if (chapterId.value === 'uncategorized') return '未分类'
   return availableChapters.value.find((item) => item.id === chapterId.value)?.name ?? '全部章节'
 })
-const selectedTagName = computed(() => (tag.value === 'all' ? '全部标签' : tag.value))
-
 function currentFilter(): ReviewFilter {
   return {
     subjectId: subjectId.value || undefined,
     chapterId:
       !['all', 'uncategorized'].includes(chapterId.value) ? chapterId.value : undefined,
     uncategorizedOnly: chapterId.value === 'uncategorized' || undefined,
-    tag: tag.value === 'all' ? undefined : tag.value,
   }
 }
 
@@ -80,17 +61,13 @@ async function refreshCount(): Promise<void> {
   }
 }
 
-watch([subjectId, chapterId, tag], refreshCount)
+watch([subjectId, chapterId], refreshCount)
 
 async function load(): Promise<void> {
   loading.value = true
   loadError.value = false
   try {
-    ;[subjects.value, chapters.value, cards.value] = await Promise.all([
-      getSubjects(),
-      getChapters(),
-      getCards(),
-    ])
+    ;[subjects.value, chapters.value] = await Promise.all([getSubjects(), getChapters()])
     if (subjects.value.some((item) => item.id === requestedSubjectId)) {
       subjectId.value = requestedSubjectId
     } else if (subjects.value.length === 1) {
@@ -115,7 +92,6 @@ function changeSubject(event: { detail: { value: string | number } }): void {
   const index = Number(event.detail.value)
   subjectId.value = subjects.value[index]?.id ?? ''
   chapterId.value = 'all'
-  tag.value = 'all'
 }
 
 function changeChapter(event: { detail: { value: string | number } }): void {
@@ -125,13 +101,7 @@ function changeChapter(event: { detail: { value: string | number } }): void {
       ? 'all'
       : index === 1
         ? 'uncategorized'
-        : availableChapters.value[index - 2]?.id ?? 'all'
-  tag.value = 'all'
-}
-
-function changeTag(event: { detail: { value: string | number } }): void {
-  const index = Number(event.detail.value)
-  tag.value = index === 0 ? 'all' : availableTags.value[index - 1] ?? 'all'
+      : availableChapters.value[index - 2]?.id ?? 'all'
 }
 
 function startStudy(): void {
@@ -171,11 +141,6 @@ function startStudy(): void {
           {{ !subjectId ? '请先选择一个知识库' : selectedChapterName }}
           <text class="picker-arrow">⌄</text>
         </view>
-      </picker>
-
-      <text class="field-label">标签范围</text>
-      <picker :range="tagOptions" @change="changeTag">
-        <view class="picker-field">{{ selectedTagName }} <text class="picker-arrow">⌄</text></view>
       </picker>
     </view>
 
