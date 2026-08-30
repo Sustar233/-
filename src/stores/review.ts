@@ -11,6 +11,7 @@ import {
   getReviewSession,
   getReviewQueueProgress,
   getReviewStates,
+  matchesReviewFilter,
   reviewFiltersEqual,
   saveReviewSession,
   shouldRepeatInCurrentSession,
@@ -61,7 +62,6 @@ export const useReviewStore = defineStore('review', () => {
       currentIndex.value,
     ),
   )
-  const completed = computed(() => queueProgress.value.completed)
   const progressCurrent = computed(() => queueProgress.value.current)
   const total = computed(() => queueProgress.value.total)
   const finished = computed(() => !loading.value && currentIndex.value >= queue.value.length)
@@ -197,7 +197,12 @@ export const useReviewStore = defineStore('review', () => {
         const restoredQueue = existing.cardIds
           .map((id) => cardById.get(id))
           .filter((card): card is KnowledgeCard => Boolean(card))
-        if (restoredQueue.length === existing.cardIds.length) {
+        if (
+          restoredQueue.length === existing.cardIds.length &&
+          restoredQueue.every(
+            (card) => card.status === 'active' && matchesReviewFilter(card, existing.filter),
+          )
+        ) {
           queue.value = restoredQueue
           currentIndex.value = Math.min(existing.currentIndex, restoredQueue.length)
           activeFilter.value = { ...existing.filter }
@@ -408,7 +413,6 @@ export const useReviewStore = defineStore('review', () => {
     currentSectionTitle,
     canMarkCurrentEasy,
     currentCard,
-    completed,
     progressCurrent,
     total,
     sessionCardCount,

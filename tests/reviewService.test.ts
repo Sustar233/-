@@ -474,7 +474,6 @@ test('review session can be persisted and cleared', async () => {
     startedAt: Date.now(),
     filter: { subjectId: 'subject_1' },
     previewedCardIds: ['card_1'],
-    retryDueAtByCardId: { card_2: Date.now() + 60_000 },
   }
 
   await saveReviewSession(session)

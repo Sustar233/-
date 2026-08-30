@@ -158,7 +158,7 @@ function openTodayReview(): void {
     <view class="stat-grid">
       <StatCard label="已复习" :value="summary.todayReviews" hint="次回答" />
       <StatCard label="新学习" :value="summary.todayNewCards" hint="张新卡" />
-      <StatCard label="忘了" :value="summary.todayAgain" hint="次遗忘" />
+      <StatCard label="已掌握" :value="summary.masteredCards" hint="张知识卡" />
       <StatCard label="连续" :value="`${summary.streakDays} 天`" hint="学习节奏" />
     </view>
     <view v-if="hasStartedToday" class="today-review-actions">

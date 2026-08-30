@@ -38,6 +38,8 @@ test('dashboard snapshot derives queue, statistics, and wrong-card count from on
   ]
   const dueState = createReviewState(cards[0]!.id, now - 60_000)
   dueState.dueAt = now - 1
+  const masteredState = createReviewState(cards[1]!.id, now - 60_000)
+  masteredState.masteredAt = now
 
   await Promise.all([
     setStorage(STORAGE_KEYS.presetKnowledgeDismissed, true),
@@ -45,7 +47,7 @@ test('dashboard snapshot derives queue, statistics, and wrong-card count from on
       { id: 'subject-1', name: 'Subject', createdAt: now, updatedAt: now },
     ]),
     setStorage(STORAGE_KEYS.cards, cards),
-    setStorage(STORAGE_KEYS.reviewStates, [dueState]),
+    setStorage(STORAGE_KEYS.reviewStates, [dueState, masteredState]),
     setStorage(STORAGE_KEYS.reviewLogs, [
       {
         id: 'wrong-log',
@@ -63,8 +65,9 @@ test('dashboard snapshot derives queue, statistics, and wrong-card count from on
 
   assert.equal(snapshot.subjects.length, 1)
   assert.equal(snapshot.cards.length, 2)
-  assert.equal(snapshot.dueCount, 2)
+  assert.equal(snapshot.dueCount, 1)
   assert.equal(snapshot.statistics.todayReviews, 1)
+  assert.equal(snapshot.statistics.masteredCards, 1)
   assert.equal(snapshot.todayWrongCount, 1)
   assert.deepEqual(snapshot.todaySubjectIds, ['subject-1'])
 })

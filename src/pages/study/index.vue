@@ -2,14 +2,17 @@
 import { computed, ref, watch } from 'vue'
 import { onLoad } from '@dcloudio/uni-app'
 import LoadErrorState from '@/components/LoadErrorState.vue'
+import { getCards } from '@/services/cardService'
 import { buildReviewQueue } from '@/services/reviewService'
 import { getChapters, getSubjects } from '@/services/subjectService'
 import type { ReviewFilter } from '@/types/review'
+import type { KnowledgeCard } from '@/types/card'
 import type { Chapter, Subject } from '@/types/subject'
 import { reviewRoute } from '@/utils/reviewFilter'
 
 const subjects = ref<Subject[]>([])
 const chapters = ref<Chapter[]>([])
+const cards = ref<KnowledgeCard[]>([])
 const subjectId = ref('')
 const chapterId = ref('all')
 const queueCount = ref(0)
@@ -24,11 +27,15 @@ const availableChapters = computed(() =>
     ? []
     : chapters.value.filter((item) => item.subjectId === subjectId.value),
 )
-const chapterOptions = computed(() => [
-  '全部章节',
-  '未分类',
-  ...availableChapters.value.map((item) => item.name),
+const hasUncategorizedCards = computed(() =>
+  cards.value.some((card) => card.subjectId === subjectId.value && !card.chapterId),
+)
+const chapterOptionItems = computed(() => [
+  { label: '全部章节', value: 'all' },
+  ...availableChapters.value.map((item) => ({ label: item.name, value: item.id })),
+  ...(hasUncategorizedCards.value ? [{ label: '未分类', value: 'uncategorized' }] : []),
 ])
+const chapterOptions = computed(() => chapterOptionItems.value.map((item) => item.label))
 const selectedSubjectName = computed(() =>
   subjects.value.find((item) => item.id === subjectId.value)?.name ?? '请选择知识库',
 )
@@ -67,7 +74,11 @@ async function load(): Promise<void> {
   loading.value = true
   loadError.value = false
   try {
-    ;[subjects.value, chapters.value] = await Promise.all([getSubjects(), getChapters()])
+    ;[subjects.value, chapters.value, cards.value] = await Promise.all([
+      getSubjects(),
+      getChapters(),
+      getCards(),
+    ])
     if (subjects.value.some((item) => item.id === requestedSubjectId)) {
       subjectId.value = requestedSubjectId
     } else if (subjects.value.length === 1) {
@@ -96,12 +107,7 @@ function changeSubject(event: { detail: { value: string | number } }): void {
 
 function changeChapter(event: { detail: { value: string | number } }): void {
   const index = Number(event.detail.value)
-  chapterId.value =
-    index === 0
-      ? 'all'
-      : index === 1
-        ? 'uncategorized'
-      : availableChapters.value[index - 2]?.id ?? 'all'
+  chapterId.value = chapterOptionItems.value[index]?.value ?? 'all'
 }
 
 function startStudy(): void {

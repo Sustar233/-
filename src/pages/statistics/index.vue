@@ -54,7 +54,7 @@ function editWeakCard(cardId: string, subjectId: string): void {
     <view class="stat-grid">
       <StatCard label="今日复习" :value="summary.todayReviews" hint="次回答" />
       <StatCard label="今日新卡" :value="summary.todayNewCards" hint="首次学习" />
-      <StatCard label="今日忘了" :value="summary.todayAgain" hint="次遗忘" />
+      <StatCard label="已掌握" :value="summary.masteredCards" hint="张知识卡" />
       <StatCard label="连续学习" :value="`${summary.streakDays} 天`" hint="有记录的天数" />
     </view>
 

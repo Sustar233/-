@@ -99,6 +99,7 @@ async function startBatchRecall(): Promise<void> {
 }
 
 async function undoLastRating(): Promise<void> {
+  if (rating.value || continuing.value) return
   try {
     if (!(await reviewStore.undoLast())) {
       uni.showToast({ title: '没有可撤销的评分', icon: 'none' })
@@ -174,10 +175,8 @@ async function goBack(): Promise<void> {
     >
       <ReviewContinuationActions
         :loading="continuing"
-        :can-undo="reviewStore.canUndo"
         :next-label="reviewStore.nextStudyLabel"
         back-label="完成并返回"
-        @undo="undoLastRating"
         @next-study="startNextStudy"
         @review="reviewWrongCards"
         @back="goBack"
@@ -213,7 +212,7 @@ async function goBack(): Promise<void> {
         :revealed="reviewStore.revealed"
         :practice="reviewStore.sessionMode === 'practice'"
         :rating="rating"
-        :can-undo="reviewStore.canUndo"
+        :can-undo="reviewStore.canUndo && !rating"
         :show-simple="reviewStore.canMarkCurrentEasy"
         @show-context="reviewStore.showContext"
         @reveal="reviewStore.reveal"

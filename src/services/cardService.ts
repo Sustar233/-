@@ -1,7 +1,7 @@
 import { STORAGE_KEYS } from '@/storage/keys'
 import { getStorage, setStorage, setStorageBatch, type StorageMutation } from '@/storage/storage'
 import type { KnowledgeCard, KnowledgeCardInput } from '@/types/card'
-import type { ReviewLog, ReviewState } from '@/types/review'
+import type { ReviewLog, ReviewSession, ReviewState } from '@/types/review'
 import { generateId } from '@/utils/id'
 import { ensurePresetKnowledge, isPresetKnowledgeId } from './presetKnowledgeService'
 
@@ -19,7 +19,7 @@ function normalizeInput(input: KnowledgeCardInput): KnowledgeCardInput {
     ...input,
     question,
     answer,
-    tags: (input.tags ?? []).map((tag) => tag.trim()).filter(Boolean),
+    tags: [...new Set((input.tags ?? []).map((tag) => tag.trim()).filter(Boolean))],
     note: input.note?.trim() || undefined,
     sectionId: input.sectionId?.trim() || undefined,
     sectionTitle: input.sectionTitle?.trim() || undefined,
@@ -70,7 +70,10 @@ export async function createCard(input: KnowledgeCardInput): Promise<KnowledgeCa
 }
 
 export async function updateCard(id: string, input: KnowledgeCardInput): Promise<KnowledgeCard> {
-  const cards = await getCards()
+  const [cards, session] = await Promise.all([
+    getCards(),
+    getStorage<ReviewSession>(STORAGE_KEYS.reviewSession),
+  ])
   const current = cards.find((card) => card.id === id)
   if (!current) throw new Error('知识卡不存在')
   const normalized = normalizeInput(input)
@@ -85,18 +88,43 @@ export async function updateCard(id: string, input: KnowledgeCardInput): Promise
     importance: normalized.importance ?? 2,
     updatedAt: Date.now(),
   }
-  await setStorage(
-    STORAGE_KEYS.cards,
-    cards.map((card) => (card.id === id ? updated : card)),
-  )
+  const subjectChanged = current.subjectId !== updated.subjectId
+  const nextCards = cards.map((card) => {
+    if (card.id === id) return updated
+    if (subjectChanged && card.parentCardId === id && card.subjectId !== updated.subjectId) {
+      return { ...card, parentCardId: undefined, updatedAt: Date.now() }
+    }
+    return card
+  })
+  const mutations: StorageMutation[] = [
+    { type: 'set', key: STORAGE_KEYS.cards, value: nextCards },
+  ]
+  if (subjectChanged) {
+    const logs = (await getStorage<ReviewLog[]>(STORAGE_KEYS.reviewLogs)) ?? []
+    mutations.push({
+      type: 'set',
+      key: STORAGE_KEYS.reviewLogs,
+      value: logs.map((log) =>
+        log.cardId === id ? { ...log, subjectId: updated.subjectId } : log,
+      ),
+    })
+  }
+  if (
+    session &&
+    (session.cardIds.includes(id) || session.lastCommit?.cardId === id)
+  ) {
+    mutations.push({ type: 'remove', key: STORAGE_KEYS.reviewSession })
+  }
+  await setStorageBatch(mutations)
   return updated
 }
 
 export async function deleteCard(id: string): Promise<void> {
-  const [cards, states, logs] = await Promise.all([
+  const [cards, states, logs, session] = await Promise.all([
     getCards(),
     getStorage<ReviewState[]>(STORAGE_KEYS.reviewStates).then((value) => value ?? []),
     getStorage<ReviewLog[]>(STORAGE_KEYS.reviewLogs).then((value) => value ?? []),
+    getStorage<ReviewSession>(STORAGE_KEYS.reviewSession),
   ])
   const mutations: StorageMutation[] = [
     {
@@ -120,8 +148,10 @@ export async function deleteCard(id: string): Promise<void> {
       key: STORAGE_KEYS.reviewLogs,
       value: logs.filter((log) => log.cardId !== id),
     },
-    { type: 'remove', key: STORAGE_KEYS.reviewSession },
   ]
+  if (session && (session.cardIds.includes(id) || session.lastCommit?.cardId === id)) {
+    mutations.push({ type: 'remove', key: STORAGE_KEYS.reviewSession })
+  }
   if (isPresetKnowledgeId(id)) {
     mutations.push({ type: 'set', key: STORAGE_KEYS.presetKnowledgeDismissed, value: true })
   }
@@ -129,16 +159,30 @@ export async function deleteCard(id: string): Promise<void> {
 }
 
 export async function setCardSuspended(id: string, suspended: boolean): Promise<void> {
-  const cards = await getCards()
+  const [cards, session] = await Promise.all([
+    getCards(),
+    getStorage<ReviewSession>(STORAGE_KEYS.reviewSession),
+  ])
   if (!cards.some((card) => card.id === id)) throw new Error('知识卡不存在')
-  await setStorage(
-    STORAGE_KEYS.cards,
-    cards.map((card) =>
-      card.id === id
-        ? { ...card, status: suspended ? 'suspended' : 'active', updatedAt: Date.now() }
-        : card,
-    ),
-  )
+  const mutations: StorageMutation[] = [
+    {
+      type: 'set',
+      key: STORAGE_KEYS.cards,
+      value: cards.map((card) =>
+        card.id === id
+          ? { ...card, status: suspended ? 'suspended' : 'active', updatedAt: Date.now() }
+          : card,
+      ),
+    },
+  ]
+  if (
+    suspended &&
+    session &&
+    (session.cardIds.includes(id) || session.lastCommit?.cardId === id)
+  ) {
+    mutations.push({ type: 'remove', key: STORAGE_KEYS.reviewSession })
+  }
+  await setStorageBatch(mutations)
 }
 
 export async function searchCards(query: string): Promise<KnowledgeCard[]> {

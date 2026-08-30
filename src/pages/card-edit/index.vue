@@ -26,12 +26,12 @@ const subjectNames = computed(() => subjects.value.map((subject) => subject.name
 const availableChapters = computed(() =>
   chapters.value.filter((chapter) => chapter.subjectId === subjectId.value),
 )
-const chapterNames = computed(() => ['未分类', ...availableChapters.value.map((chapter) => chapter.name)])
+const chapterNames = computed(() => availableChapters.value.map((chapter) => chapter.name))
 const selectedSubjectName = computed(
   () => subjects.value.find((subject) => subject.id === subjectId.value)?.name ?? '请选择科目',
 )
 const selectedChapterName = computed(
-  () => availableChapters.value.find((chapter) => chapter.id === chapterId.value)?.name ?? '未分类',
+  () => availableChapters.value.find((chapter) => chapter.id === chapterId.value)?.name ?? '请选择章节',
 )
 const parentCandidates = computed(() =>
   cards.value
@@ -79,6 +79,9 @@ onLoad(async (query) => {
         note.value = card.note ?? ''
       }
     }
+    if (!cardId.value && !availableChapters.value.some((chapter) => chapter.id === chapterId.value)) {
+      chapterId.value = availableChapters.value[0]?.id ?? ''
+    }
     uni.setNavigationBarTitle({ title: pageTitle.value })
   } finally {
     loading.value = false
@@ -88,7 +91,7 @@ onLoad(async (query) => {
 function changeSubject(event: { detail: { value: string | number } }): void {
   const index = Number(event.detail.value)
   subjectId.value = subjects.value[index]?.id ?? ''
-  chapterId.value = ''
+  chapterId.value = chapters.value.find((chapter) => chapter.subjectId === subjectId.value)?.id ?? ''
   parentCardId.value = ''
 }
 
@@ -99,7 +102,7 @@ function changeParent(event: { detail: { value: string | number } }): void {
 
 function changeChapter(event: { detail: { value: string | number } }): void {
   const index = Number(event.detail.value)
-  chapterId.value = index === 0 ? '' : availableChapters.value[index - 1]?.id ?? ''
+  chapterId.value = availableChapters.value[index]?.id ?? ''
 }
 
 function changeImportance(event: { detail: { value: string | number } }): void {
@@ -110,6 +113,10 @@ async function save(): Promise<void> {
   if (saving.value) return
   if (!subjectId.value) {
     uni.showToast({ title: '请先创建并选择科目', icon: 'none' })
+    return
+  }
+  if (!chapterId.value) {
+    uni.showToast({ title: '请先为知识卡选择章节', icon: 'none' })
     return
   }
   saving.value = true
@@ -159,6 +166,9 @@ async function save(): Promise<void> {
       <picker :range="chapterNames" @change="changeChapter">
         <view class="picker-field">{{ selectedChapterName }}</view>
       </picker>
+      <text v-if="subjectId && !availableChapters.length" class="field-help chapter-help">
+        当前知识库还没有章节，请返回知识库先添加章节。
+      </text>
 
       <view class="path-heading">
         <text class="field-label">前置知识</text>
@@ -211,7 +221,7 @@ async function save(): Promise<void> {
         placeholder="补充说明（可选）"
       />
 
-      <button class="primary-button save-button" :loading="saving" :disabled="saving || loading" @click="save">保存知识卡</button>
+      <button class="primary-button save-button" :loading="saving" :disabled="saving || loading || !chapterId" @click="save">保存知识卡</button>
     </view>
   </view>
 </template>
@@ -262,6 +272,10 @@ async function save(): Promise<void> {
   color: var(--color-subtle);
   font-size: 21rpx;
   line-height: 1.55;
+}
+
+.chapter-help {
+  color: var(--color-danger);
 }
 
 .notice {

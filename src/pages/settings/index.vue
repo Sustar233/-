@@ -8,9 +8,15 @@ import {
   parseBackup,
   restoreAutomaticBackup as restoreAutomaticBackupData,
 } from '@/services/backupService'
+import { AI_KNOWLEDGE_PROMPT } from '@/data/aiKnowledgePrompt'
+import {
+  importAiKnowledgePackage,
+  parseAiKnowledgePackage,
+} from '@/services/knowledgePackageService'
 import { restorePresetKnowledge } from '@/services/presetKnowledgeService'
 
 const backupText = ref('')
+const knowledgePackageText = ref('')
 const working = ref(false)
 const automaticBackupAvailable = ref(false)
 
@@ -98,6 +104,51 @@ function restoreDefaultKnowledge(): void {
     },
   })
 }
+
+function copyAiPrompt(): void {
+  uni.setClipboardData({
+    data: AI_KNOWLEDGE_PROMPT,
+    success: () => uni.showToast({ title: '拆解模板已复制', icon: 'success' }),
+  })
+}
+
+function importKnowledgePackage(): void {
+  let knowledgePackage
+  try {
+    knowledgePackage = parseAiKnowledgePackage(knowledgePackageText.value)
+  } catch (error) {
+    uni.showToast({ title: (error as Error).message, icon: 'none', duration: 3000 })
+    return
+  }
+  const sectionCount = knowledgePackage.chapters.reduce(
+    (total, chapter) => total + chapter.sections.length,
+    0,
+  )
+  const cardCount = knowledgePackage.chapters.reduce(
+    (total, chapter) =>
+      total + chapter.sections.reduce((count, section) => count + section.cards.length, 0),
+    0,
+  )
+
+  uni.showModal({
+    title: `导入“${knowledgePackage.subject.name}”`,
+    content: `将新增 ${knowledgePackage.chapters.length} 章、${sectionCount} 小节、${cardCount} 张知识卡，不会覆盖已有数据。`,
+    confirmColor: '#28624f',
+    success: async ({ confirm }) => {
+      if (!confirm) return
+      working.value = true
+      try {
+        const result = await importAiKnowledgePackage(knowledgePackageText.value)
+        knowledgePackageText.value = ''
+        uni.showToast({ title: `已导入 ${result.cardCount} 张`, icon: 'success' })
+      } catch (error) {
+        uni.showToast({ title: (error as Error).message, icon: 'none', duration: 3000 })
+      } finally {
+        working.value = false
+      }
+    },
+  })
+}
 </script>
 
 <template>
@@ -118,6 +169,33 @@ function restoreDefaultKnowledge(): void {
       </view>
       <button class="secondary-button restore-preset" :disabled="working" @click="restoreDefaultKnowledge">
         恢复默认知识库
+      </button>
+    </view>
+
+    <view class="section-heading">
+      <text class="section-title">AI 知识库导入</text>
+      <text class="muted">新增导入</text>
+    </view>
+    <view class="ai-import-card surface">
+      <text class="backup-intro">
+        复制拆解模板交给 AI，并附上原始资料。将 AI 返回的纯 JSON 粘贴到下方即可导入。
+      </text>
+      <button class="secondary-button prompt-button" :disabled="working" @click="copyAiPrompt">
+        复制 AI 拆解模板
+      </button>
+      <textarea
+        v-model="knowledgePackageText"
+        class="backup-textarea ai-textarea"
+        maxlength="-1"
+        placeholder="粘贴 recalllab-ai-knowledge JSON。导入会创建新的知识库，不影响已有内容。"
+      />
+      <button
+        class="primary-button import-knowledge"
+        :loading="working"
+        :disabled="working || !knowledgePackageText.trim()"
+        @click="importKnowledgePackage"
+      >
+        校验并导入
       </button>
     </view>
 
@@ -163,8 +241,19 @@ function restoreDefaultKnowledge(): void {
 
 <style scoped>
 .preset-card,
+.ai-import-card,
 .backup-card {
   padding: 30rpx;
+}
+
+.prompt-button,
+.import-knowledge {
+  width: 100%;
+  margin-top: 20rpx;
+}
+
+.ai-textarea {
+  height: 280rpx;
 }
 
 .setting-name,

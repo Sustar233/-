@@ -1,7 +1,7 @@
 import { getCards } from './cardService'
-import { getReviewLogs } from './reviewService'
+import { getReviewLogs, getReviewStates } from './reviewService'
 import type { KnowledgeCard } from '@/types/card'
-import type { ReviewLog } from '@/types/review'
+import type { ReviewLog, ReviewState } from '@/types/review'
 import { addDays, formatShortDate, startOfDay } from '@/utils/date'
 
 export interface DayStatistic {
@@ -13,7 +13,7 @@ export interface DayStatistic {
 export interface StatisticsSummary {
   todayReviews: number
   todayNewCards: number
-  todayAgain: number
+  masteredCards: number
   streakDays: number
   last7Days: DayStatistic[]
   weakCards: Array<{ card: KnowledgeCard; score: number; reviewCount: number }>
@@ -23,7 +23,7 @@ export function createEmptyStatistics(): StatisticsSummary {
   return {
     todayReviews: 0,
     todayNewCards: 0,
-    todayAgain: 0,
+    masteredCards: 0,
     streakDays: 0,
     last7Days: [],
     weakCards: [],
@@ -54,6 +54,7 @@ export function calculateWeakCards(
   }
 
   return cards
+    .filter((card) => card.status === 'active')
     .map((card) => {
       const recent = (logsByCard.get(card.id) ?? [])
         .sort((first, second) => second.reviewedAt - first.reviewedAt)
@@ -70,19 +71,18 @@ export function calculateWeakCards(
 export function calculateStatistics(
   cards: KnowledgeCard[],
   logs: ReviewLog[],
+  states: ReviewState[],
   now = Date.now(),
 ): StatisticsSummary {
   const today = startOfDay(now)
   const reviewsByDay = new Map<number, number>()
   const firstReviewByCard = new Map<string, number>()
   let todayReviews = 0
-  let todayAgain = 0
   for (const log of logs) {
     const day = startOfDay(log.reviewedAt)
     reviewsByDay.set(day, (reviewsByDay.get(day) ?? 0) + 1)
     if (day === today) {
       todayReviews += 1
-      if (log.rating === 1) todayAgain += 1
     }
     const firstReviewAt = firstReviewByCard.get(log.cardId)
     if (firstReviewAt === undefined || log.reviewedAt < firstReviewAt) {
@@ -97,10 +97,15 @@ export function calculateStatistics(
       count: reviewsByDay.get(day) ?? 0,
     }
   })
+  const activeCardIds = new Set(
+    cards.filter((card) => card.status === 'active').map((card) => card.id),
+  )
   return {
     todayReviews,
     todayNewCards: [...firstReviewByCard.values()].filter((time) => startOfDay(time) === today).length,
-    todayAgain,
+    masteredCards: states.filter(
+      (state) => Boolean(state.masteredAt) && activeCardIds.has(state.cardId),
+    ).length,
     streakDays: calculateStreak(logs, now),
     last7Days,
     weakCards: calculateWeakCards(cards, logs),
@@ -108,6 +113,6 @@ export function calculateStatistics(
 }
 
 export async function getStatistics(now = Date.now()): Promise<StatisticsSummary> {
-  const [cards, logs] = await Promise.all([getCards(), getReviewLogs()])
-  return calculateStatistics(cards, logs, now)
+  const [cards, logs, states] = await Promise.all([getCards(), getReviewLogs(), getReviewStates()])
+  return calculateStatistics(cards, logs, states, now)
 }

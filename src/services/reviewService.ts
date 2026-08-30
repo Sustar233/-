@@ -1,4 +1,4 @@
-import { applyReview, createReviewState, previewReview } from '@/scheduler/fsrs'
+import { applyReview, createReviewState } from '@/scheduler/fsrs'
 import { STORAGE_KEYS } from '@/storage/keys'
 import {
   getStorage,
@@ -12,7 +12,6 @@ import type {
   ReviewCommit,
   ReviewFilter,
   ReviewLog,
-  ReviewPreview,
   ReviewRating,
   ReviewSession,
   ReviewState,
@@ -130,7 +129,7 @@ export async function getReviewLogs(): Promise<ReviewLog[]> {
   return (await getStorage<ReviewLog[]>(STORAGE_KEYS.reviewLogs)) ?? []
 }
 
-function matchesFilter(card: KnowledgeCard, filter: ReviewFilter): boolean {
+export function matchesReviewFilter(card: KnowledgeCard, filter: ReviewFilter): boolean {
   if (filter.subjectId && card.subjectId !== filter.subjectId) return false
   if (filter.uncategorizedOnly && card.chapterId) return false
   if (filter.chapterId && card.chapterId !== filter.chapterId) return false
@@ -219,7 +218,7 @@ export function buildReviewQueueFromData(
 ): KnowledgeCard[] {
   const { cards, states } = data
   const activeCards = cards.filter(
-    (card) => card.status === 'active' && matchesFilter(card, filter),
+    (card) => card.status === 'active' && matchesReviewFilter(card, filter),
   )
   const stateByCard = new Map(states.map((state) => [state.cardId, state]))
   const dueCards =
@@ -287,7 +286,7 @@ export function buildTodayReviewQueueFromData(
       const activity = activityByCard.get(card.id)
       return (
         card.status === 'active' &&
-        matchesFilter(card, filter) &&
+        matchesReviewFilter(card, filter) &&
         Boolean(activity) &&
         (!wrongOnly || activity?.wasWrong)
       )
@@ -317,15 +316,6 @@ export function shouldRepeatInCurrentSession(
   rating: ReviewRating,
 ): boolean {
   return rating === 1
-}
-
-export async function previewCard(cardId: string, now = Date.now()): Promise<ReviewPreview[]> {
-  const [states, settingsValue] = await Promise.all([
-    getReviewStates(),
-    getStorage<Settings>(STORAGE_KEYS.settings),
-  ])
-  const state = states.find((item) => item.cardId === cardId) ?? createReviewState(cardId, now)
-  return previewReview(state, now, normalizeSettings(settingsValue))
 }
 
 export async function commitReview(
@@ -470,14 +460,7 @@ export async function getReviewSession(): Promise<ReviewSession | null> {
     (session.mode !== undefined && !['scheduled', 'practice'].includes(session.mode)) ||
     (session.previewedCardIds !== undefined &&
       (!Array.isArray(session.previewedCardIds) ||
-        !session.previewedCardIds.every((cardId) => typeof cardId === 'string'))) ||
-    (session.retryDueAtByCardId !== undefined &&
-      (!session.retryDueAtByCardId ||
-        typeof session.retryDueAtByCardId !== 'object' ||
-        Array.isArray(session.retryDueAtByCardId) ||
-        !Object.values(session.retryDueAtByCardId).every(
-          (dueAt) => typeof dueAt === 'number' && Number.isFinite(dueAt),
-        )))
+        !session.previewedCardIds.every((cardId) => typeof cardId === 'string')))
   ) {
     return null
   }

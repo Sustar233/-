@@ -7,7 +7,7 @@ import {
 import { STORAGE_KEYS } from '@/storage/keys'
 import { getStorage, setStorageBatch, type StorageMutation } from '@/storage/storage'
 import type { KnowledgeCard } from '@/types/card'
-import type { ReviewLog, ReviewState } from '@/types/review'
+import type { ReviewLog, ReviewSession, ReviewState } from '@/types/review'
 import type { Chapter, Subject } from '@/types/subject'
 
 let initializationPromise: Promise<void> | null = null
@@ -19,8 +19,16 @@ export function isPresetKnowledgeId(id: string): boolean {
 }
 
 async function initializePresetKnowledge(force = false): Promise<void> {
-  const [version, dismissed, subjectsValue, chaptersValue, cardsValue, statesValue, logsValue] =
-    await Promise.all([
+  const [
+    version,
+    dismissed,
+    subjectsValue,
+    chaptersValue,
+    cardsValue,
+    statesValue,
+    logsValue,
+    reviewSession,
+  ] = await Promise.all([
     getStorage<number>(STORAGE_KEYS.presetKnowledgeVersion),
     getStorage<boolean>(STORAGE_KEYS.presetKnowledgeDismissed),
     getStorage<Subject[]>(STORAGE_KEYS.subjects),
@@ -28,6 +36,7 @@ async function initializePresetKnowledge(force = false): Promise<void> {
     getStorage<KnowledgeCard[]>(STORAGE_KEYS.cards),
     getStorage<ReviewState[]>(STORAGE_KEYS.reviewStates),
     getStorage<ReviewLog[]>(STORAGE_KEYS.reviewLogs),
+    getStorage<ReviewSession>(STORAGE_KEYS.reviewSession),
   ])
 
   const subjects = subjectsValue ?? []
@@ -38,6 +47,12 @@ async function initializePresetKnowledge(force = false): Promise<void> {
   if (dismissed && !force) return
 
   const preset = buildPresetKnowledgeData()
+  const sessionTouchesPreset = Boolean(
+    reviewSession &&
+      (reviewSession.filter.subjectId === preset.subject.id ||
+        reviewSession.cardIds.some((cardId) => isPresetKnowledgeId(cardId)) ||
+        (reviewSession.lastCommit && isPresetKnowledgeId(reviewSession.lastCommit.cardId))),
+  )
   const hasLegacyPresetData = [...subjects, ...chapters, ...cards].some((item) =>
     LEGACY_PRESET_ID_PREFIXES.some((prefix) => item.id.startsWith(prefix)),
   )
@@ -92,8 +107,10 @@ async function initializePresetKnowledge(force = false): Promise<void> {
           key: STORAGE_KEYS.cards,
           value: [...cards.filter((card) => !isPresetKnowledgeId(card.id)), ...preset.cards],
         },
-        { type: 'remove', key: STORAGE_KEYS.reviewSession },
       )
+      if (sessionTouchesPreset) {
+        mutations.push({ type: 'remove', key: STORAGE_KEYS.reviewSession })
+      }
     }
     await setStorageBatch(mutations)
     return
@@ -145,9 +162,11 @@ async function initializePresetKnowledge(force = false): Promise<void> {
       key: STORAGE_KEYS.reviewLogs,
       value: logs.filter((log) => shouldKeepReviewForCard(log.cardId)),
     },
-    { type: 'remove', key: STORAGE_KEYS.reviewSession },
     { type: 'set', key: STORAGE_KEYS.presetKnowledgeVersion, value: PRESET_KNOWLEDGE_VERSION },
     { type: 'set', key: STORAGE_KEYS.presetKnowledgeDismissed, value: false },
+    ...(sessionTouchesPreset
+      ? [{ type: 'remove' as const, key: STORAGE_KEYS.reviewSession }]
+      : []),
   ])
 }
 

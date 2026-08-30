@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import { calculateStatistics, calculateStreak, calculateWeakCards } from '../src/services/statisticsService'
 import type { KnowledgeCard } from '../src/types/card'
-import type { ReviewLog } from '../src/types/review'
+import type { ReviewLog, ReviewState } from '../src/types/review'
 
 const now = new Date(2026, 6, 30, 12).getTime()
 const day = 24 * 60 * 60 * 1000
@@ -29,9 +29,13 @@ test('statistics apply streak and weakness rules', () => {
   assert.equal(calculateStreak(logs, now), 3)
   assert.equal(calculateWeakCards(cards, logs)[0].score, 7)
 
-  const summary = calculateStatistics(cards, logs, now)
+  const states: ReviewState[] = [
+    { cardId: 'weak', dueAt: now, fsrsData: {}, masteredAt: now },
+    { cardId: 'deleted', dueAt: now, fsrsData: {}, masteredAt: now },
+  ]
+  const summary = calculateStatistics(cards, logs, states, now)
   assert.equal(summary.todayReviews, 1)
-  assert.equal(summary.todayAgain, 1)
+  assert.equal(summary.masteredCards, 1)
   assert.equal(summary.todayNewCards, 0)
   assert.equal(summary.last7Days.length, 7)
 })
@@ -52,7 +56,7 @@ test('statistics remain correct when logs are not chronological', () => {
     },
   ]
 
-  const summary = calculateStatistics([], unsortedLogs, now)
+  const summary = calculateStatistics([], unsortedLogs, [], now)
   assert.equal(summary.todayReviews, 1)
   assert.equal(summary.todayNewCards, 0)
   assert.equal(summary.last7Days.at(-1)?.count, 1)

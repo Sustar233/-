@@ -4,7 +4,7 @@ import { getKnowledgeContext, updateCard } from '../src/services/cardService'
 import { STORAGE_KEYS } from '../src/storage/keys'
 import { setStorage } from '../src/storage/storage'
 import type { KnowledgeCard } from '../src/types/card'
-import { installStorageMock, resetStorage } from './helpers/storageMock'
+import { installStorageMock, readStored, resetStorage } from './helpers/storageMock'
 
 installStorageMock()
 beforeEach(resetStorage)
@@ -79,4 +79,35 @@ test('moving a card to another chapter clears its previous section metadata', as
 
   assert.equal(updated.sectionId, undefined)
   assert.equal(updated.sectionTitle, undefined)
+})
+
+test('moving a card between subjects repairs logs and dependent knowledge paths', async () => {
+  const target = card('moved', 1)
+  const dependent = card('dependent', 2, target.id)
+  await Promise.all([
+    setStorage(STORAGE_KEYS.cards, [target, dependent]),
+    setStorage(STORAGE_KEYS.reviewLogs, [
+      {
+        id: 'log-moved',
+        cardId: target.id,
+        subjectId: target.subjectId,
+        rating: 3,
+        reviewedAt: 1,
+      },
+    ]),
+  ])
+
+  await updateCard(target.id, {
+    subjectId: 'subject_2',
+    chapterId: 'chapter_2',
+    question: target.question,
+    answer: target.answer,
+  })
+
+  const storedCards = readStored<KnowledgeCard[]>(STORAGE_KEYS.cards) ?? []
+  assert.equal(storedCards.find((item) => item.id === dependent.id)?.parentCardId, undefined)
+  assert.equal(
+    readStored<Array<{ subjectId: string }>>(STORAGE_KEYS.reviewLogs)?.[0]?.subjectId,
+    'subject_2',
+  )
 })

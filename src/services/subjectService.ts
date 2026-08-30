@@ -104,12 +104,13 @@ export async function resetSubjectProgress(
 }
 
 export async function deleteSubject(id: string): Promise<void> {
-  const [subjects, chapters, cards, reviewStates, reviewLogs] = await Promise.all([
+  const [subjects, chapters, cards, reviewStates, reviewLogs, reviewSession] = await Promise.all([
     getSubjects(),
     getChapters(),
     getStorage<KnowledgeCard[]>(STORAGE_KEYS.cards).then((value) => value ?? []),
     getStorage<ReviewState[]>(STORAGE_KEYS.reviewStates).then((value) => value ?? []),
     getStorage<ReviewLog[]>(STORAGE_KEYS.reviewLogs).then((value) => value ?? []),
+    getStorage<ReviewSession>(STORAGE_KEYS.reviewSession),
   ])
   const removedCardIds = new Set(cards.filter((card) => card.subjectId === id).map((card) => card.id))
 
@@ -139,8 +140,15 @@ export async function deleteSubject(id: string): Promise<void> {
       key: STORAGE_KEYS.reviewLogs,
       value: reviewLogs.filter((log) => log.subjectId !== id),
     },
-    { type: 'remove', key: STORAGE_KEYS.reviewSession },
   ]
+  if (
+    reviewSession &&
+    (reviewSession.filter.subjectId === id ||
+      reviewSession.cardIds.some((cardId) => removedCardIds.has(cardId)) ||
+      (reviewSession.lastCommit && removedCardIds.has(reviewSession.lastCommit.cardId)))
+  ) {
+    mutations.push({ type: 'remove', key: STORAGE_KEYS.reviewSession })
+  }
   if (isPresetKnowledgeId(id)) {
     mutations.push({ type: 'set', key: STORAGE_KEYS.presetKnowledgeDismissed, value: true })
   }
@@ -185,25 +193,14 @@ export async function deleteChapter(id: string): Promise<void> {
     getChapters(),
     getStorage<KnowledgeCard[]>(STORAGE_KEYS.cards).then((value) => value ?? []),
   ])
+  if (cards.some((card) => card.chapterId === id)) {
+    throw new Error('该章节仍有知识卡，请先移动知识卡后再删除')
+  }
   const mutations: StorageMutation[] = [
     {
       type: 'set',
       key: STORAGE_KEYS.chapters,
       value: chapters.filter((chapter) => chapter.id !== id),
-    },
-    {
-      type: 'set',
-      key: STORAGE_KEYS.cards,
-      value: cards.map((card) => {
-        if (card.chapterId !== id) return card
-        const {
-          chapterId: _chapterId,
-          sectionId: _sectionId,
-          sectionTitle: _sectionTitle,
-          ...uncategorized
-        } = card
-        return { ...uncategorized, updatedAt: Date.now() }
-      }),
     },
   ]
   if (isPresetKnowledgeId(id)) {

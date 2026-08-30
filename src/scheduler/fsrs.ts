@@ -1,7 +1,6 @@
 import { createEmptyCard, fsrs, type Card, type CardInput, type Grade } from 'ts-fsrs'
-import type { ReviewPreview, ReviewRating, ReviewState } from '@/types/review'
+import type { ReviewRating, ReviewState } from '@/types/review'
 import { DEFAULT_SETTINGS, type Settings } from '@/types/settings'
-import { formatInterval } from '@/utils/date'
 
 export interface StoredFsrsCard extends Omit<Card, 'due' | 'last_review'> {
   due: string
@@ -83,23 +82,6 @@ export function createReviewState(cardId: string, now = Date.now()): ReviewState
     dueAt: card.due.getTime(),
     fsrsData: serializeCard(card),
   }
-}
-
-export function previewReview(
-  state: ReviewState,
-  now = Date.now(),
-  settings = DEFAULT_SETTINGS,
-): ReviewPreview[] {
-  const scheduler = createScheduler(settings)
-  const result = scheduler.repeat(parseStoredFsrsCard(state.fsrsData), new Date(now))
-  return ([1, 2, 3, 4] as ReviewRating[]).map((rating) => {
-    const dueAt = result[rating].card.due.getTime()
-    return {
-      rating,
-      dueAt,
-      intervalLabel: formatInterval(now, dueAt),
-    }
-  })
 }
 
 export function applyReview(

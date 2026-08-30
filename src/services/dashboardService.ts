@@ -59,7 +59,7 @@ export async function getDashboardSnapshot(now = Date.now()): Promise<DashboardS
         count + buildReviewQueueFromData(queueData, now, { subjectId: subject.id }).length,
       0,
     ),
-    statistics: calculateStatistics(cards, logs, now),
+    statistics: calculateStatistics(cards, logs, states, now),
     session,
     todayWrongCount: buildTodayReviewQueueFromData(cards, logs, now, {}, true).length,
     todaySubjectIds,

@@ -21,12 +21,6 @@ export interface ReviewLog {
   mode?: ReviewMode
 }
 
-export interface ReviewPreview {
-  rating: ReviewRating
-  dueAt: number
-  intervalLabel: string
-}
-
 export interface ReviewFilter {
   subjectId?: string
   chapterId?: string
@@ -49,6 +43,5 @@ export interface ReviewSession {
   filter: ReviewFilter
   mode?: ReviewMode
   previewedCardIds?: string[]
-  retryDueAtByCardId?: Record<string, number>
   lastCommit?: ReviewCommit
 }

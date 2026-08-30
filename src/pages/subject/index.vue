@@ -105,9 +105,18 @@ function beginChapterEdit(id: string): void {
 function removeChapter(id: string): void {
   const chapter = chapters.value.find((item) => item.id === id)
   if (!chapter) return
+  const cardCount = countFor(id)
+  if (cardCount) {
+    uni.showModal({
+      title: '暂时不能删除',
+      content: `“${chapter.name}”中还有 ${cardCount} 张知识卡，请先将它们移动到其他章节。`,
+      showCancel: false,
+    })
+    return
+  }
   uni.showModal({
     title: '删除章节',
-    content: `删除“${chapter.name}”后，其中的卡片会移到未分类。`,
+    content: `确定删除空章节“${chapter.name}”吗？`,
     confirmColor: '#a3453e',
     success: async ({ confirm }) => {
       if (!confirm) return
@@ -119,6 +128,10 @@ function removeChapter(id: string): void {
 }
 
 function openCardEditor(cardId?: string): void {
+  if (!cardId && !chapters.value.length) {
+    uni.showToast({ title: '请先添加章节，再添加知识卡', icon: 'none' })
+    return
+  }
   const parts = [`subjectId=${encodeURIComponent(subjectId.value)}`]
   if (!['all', 'uncategorized'].includes(selectedChapterId.value)) {
     parts.push(`chapterId=${encodeURIComponent(selectedChapterId.value)}`)
@@ -237,13 +250,6 @@ function resetProgress(): void {
         >
           全部 · {{ cardStore.cards.length }}
         </button>
-        <button
-          class="chapter-pill"
-          :class="{ active: selectedChapterId === 'uncategorized' }"
-          @click="selectedChapterId = 'uncategorized'"
-        >
-          未分类 · {{ countFor() }}
-        </button>
         <view
           v-for="chapter in chapters"
           :key="chapter.id"
@@ -257,6 +263,14 @@ function resetProgress(): void {
             <text class="remove" @click.stop="removeChapter(chapter.id)">删除</text>
           </view>
         </view>
+        <button
+          v-if="countFor()"
+          class="chapter-pill"
+          :class="{ active: selectedChapterId === 'uncategorized' }"
+          @click="selectedChapterId = 'uncategorized'"
+        >
+          未分类 · {{ countFor() }}
+        </button>
       </view>
     </scroll-view>
 

@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict'
 import { beforeEach, test } from 'node:test'
 import { PRESET_ID_PREFIX } from '../src/data/presetKnowledge'
-import { deleteCard } from '../src/services/cardService'
-import { deleteSubject, resetSubjectProgress } from '../src/services/subjectService'
+import { deleteCard, setCardSuspended } from '../src/services/cardService'
+import { deleteChapter, deleteSubject, resetSubjectProgress } from '../src/services/subjectService'
 import { STORAGE_KEYS } from '../src/storage/keys'
 import { setStorage } from '../src/storage/storage'
 import type { KnowledgeCard } from '../src/types/card'
@@ -27,6 +27,7 @@ const baseCard: KnowledgeCard = {
 
 async function seed(): Promise<void> {
   await Promise.all([
+    setStorage(STORAGE_KEYS.presetKnowledgeDismissed, true),
     setStorage(STORAGE_KEYS.subjects, [
       { id: 'subject_1', name: 'S1', createdAt: 1, updatedAt: 1 },
       { id: 'subject_2', name: 'S2', createdAt: 1, updatedAt: 1 },
@@ -86,6 +87,24 @@ test('deleting a prerequisite keeps dependent cards and clears their broken link
   assert.equal(child.parentCardId, undefined)
 })
 
+test('card changes keep an unrelated active session and clear only an affected session', async () => {
+  await seed()
+  const otherSession: ReviewSession = {
+    version: 1,
+    cardIds: ['card_2'],
+    currentIndex: 0,
+    startedAt: 1,
+    filter: { subjectId: 'subject_2' },
+  }
+  await setStorage(STORAGE_KEYS.reviewSession, otherSession)
+
+  await deleteCard('card_1')
+  assert.deepEqual(readStored(STORAGE_KEYS.reviewSession), otherSession)
+
+  await setCardSuspended('card_2', true)
+  assert.equal(readStored(STORAGE_KEYS.reviewSession), undefined)
+})
+
 test('deleting a subject cascades chapters, cards, states and logs', async () => {
   await seed()
   await deleteSubject('subject_1')
@@ -115,6 +134,32 @@ test('deleting a subject cascades chapters, cards, states and logs', async () =>
   assert.deepEqual(
     readStored<Array<{ cardId: string }>>(STORAGE_KEYS.reviewLogs)?.map((item) => item.cardId),
     ['card_2'],
+  )
+})
+
+test('deleting a subject keeps another subject active session', async () => {
+  await seed()
+  const otherSession: ReviewSession = {
+    version: 1,
+    cardIds: ['card_2'],
+    currentIndex: 0,
+    startedAt: 1,
+    filter: { subjectId: 'subject_2' },
+  }
+  await setStorage(STORAGE_KEYS.reviewSession, otherSession)
+
+  await deleteSubject('subject_1')
+  assert.deepEqual(readStored(STORAGE_KEYS.reviewSession), otherSession)
+})
+
+test('a non-empty chapter cannot be deleted into uncategorized data', async () => {
+  await seed()
+  await assert.rejects(deleteChapter('chapter_1'), /仍有知识卡/)
+  assert.equal(
+    readStored<Array<{ id: string }>>(STORAGE_KEYS.chapters)?.some(
+      (chapter) => chapter.id === 'chapter_1',
+    ),
+    true,
   )
 })
 

@@ -89,14 +89,14 @@ watch(
       显示答案
     </button>
     <view v-if="!revealed && canUndo" class="session-actions">
-      <button class="text-button undo-button" @click="emit('undo')">撤销</button>
+      <button class="text-button undo-button" :disabled="rating" @click="emit('undo')">撤销</button>
     </view>
     <ReviewButtons v-if="revealed" :class="{ disabled: rating }" @rate="emit('rate', $event)" />
     <text v-if="revealed && practice" class="practice-note">
       主动练习只记录结果，不改变原复习时间。
     </text>
     <view v-if="revealed && canUndo" class="session-actions">
-      <button class="text-button undo-button" @click="emit('undo')">撤销</button>
+      <button class="text-button undo-button" :disabled="rating" @click="emit('undo')">撤销</button>
     </view>
   </view>
 </template>
