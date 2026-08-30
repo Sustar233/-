@@ -83,17 +83,12 @@ function openStudy(): void {
   uni.navigateTo({ url: '/pages/study/index' })
 }
 
-function openTodayReview(wrongOnly = false): void {
-  if (!summary.value.todayReviews || (wrongOnly && !todayWrongCount.value)) {
-    uni.showToast({
-      title: wrongOnly ? '今天还没有背错的知识' : '今天还没有复习记录',
-      icon: 'none',
-    })
+function openTodayReview(): void {
+  if (!todayWrongCount.value) {
+    uni.showToast({ title: '今天还没有背错的知识', icon: 'none' })
     return
   }
-  uni.navigateTo({
-    url: `/pages/review/index?fresh=1&today=${wrongOnly ? 'wrong' : 'all'}`,
-  })
+  uni.navigateTo({ url: '/pages/review/index?fresh=1&today=wrong' })
 }
 </script>
 
@@ -129,12 +124,7 @@ function openTodayReview(wrongOnly = false): void {
       <StatCard label="连续" :value="`${summary.streakDays} 天`" hint="学习节奏" />
     </view>
     <view class="today-review-actions">
-      <button class="secondary-button compact-action" @click="openTodayReview(true)">
-        复习今日错题
-      </button>
-      <button class="secondary-button compact-action" @click="openTodayReview(false)">
-        复习今日知识
-      </button>
+      <button class="secondary-button compact-action" @click="openTodayReview">复习</button>
     </view>
 
     <view class="section-heading">
@@ -233,13 +223,11 @@ function openTodayReview(wrongOnly = false): void {
 }
 
 .today-review-actions {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 14rpx;
   margin-top: 14rpx;
 }
 
 .compact-action {
+  width: 100%;
   padding-right: 12rpx;
   padding-left: 12rpx;
   font-size: 23rpx;

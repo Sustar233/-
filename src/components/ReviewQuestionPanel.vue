@@ -2,14 +2,13 @@
 import { ref, watch } from 'vue'
 import ReviewButtons from '@/components/ReviewButtons.vue'
 import type { KnowledgeCard } from '@/types/card'
-import type { ReviewPreview, ReviewRating } from '@/types/review'
+import type { ReviewRating } from '@/types/review'
 
 const props = defineProps<{
   card: KnowledgeCard
   contextCards: KnowledgeCard[]
   contextRevealed: boolean
   revealed: boolean
-  previews: ReviewPreview[]
   practice: boolean
   rating: boolean
   canUndo: boolean
@@ -75,7 +74,7 @@ watch(
       class="secondary-button context-button"
       @click="emit('showContext')"
     >
-      查看上文提示
+      查看关联知识
     </button>
     <text v-if="!revealed && contextRevealed" class="hint-advice">
       已使用提示；评分时请如实选择“重来”或“困难”。
@@ -84,20 +83,14 @@ watch(
       显示答案
     </button>
     <view v-if="!revealed && canUndo" class="session-actions">
-      <button class="text-button" @click="emit('undo')">撤销上次评分</button>
+      <button class="text-button undo-button" @click="emit('undo')">撤销</button>
     </view>
-    <ReviewButtons
-      v-if="revealed"
-      :previews="previews"
-      :show-intervals="!practice"
-      :class="{ disabled: rating }"
-      @rate="emit('rate', $event)"
-    />
+    <ReviewButtons v-if="revealed" :class="{ disabled: rating }" @rate="emit('rate', $event)" />
     <text v-if="revealed && practice" class="practice-note">
       主动练习只记录结果，不改变原复习时间。
     </text>
     <view v-if="revealed && canUndo" class="session-actions">
-      <button class="text-button" @click="emit('undo')">撤销上次评分</button>
+      <button class="text-button undo-button" @click="emit('undo')">撤销</button>
     </view>
   </view>
 </template>
@@ -270,8 +263,14 @@ watch(
 .session-actions {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 18rpx;
-  margin-top: 12rpx;
+  justify-content: flex-end;
+  margin-top: 8rpx;
+}
+
+.undo-button {
+  padding: 4rpx 6rpx;
+  color: var(--color-subtle);
+  font-size: 20rpx;
+  opacity: 0.72;
 }
 </style>

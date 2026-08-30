@@ -10,7 +10,6 @@ import {
   commitReview,
   getReviewSession,
   getReviewStates,
-  previewCard,
   reviewFiltersEqual,
   saveReviewSession,
   shouldRepeatInCurrentSession,
@@ -21,7 +20,6 @@ import type {
   ReviewCommit,
   ReviewFilter,
   ReviewMode,
-  ReviewPreview,
   ReviewRating,
   ReviewSession,
 } from '@/types/review'
@@ -31,7 +29,6 @@ export const useReviewStore = defineStore('review', () => {
   const queue = ref<KnowledgeCard[]>([])
   const currentIndex = ref(0)
   const revealed = ref(false)
-  const previews = ref<ReviewPreview[]>([])
   const loading = ref(false)
   const activeFilter = ref<ReviewFilter>({})
   const startedAt = ref(0)
@@ -60,7 +57,6 @@ export const useReviewStore = defineStore('review', () => {
 
   function prepareCurrent(): void {
     revealed.value = false
-    previews.value = []
     contextRevealed.value = false
     const card = currentCard.value
     contextCards.value = card ? getKnowledgeContext(card, allCards.value) : []
@@ -145,11 +141,9 @@ export const useReviewStore = defineStore('review', () => {
     }
   }
 
-  async function reveal(): Promise<void> {
+  function reveal(): void {
     if (!currentCard.value) return
     if ((currentRetryDueAt.value ?? 0) > Date.now()) return
-    previews.value =
-      sessionMode.value === 'practice' ? [] : await previewCard(currentCard.value.id)
     revealed.value = true
     resumed.value = false
   }
@@ -235,8 +229,6 @@ export const useReviewStore = defineStore('review', () => {
     currentIndex.value = Math.max(0, currentIndex.value - 1)
     lastCommit.value = undefined
     prepareCurrent()
-    previews.value =
-      sessionMode.value === 'practice' ? [] : await previewCard(commit.cardId)
     learning.value = false
     learningBatch.value = []
     revealed.value = true
@@ -315,7 +307,6 @@ export const useReviewStore = defineStore('review', () => {
     currentIndex.value = 0
     lastCommit.value = undefined
     revealed.value = false
-    previews.value = []
     learning.value = false
     learningBatch.value = []
     previewedCardIds.value = []
@@ -329,7 +320,6 @@ export const useReviewStore = defineStore('review', () => {
     queue,
     currentIndex,
     revealed,
-    previews,
     loading,
     activeFilter,
     resumed,

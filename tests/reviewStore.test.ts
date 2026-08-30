@@ -125,7 +125,6 @@ test('a finished session can load another 20 new cards or review today\'s knowle
   assert.equal(store.sessionMode, 'practice')
 
   await store.reveal()
-  assert.deepEqual(store.previews, [])
   await store.rate(1)
   assert.deepEqual(readStored<ReviewState[]>(STORAGE_KEYS.reviewStates), scheduledStates)
   assert.equal(

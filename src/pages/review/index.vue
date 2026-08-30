@@ -130,16 +130,13 @@ async function learnMore(): Promise<void> {
   }
 }
 
-async function reviewToday(wrongOnly = false): Promise<void> {
+async function reviewWrongCards(): Promise<void> {
   if (continuing.value) return
   continuing.value = true
   try {
-    const count = await reviewStore.startTodayReview(wrongOnly)
+    const count = await reviewStore.startTodayReview(true)
     if (!count) {
-      uni.showToast({
-        title: wrongOnly ? '今天还没有背错的知识' : '今天还没有复习记录',
-        icon: 'none',
-      })
+      uni.showToast({ title: '今天还没有背错的知识', icon: 'none' })
     }
   } catch (error) {
     uni.showToast({ title: (error as Error).message, icon: 'none' })
@@ -191,8 +188,7 @@ async function goBack(): Promise<void> {
         back-label="完成并返回"
         @undo="undoLastRating"
         @learn-more="learnMore"
-        @review-wrong="reviewToday(true)"
-        @review-today="reviewToday(false)"
+        @review="reviewWrongCards"
         @back="goBack"
       />
     </EmptyState>
@@ -208,12 +204,9 @@ async function goBack(): Promise<void> {
         </text>
         <ReviewContinuationActions
           :loading="continuing"
-          :can-undo="reviewStore.canUndo"
           back-label="暂时返回"
-          @undo="undoLastRating"
           @learn-more="learnMore"
-          @review-wrong="reviewToday(true)"
-          @review-today="reviewToday(false)"
+          @review="reviewWrongCards"
           @back="goBack"
         />
       </view>
@@ -231,7 +224,6 @@ async function goBack(): Promise<void> {
         :context-cards="reviewStore.contextCards"
         :context-revealed="reviewStore.contextRevealed"
         :revealed="reviewStore.revealed"
-        :previews="reviewStore.previews"
         :practice="reviewStore.sessionMode === 'practice'"
         :rating="rating"
         :can-undo="reviewStore.canUndo"

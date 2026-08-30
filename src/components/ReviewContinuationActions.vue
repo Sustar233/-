@@ -14,27 +14,26 @@ withDefaults(
 const emit = defineEmits<{
   undo: []
   learnMore: []
-  reviewWrong: []
-  reviewToday: []
+  review: []
   back: []
 }>()
 </script>
 
 <template>
   <view class="continuation-actions">
-    <button v-if="canUndo" class="secondary-button" :disabled="loading" @click="emit('undo')">
-      撤销上次评分
-    </button>
     <button class="primary-button" :loading="loading" :disabled="loading" @click="emit('learnMore')">
       继续学习 20 张
     </button>
-    <button class="secondary-button" :disabled="loading" @click="emit('reviewWrong')">
-      复习今日错题
-    </button>
-    <button class="secondary-button" :disabled="loading" @click="emit('reviewToday')">
-      复习今日知识
-    </button>
+    <button class="secondary-button" :disabled="loading" @click="emit('review')">复习</button>
     <button class="text-button" :disabled="loading" @click="emit('back')">{{ backLabel }}</button>
+    <button
+      v-if="canUndo"
+      class="text-button undo-button"
+      :disabled="loading"
+      @click="emit('undo')"
+    >
+      撤销
+    </button>
   </view>
 </template>
 
@@ -46,5 +45,13 @@ const emit = defineEmits<{
   margin-top: 30rpx;
   flex-direction: column;
   gap: 14rpx;
+}
+
+.undo-button {
+  align-self: flex-end;
+  padding: 4rpx 6rpx;
+  color: var(--color-subtle);
+  font-size: 20rpx;
+  opacity: 0.72;
 }
 </style>
