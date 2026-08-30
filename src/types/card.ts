@@ -5,6 +5,8 @@ export interface KnowledgeCard {
   id: string
   subjectId: string
   chapterId?: string
+  sectionId?: string
+  sectionTitle?: string
   parentCardId?: string
   connection?: string
   question: string
@@ -21,6 +23,13 @@ export type KnowledgeCardInput = Pick<KnowledgeCard, 'subjectId' | 'question' | 
   Partial<
     Pick<
       KnowledgeCard,
-      'chapterId' | 'parentCardId' | 'connection' | 'tags' | 'importance' | 'note'
+      | 'chapterId'
+      | 'sectionId'
+      | 'sectionTitle'
+      | 'parentCardId'
+      | 'connection'
+      | 'tags'
+      | 'importance'
+      | 'note'
     >
   >

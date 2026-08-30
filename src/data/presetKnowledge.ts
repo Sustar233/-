@@ -1,12 +1,14 @@
 import type { CardImportance, KnowledgeCard } from '@/types/card'
 import type { Chapter, Subject } from '@/types/subject'
 
-export const PRESET_KNOWLEDGE_VERSION = 4
+export const PRESET_KNOWLEDGE_VERSION = 5
 export const PRESET_SUBJECT_ID = 'preset_operating_system_subject_v2'
 export const PRESET_ID_PREFIX = 'preset_operating_system_'
 export const LEGACY_PRESET_ID_PREFIXES = ['preset_food_health_'] as const
 
 const PRESET_CREATED_AT = 1_787_417_600_000
+const PRESET_SECTION_SIZE = 5
+const SECTION_TITLES = ['基础概念', '关键机制', '方法与规则', '综合应用'] as const
 
 type ChapterKey =
   | 'overview'
@@ -250,14 +252,19 @@ export function buildPresetKnowledgeData(): PresetKnowledgeData {
 
   for (const chapter of CHAPTER_DEFINITIONS) {
     let previousCardId: string | undefined
-    for (const [question, answer, tags, importance = 2] of CARD_GROUPS[chapter.key]) {
+    for (const [chapterCardIndex, seed] of CARD_GROUPS[chapter.key].entries()) {
+      const [question, answer, tags, importance = 2] = seed
       const index = cards.length + 1
       const id = `${PRESET_ID_PREFIX}card_${String(index).padStart(3, '0')}`
       const chapterDefinition = chapterByKey.get(chapter.key)!
+      const sectionIndex = Math.floor(chapterCardIndex / PRESET_SECTION_SIZE)
+      const sectionNumber = String(sectionIndex + 1).padStart(2, '0')
       cards.push({
         id,
         subjectId: PRESET_SUBJECT_ID,
         chapterId: chapterDefinition.id,
+        sectionId: `${chapterDefinition.id}_section_${sectionNumber}`,
+        sectionTitle: `${sectionNumber} ${SECTION_TITLES[sectionIndex] ?? '延伸知识'}`,
         parentCardId: previousCardId,
         connection: previousCardId ? `沿“${chapterDefinition.name}”的知识脉络继续学习。` : undefined,
         question,

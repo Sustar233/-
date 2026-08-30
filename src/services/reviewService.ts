@@ -23,21 +23,18 @@ import { addDays, startOfDay } from '@/utils/date'
 import { generateId } from '@/utils/id'
 import { getCards, orderCardsByKnowledgePath } from './cardService'
 
-export const LEARNING_PREVIEW_BATCH_SIZE = 8
+export const LEGACY_STUDY_SECTION_SIZE = 8
 export const FORGOT_RETRY_MS = 10 * 60_000
 
 const REMEMBER_INTERVAL_DAYS = [1, 2] as const
 
 export interface ReviewQueueOptions {
   includeDueCards?: boolean
-  newCardLimit?: number
 }
 
 export interface ReviewQueueData {
   cards: KnowledgeCard[]
   states: ReviewState[]
-  logs: ReviewLog[]
-  settings?: Settings | null
 }
 
 function withDueAt(state: ReviewState, dueAt: number): ReviewState {
@@ -132,22 +129,30 @@ export function buildLearningPreviewBatch(
   startIndex: number,
   newCardIds: Iterable<string>,
   previewedCardIds: Iterable<string>,
-  limit = LEARNING_PREVIEW_BATCH_SIZE,
+  legacySectionSize = LEGACY_STUDY_SECTION_SIZE,
 ): KnowledgeCard[] {
   const first = queue[startIndex]
-  if (!first || limit <= 0) return []
+  if (!first || legacySectionSize <= 0) return []
 
   const newIds = new Set(newCardIds)
   const previewedIds = new Set(previewedCardIds)
   if (!newIds.has(first.id) || previewedIds.has(first.id)) return []
 
   const batch: KnowledgeCard[] = []
-  for (let index = startIndex; index < queue.length && batch.length < limit; index += 1) {
+  for (let index = startIndex; index < queue.length; index += 1) {
     const card = queue[index]
+    const sameSection = first.sectionId
+      ? card?.sectionId === first.sectionId
+      : Boolean(
+          card &&
+            !card.sectionId &&
+            card.subjectId === first.subjectId &&
+            card.chapterId === first.chapterId &&
+            batch.length < legacySectionSize,
+        )
     if (
       !card ||
-      card.subjectId !== first.subjectId ||
-      card.chapterId !== first.chapterId ||
+      !sameSection ||
       !newIds.has(card.id) ||
       previewedIds.has(card.id)
     ) {
@@ -158,13 +163,38 @@ export function buildLearningPreviewBatch(
   return batch
 }
 
+function studySectionKeys(cards: KnowledgeCard[]): Map<string, string> {
+  const keys = new Map<string, string>()
+  const legacyGroups = new Map<string, KnowledgeCard[]>()
+
+  for (const card of cards) {
+    if (card.sectionId) {
+      keys.set(card.id, `explicit:${card.subjectId}:${card.sectionId}`)
+      continue
+    }
+    const scope = `${card.subjectId}:${card.chapterId ?? 'uncategorized'}`
+    const group = legacyGroups.get(scope)
+    if (group) group.push(card)
+    else legacyGroups.set(scope, [card])
+  }
+
+  for (const [scope, group] of legacyGroups) {
+    group
+      .sort((first, second) => first.createdAt - second.createdAt)
+      .forEach((card, index) => {
+        keys.set(card.id, `legacy:${scope}:${Math.floor(index / LEGACY_STUDY_SECTION_SIZE)}`)
+      })
+  }
+  return keys
+}
+
 export function buildReviewQueueFromData(
   data: ReviewQueueData,
   now: number,
   filter: ReviewFilter = {},
   options: ReviewQueueOptions = {},
 ): KnowledgeCard[] {
-  const { cards, states, logs, settings } = data
+  const { cards, states } = data
   const activeCards = cards.filter(
     (card) => card.status === 'active' && matchesFilter(card, filter),
   )
@@ -184,34 +214,19 @@ export function buildReviewQueueFromData(
             ),
           cards,
         )
-  const firstReviewByCard = new Map<string, number>()
-  for (const log of logs) {
-    const firstReviewAt = firstReviewByCard.get(log.cardId)
-    if (firstReviewAt === undefined || log.reviewedAt < firstReviewAt) {
-      firstReviewByCard.set(log.cardId, log.reviewedAt)
-    }
-  }
-  const today = startOfDay(now)
-  const dailyScopeCardIds = new Set(
-    cards
-      .filter((card) => !filter.subjectId || card.subjectId === filter.subjectId)
-      .map((card) => card.id),
-  )
-  const studiedNewCardsToday = [...firstReviewByCard.entries()].filter(
-    ([cardId, reviewedAt]) =>
-      dailyScopeCardIds.has(cardId) && startOfDay(reviewedAt) === today,
-  ).length
-  const normalizedSettings = normalizeSettings(settings)
-  const remainingNewCardLimit =
-    options.newCardLimit === undefined
-      ? Math.max(0, normalizedSettings.dailyNewCards - studiedNewCardsToday)
-      : Math.max(0, Math.floor(options.newCardLimit))
-  const newCards = orderCardsByKnowledgePath(
+  const orderedNewCards = orderCardsByKnowledgePath(
     activeCards
       .filter((card) => !stateByCard.has(card.id))
       .sort((first, second) => first.createdAt - second.createdAt),
     cards,
-  ).slice(0, remainingNewCardLimit)
+  )
+  const sectionKeyByCard = studySectionKeys(cards)
+  const nextSectionKey = orderedNewCards[0]
+    ? sectionKeyByCard.get(orderedNewCards[0].id)
+    : undefined
+  const newCards = nextSectionKey
+    ? orderedNewCards.filter((card) => sectionKeyByCard.get(card.id) === nextSectionKey)
+    : []
   return [...dueCards, ...newCards]
 }
 
@@ -221,12 +236,8 @@ export async function buildReviewQueue(
   options: ReviewQueueOptions = {},
 ): Promise<KnowledgeCard[]> {
   const cards = await getCards()
-  const [states, logs, settings] = await Promise.all([
-    getReviewStates(),
-    getReviewLogs(),
-    getStorage<Settings>(STORAGE_KEYS.settings),
-  ])
-  return buildReviewQueueFromData({ cards, states, logs, settings }, now, filter, options)
+  const states = await getReviewStates()
+  return buildReviewQueueFromData({ cards, states }, now, filter, options)
 }
 
 export function buildTodayReviewQueueFromData(
@@ -279,10 +290,10 @@ export async function buildTodayReviewQueue(
 }
 
 export function shouldRepeatInCurrentSession(
-  state: ReviewState,
+  _state: ReviewState,
   rating: ReviewRating,
 ): boolean {
-  return rating === 1 && !state.masteredAt
+  return rating === 1
 }
 
 export async function previewCard(cardId: string, now = Date.now()): Promise<ReviewPreview[]> {

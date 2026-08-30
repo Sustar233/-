@@ -5,7 +5,7 @@ import {
   PRESET_KNOWLEDGE_VERSION,
 } from '@/data/presetKnowledge'
 import { STORAGE_KEYS } from '@/storage/keys'
-import { getStorage, setStorageBatch } from '@/storage/storage'
+import { getStorage, setStorageBatch, type StorageMutation } from '@/storage/storage'
 import type { KnowledgeCard } from '@/types/card'
 import type { ReviewLog, ReviewState } from '@/types/review'
 import type { Chapter, Subject } from '@/types/subject'
@@ -44,29 +44,70 @@ async function initializePresetKnowledge(force = false): Promise<void> {
   const subjectIds = new Set(subjects.map((subject) => subject.id))
   const chapterIds = new Set(chapters.map((chapter) => chapter.id))
   const cardIds = new Set(cards.map((card) => card.id))
-  const hasCompleteCurrentPreset =
+  const hasAllCurrentPresetIds =
     subjectIds.has(preset.subject.id) &&
     preset.chapters.every((chapter) => chapterIds.has(chapter.id)) &&
     preset.cards.every((card) => cardIds.has(card.id))
 
-  // The version-4 migration repairs WeChat stores that were incorrectly marked
-  // as initialized without receiving the preset. A complete preset only needs
-  // the marker update, so its learning progress remains untouched.
-  if (hasCompleteCurrentPreset && !hasLegacyPresetData) {
-    await setStorageBatch([
+  // Refresh preset content in place when its structure changes. Card IDs stay
+  // stable, so review states and logs remain valid across the migration.
+  if (hasAllCurrentPresetIds && !hasLegacyPresetData) {
+    const mutations: StorageMutation[] = [
       {
         type: 'set',
         key: STORAGE_KEYS.presetKnowledgeVersion,
         value: PRESET_KNOWLEDGE_VERSION,
       },
       { type: 'set', key: STORAGE_KEYS.presetKnowledgeDismissed, value: false },
-    ])
+    ]
+    const presetNeedsRefresh =
+      version !== PRESET_KNOWLEDGE_VERSION ||
+      preset.cards.some((presetCard) => {
+        const storedCard = cards.find((card) => card.id === presetCard.id)
+        return (
+          storedCard?.sectionId !== presetCard.sectionId ||
+          storedCard?.sectionTitle !== presetCard.sectionTitle
+        )
+      })
+    if (presetNeedsRefresh) {
+      mutations.push(
+        {
+          type: 'set',
+          key: STORAGE_KEYS.subjects,
+          value: [
+            ...subjects.filter((subject) => !isPresetKnowledgeId(subject.id)),
+            preset.subject,
+          ],
+        },
+        {
+          type: 'set',
+          key: STORAGE_KEYS.chapters,
+          value: [
+            ...chapters.filter((chapter) => !isPresetKnowledgeId(chapter.id)),
+            ...preset.chapters,
+          ],
+        },
+        {
+          type: 'set',
+          key: STORAGE_KEYS.cards,
+          value: [...cards.filter((card) => !isPresetKnowledgeId(card.id)), ...preset.cards],
+        },
+        { type: 'remove', key: STORAGE_KEYS.reviewSession },
+      )
+    }
+    await setStorageBatch(mutations)
     return
   }
 
   const removedPresetCardIds = new Set(
     cards.filter((card) => isPresetKnowledgeId(card.id)).map((card) => card.id),
   )
+  const nextPresetCardIds = new Set(preset.cards.map((card) => card.id))
+  const shouldKeepReviewForCard = (cardId: string): boolean => {
+    if (LEGACY_PRESET_ID_PREFIXES.some((prefix) => cardId.startsWith(prefix))) return false
+    if (cardId.startsWith(PRESET_ID_PREFIX)) return nextPresetCardIds.has(cardId)
+    return true
+  }
   const userCards = cards
     .filter((card) => !isPresetKnowledgeId(card.id))
     .map((card) =>
@@ -97,17 +138,12 @@ async function initializePresetKnowledge(force = false): Promise<void> {
     {
       type: 'set',
       key: STORAGE_KEYS.reviewStates,
-      value: states.filter(
-        (state) =>
-          !removedPresetCardIds.has(state.cardId) && !isPresetKnowledgeId(state.cardId),
-      ),
+      value: states.filter((state) => shouldKeepReviewForCard(state.cardId)),
     },
     {
       type: 'set',
       key: STORAGE_KEYS.reviewLogs,
-      value: logs.filter(
-        (log) => !removedPresetCardIds.has(log.cardId) && !isPresetKnowledgeId(log.cardId),
-      ),
+      value: logs.filter((log) => shouldKeepReviewForCard(log.cardId)),
     },
     { type: 'remove', key: STORAGE_KEYS.reviewSession },
     { type: 'set', key: STORAGE_KEYS.presetKnowledgeVersion, value: PRESET_KNOWLEDGE_VERSION },

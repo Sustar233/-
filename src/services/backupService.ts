@@ -50,6 +50,8 @@ function isCard(value: unknown): value is KnowledgeCard {
     hasString(value, 'question') &&
     hasString(value, 'answer') &&
     (!('chapterId' in value) || typeof value.chapterId === 'string') &&
+    (!('sectionId' in value) || typeof value.sectionId === 'string') &&
+    (!('sectionTitle' in value) || typeof value.sectionTitle === 'string') &&
     (!('parentCardId' in value) || typeof value.parentCardId === 'string') &&
     (!('connection' in value) || typeof value.connection === 'string') &&
     (!('note' in value) || typeof value.note === 'string') &&

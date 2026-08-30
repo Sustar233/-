@@ -40,10 +40,14 @@ test('a previewed new-card batch enters recall once and resumes without previewi
   const store = useReviewStore()
   await store.start({ subjectId: 'subject_batch' }, false)
 
-  assert.equal(store.learning, true)
+  assert.equal(store.sectionPrompt, true)
+  assert.equal(store.learning, false)
   assert.deepEqual(store.learningBatch.map((card) => card.id), cards.map((card) => card.id))
   assert.deepEqual(readStored(STORAGE_KEYS.reviewStates) ?? [], [])
 
+  store.previewSection()
+  assert.equal(store.sectionPrompt, false)
+  assert.equal(store.learning, true)
   await store.beginRecall()
 
   assert.equal(store.learning, false)
@@ -64,7 +68,7 @@ test('a previewed new-card batch enters recall once and resumes without previewi
   assert.equal(resumedStore.learning, false)
 })
 
-test('forgot stays in the session until its ten-minute retry time', async () => {
+test('forgot moves to the section tail immediately and remains until remembered', async () => {
   const target = newCard('retry-card', 1)
   await Promise.all([
     setStorage(STORAGE_KEYS.cards, [target]),
@@ -77,19 +81,18 @@ test('forgot stays in the session until its ten-minute retry time', async () => 
   await store.reveal()
   await store.rate(1)
 
-  const session = readStored<ReviewSession>(STORAGE_KEYS.reviewSession)
-  const retryDueAt = session?.retryDueAtByCardId?.[target.id]
   assert.equal(store.finished, false)
   assert.equal(store.currentCard?.id, target.id)
-  assert.ok(retryDueAt)
-  assert.ok(retryDueAt - Date.now() > 599_000)
-  assert.ok(retryDueAt - Date.now() <= 601_000)
-  assert.equal(store.currentRetryDueAt, retryDueAt)
+  assert.equal(store.total, 2)
+  assert.equal(store.isReinforcement, true)
+
+  await store.reveal()
+  await store.rate(3)
+  assert.equal(store.finished, true)
 
   await store.undoLast()
-  assert.equal(store.total, 1)
-  assert.equal(store.currentIndex, 0)
-  assert.equal(store.currentRetryDueAt, undefined)
+  assert.equal(store.total, 2)
+  assert.equal(store.currentIndex, 1)
 })
 
 test('simple is available only on first sight and undo restores that state', async () => {
@@ -115,8 +118,12 @@ test('simple is available only on first sight and undo restores that state', asy
   assert.deepEqual(readStored(STORAGE_KEYS.reviewStates), [])
 })
 
-test('a finished session can load another 20 new cards or review today\'s knowledge', async () => {
-  const cards = Array.from({ length: 25 }, (_, index) => newCard(`batch-${index + 1}`, index + 1))
+test('a finished section can load the next section or review today\'s knowledge', async () => {
+  const cards = Array.from({ length: 10 }, (_, index) => ({
+    ...newCard(`batch-${index + 1}`, index + 1),
+    sectionId: index < 5 ? 'section_1' : 'section_2',
+    sectionTitle: index < 5 ? '第一节' : '第二节',
+  }))
   await Promise.all([
     setStorage(STORAGE_KEYS.cards, cards),
     setStorage(STORAGE_KEYS.settings, { dailyNewCards: 20 }),
@@ -129,9 +136,9 @@ test('a finished session can load another 20 new cards or review today\'s knowle
     await store.reveal()
     await store.rate(4)
   }
-  assert.equal(store.sessionCardCount, 20)
+  assert.equal(store.sessionCardCount, 5)
 
-  const nextCount = await store.startMoreNewCards(20)
+  const nextCount = await store.startNextSection()
   assert.equal(nextCount, 5)
   assert.equal(store.learningBatch.length, 5)
 
@@ -141,14 +148,15 @@ test('a finished session can load another 20 new cards or review today\'s knowle
     await store.rate(4)
   }
   const scheduledStates = readStored<ReviewState[]>(STORAGE_KEYS.reviewStates)
-  assert.equal(await store.startTodayReview(), 25)
-  assert.equal(store.total, 25)
+  assert.equal(await store.startTodayReview(), 10)
+  assert.equal(store.total, 10)
   assert.equal(store.currentIndex, 0)
   assert.equal(store.learning, false)
   assert.equal(store.sessionMode, 'practice')
 
   await store.reveal()
   await store.rate(1)
+  assert.equal(store.total, 11)
   assert.deepEqual(readStored<ReviewState[]>(STORAGE_KEYS.reviewStates), scheduledStates)
   assert.equal(
     readStored<ReviewLog[]>(STORAGE_KEYS.reviewLogs)?.at(-1)?.mode,
@@ -156,11 +164,15 @@ test('a finished session can load another 20 new cards or review today\'s knowle
   )
 })
 
-test('continuing with new cards keeps a waiting learning-step card in the session', async () => {
-  const cards = Array.from({ length: 3 }, (_, index) => newCard(`continue-${index + 1}`, index + 1))
+test('the next section stays locked until every forgotten card is remembered', async () => {
+  const cards = Array.from({ length: 3 }, (_, index) => ({
+    ...newCard(`continue-${index + 1}`, index + 1),
+    sectionId: index < 2 ? 'section_1' : 'section_2',
+    sectionTitle: index < 2 ? '第一节' : '第二节',
+  }))
   await Promise.all([
     setStorage(STORAGE_KEYS.cards, cards),
-    setStorage(STORAGE_KEYS.settings, { dailyNewCards: 1 }),
+    setStorage(STORAGE_KEYS.settings, { dailyNewCards: 20 }),
   ])
 
   const store = useReviewStore()
@@ -169,19 +181,16 @@ test('continuing with new cards keeps a waiting learning-step card in the sessio
   await store.reveal()
   await store.rate(1)
 
-  const retryDueAt = readStored<ReviewSession>(STORAGE_KEYS.reviewSession)
-    ?.retryDueAtByCardId?.[cards[0]!.id]
-  assert.ok(retryDueAt)
-  assert.equal(store.currentCard?.id, cards[0]!.id)
-
-  assert.equal(await store.startMoreNewCards(20), 2)
   assert.equal(store.currentCard?.id, cards[1]!.id)
-  assert.deepEqual(
-    store.queue.map((card) => card.id),
-    [cards[0]!.id, cards[1]!.id, cards[2]!.id, cards[0]!.id],
-  )
-  assert.equal(
-    readStored<ReviewSession>(STORAGE_KEYS.reviewSession)?.retryDueAtByCardId?.[cards[0]!.id],
-    retryDueAt,
-  )
+  assert.deepEqual(store.queue.map((card) => card.id), [cards[0]!.id, cards[1]!.id, cards[0]!.id])
+  assert.equal(await store.startNextSection(), 0)
+
+  await store.reveal()
+  await store.rate(3)
+  await store.reveal()
+  await store.rate(3)
+  assert.equal(store.finished, true)
+
+  assert.equal(await store.startNextSection(), 1)
+  assert.equal(store.currentCard?.id, cards[2]!.id)
 })

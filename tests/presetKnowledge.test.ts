@@ -19,12 +19,13 @@ import { installStorageMock, readStored, resetStorage } from './helpers/storageM
 installStorageMock()
 beforeEach(resetStorage)
 
-test('operating-system preset contains 8 chapters and 160 linked cards', () => {
+test('operating-system preset contains 8 chapters, 32 sections, and 160 linked cards', () => {
   const data = buildPresetKnowledgeData()
   const chapterIds = new Set(data.chapters.map((chapter) => chapter.id))
 
   assert.equal(data.chapters.length, 8)
   assert.equal(data.cards.length, 160)
+  assert.equal(new Set(data.cards.map((card) => card.sectionId)).size, 32)
   assert.equal(new Set(data.cards.map((card) => card.id)).size, 160)
   assert.match(data.subject.name, /操作系统/)
   assert.equal(
@@ -34,6 +35,8 @@ test('operating-system preset contains 8 chapters and 160 linked cards', () => {
         card.answer.trim() &&
         card.tags.length > 0 &&
         card.chapterId &&
+        card.sectionId &&
+        card.sectionTitle &&
         chapterIds.has(card.chapterId),
     ),
     true,
@@ -44,6 +47,9 @@ test('operating-system preset contains 8 chapters and 160 linked cards', () => {
     chapterCards.slice(1).forEach((card, index) => {
       assert.equal(card.parentCardId, chapterCards[index]?.id)
     })
+  }
+  for (const sectionId of new Set(data.cards.map((card) => card.sectionId))) {
+    assert.equal(data.cards.filter((card) => card.sectionId === sectionId).length, 5)
   }
 })
 
@@ -164,6 +170,10 @@ test('version marker upgrade preserves progress for an existing complete preset'
   const preset = buildPresetKnowledgeData()
   const presetCard = preset.cards[0]
   assert.ok(presetCard)
+  const cardsWithoutSections = preset.cards.map((card) => {
+    const { sectionId: _sectionId, sectionTitle: _sectionTitle, ...legacyCard } = card
+    return legacyCard
+  })
   const state: ReviewState = { cardId: presetCard.id, dueAt: 20, fsrsData: {} }
   const log: ReviewLog = {
     id: 'review_preset_existing',
@@ -173,10 +183,10 @@ test('version marker upgrade preserves progress for an existing complete preset'
     reviewedAt: 20,
   }
   await Promise.all([
-    setStorage(STORAGE_KEYS.presetKnowledgeVersion, 2),
+    setStorage(STORAGE_KEYS.presetKnowledgeVersion, 4),
     setStorage(STORAGE_KEYS.subjects, [preset.subject]),
     setStorage(STORAGE_KEYS.chapters, preset.chapters),
-    setStorage(STORAGE_KEYS.cards, preset.cards),
+    setStorage(STORAGE_KEYS.cards, cardsWithoutSections),
     setStorage(STORAGE_KEYS.reviewStates, [state]),
     setStorage(STORAGE_KEYS.reviewLogs, [log]),
   ])
@@ -185,6 +195,11 @@ test('version marker upgrade preserves progress for an existing complete preset'
 
   assert.deepEqual(readStored(STORAGE_KEYS.reviewStates), [state])
   assert.deepEqual(readStored(STORAGE_KEYS.reviewLogs), [log])
+  assert.equal(
+    readStored<KnowledgeCard[]>(STORAGE_KEYS.cards)?.find((card) => card.id === presetCard.id)
+      ?.sectionId,
+    presetCard.sectionId,
+  )
   assert.equal(
     readStored<number>(STORAGE_KEYS.presetKnowledgeVersion),
     PRESET_KNOWLEDGE_VERSION,

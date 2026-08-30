@@ -61,3 +61,22 @@ test('editing a prerequisite cannot create a circular path', async () => {
     /不能形成循环/,
   )
 })
+
+test('moving a card to another chapter clears its previous section metadata', async () => {
+  const target = {
+    ...card('sectioned', 1),
+    sectionId: 'section_1',
+    sectionTitle: '第一节',
+  }
+  await setStorage(STORAGE_KEYS.cards, [target])
+
+  const updated = await updateCard(target.id, {
+    subjectId: target.subjectId,
+    chapterId: 'chapter_2',
+    question: target.question,
+    answer: target.answer,
+  })
+
+  assert.equal(updated.sectionId, undefined)
+  assert.equal(updated.sectionTitle, undefined)
+})

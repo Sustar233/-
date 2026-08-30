@@ -41,7 +41,7 @@ function card(id: string, createdAt: number): KnowledgeCard {
   }
 }
 
-test('review queue puts due cards before old-to-new limited new cards', async () => {
+test('review queue puts due cards before the next complete study section', async () => {
   const now = new Date('2026-07-30T08:00:00.000Z').getTime()
   const due = card('due', now - 30_000)
   const newOld = card('new-old', now - 20_000)
@@ -58,7 +58,7 @@ test('review queue puts due cards before old-to-new limited new cards', async ()
   const queue = await buildReviewQueue(now)
   assert.deepEqual(
     queue.map((item) => item.id),
-    ['due', 'new-old'],
+    ['due', 'new-old', 'new-recent'],
   )
 })
 
@@ -81,10 +81,12 @@ test('review queue places a prerequisite before its dependent card', async () =>
   )
 })
 
-test('learning preview batches consecutive new cards from one chapter', () => {
+test('learning preview uses explicit sections and falls back to eight-card legacy sections', () => {
   const cards = Array.from({ length: 10 }, (_, index) => ({
     ...card(`chapter-card-${index + 1}`, index),
     chapterId: 'chapter_1',
+    sectionId: index < 5 ? 'section_1' : 'section_2',
+    sectionTitle: index < 5 ? '第一节' : '第二节',
   }))
   const otherChapter = { ...card('other-chapter', 11), chapterId: 'chapter_2' }
   const queue = [...cards, otherChapter]
@@ -92,17 +94,31 @@ test('learning preview batches consecutive new cards from one chapter', () => {
 
   assert.deepEqual(
     buildLearningPreviewBatch(queue, 0, newCardIds, []).map((item) => item.id),
-    cards.slice(0, 8).map((item) => item.id),
+    cards.slice(0, 5).map((item) => item.id),
   )
   assert.deepEqual(
-    buildLearningPreviewBatch(queue, 8, newCardIds, cards.slice(0, 8).map((item) => item.id)).map(
+    buildLearningPreviewBatch(queue, 5, newCardIds, cards.slice(0, 5).map((item) => item.id)).map(
       (item) => item.id,
     ),
-    cards.slice(8).map((item) => item.id),
+    cards.slice(5).map((item) => item.id),
   )
   assert.deepEqual(
     buildLearningPreviewBatch(queue, 10, newCardIds, []).map((item) => item.id),
     [otherChapter.id],
+  )
+
+  const legacyCards = Array.from({ length: 10 }, (_, index) => ({
+    ...card(`legacy-${index + 1}`, index),
+    chapterId: 'legacy_chapter',
+  }))
+  assert.deepEqual(
+    buildLearningPreviewBatch(
+      legacyCards,
+      0,
+      legacyCards.map((item) => item.id),
+      [],
+    ).map((item) => item.id),
+    legacyCards.slice(0, 8).map((item) => item.id),
   )
 })
 
@@ -164,20 +180,24 @@ test('a forgotten day resets the streak and later recovery that day does not cou
   assert.equal(nextDay.rememberedDayStreak, 1)
 })
 
-test('explicit new-card limit loads another batch without due cards', async () => {
+test('requesting new knowledge loads one whole section without due cards', async () => {
   const now = new Date('2026-07-30T08:00:00.000Z').getTime()
   const due = card('due', now - 100)
   const dueState = createReviewState(due.id, now - 1000)
   dueState.dueAt = now - 1
-  const newCards = Array.from({ length: 25 }, (_, index) => card(`new-${index + 1}`, index))
+  const newCards = Array.from({ length: 10 }, (_, index) => ({
+    ...card(`new-${index + 1}`, index),
+    sectionId: index < 4 ? 'section_1' : 'section_2',
+    sectionTitle: index < 4 ? '第一节' : '第二节',
+  }))
   await Promise.all([
     setStorage(STORAGE_KEYS.cards, [due, ...newCards]),
     setStorage(STORAGE_KEYS.reviewStates, [dueState]),
     setStorage(STORAGE_KEYS.settings, { dailyNewCards: 0 }),
   ])
 
-  const queue = await buildReviewQueue(now, {}, { includeDueCards: false, newCardLimit: 20 })
-  assert.equal(queue.length, 20)
+  const queue = await buildReviewQueue(now, {}, { includeDueCards: false })
+  assert.deepEqual(queue.map((item) => item.id), newCards.slice(0, 4).map((item) => item.id))
   assert.equal(queue.some((item) => item.id === due.id), false)
 })
 
@@ -247,9 +267,9 @@ test('today review can include all reviewed cards or only cards answered incorre
   )
 })
 
-test('rebuilding the queue does not refill new cards already studied today', async () => {
+test('rebuilding the queue continues the unfinished section without a daily card limit', async () => {
   const now = new Date(2026, 6, 30, 12).getTime()
-  const cards = Array.from({ length: 5 }, (_, index) => card(`new-${index + 1}`, now + index))
+  const cards = Array.from({ length: 10 }, (_, index) => card(`new-${index + 1}`, now + index))
 
   await Promise.all([
     setStorage(STORAGE_KEYS.cards, cards),
@@ -258,18 +278,18 @@ test('rebuilding the queue does not refill new cards already studied today', asy
 
   assert.deepEqual(
     (await buildReviewQueue(now)).map((item) => item.id),
-    ['new-1', 'new-2', 'new-3'],
+    ['new-1', 'new-2', 'new-3', 'new-4', 'new-5', 'new-6', 'new-7', 'new-8'],
   )
 
   await reviewCard(cards[0], 4, now)
 
   assert.deepEqual(
     (await buildReviewQueue(now)).map((item) => item.id),
-    ['new-2', 'new-3'],
+    ['new-2', 'new-3', 'new-4', 'new-5', 'new-6', 'new-7', 'new-8'],
   )
 })
 
-test('daily new-card limits are isolated per subject', async () => {
+test('next study sections are isolated per subject', async () => {
   const now = new Date(2026, 6, 30, 12).getTime()
   const subjectA = [card('a-1', now), card('a-2', now + 1)]
   const subjectB = [
@@ -283,10 +303,13 @@ test('daily new-card limits are isolated per subject', async () => {
 
   await reviewCard(subjectA[0]!, 4, now)
 
-  assert.deepEqual(await buildReviewQueue(now, { subjectId: 'subject_1' }), [])
+  assert.deepEqual(
+    (await buildReviewQueue(now, { subjectId: 'subject_1' })).map((item) => item.id),
+    ['a-2'],
+  )
   assert.deepEqual(
     (await buildReviewQueue(now, { subjectId: 'subject_2' })).map((item) => item.id),
-    ['b-1'],
+    ['b-1', 'b-2'],
   )
 })
 

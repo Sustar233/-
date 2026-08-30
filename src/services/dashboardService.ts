@@ -2,7 +2,6 @@ import { STORAGE_KEYS } from '@/storage/keys'
 import { getStorage } from '@/storage/storage'
 import type { KnowledgeCard } from '@/types/card'
 import type { ReviewSession } from '@/types/review'
-import type { Settings } from '@/types/settings'
 import type { Subject } from '@/types/subject'
 import { startOfDay } from '@/utils/date'
 import { ensurePresetKnowledge } from './presetKnowledgeService'
@@ -27,17 +26,16 @@ export interface DashboardSnapshot {
 
 export async function getDashboardSnapshot(now = Date.now()): Promise<DashboardSnapshot> {
   await ensurePresetKnowledge()
-  const [subjectsValue, cardsValue, states, logs, settings, session] = await Promise.all([
+  const [subjectsValue, cardsValue, states, logs, session] = await Promise.all([
     getStorage<Subject[]>(STORAGE_KEYS.subjects),
     getStorage<KnowledgeCard[]>(STORAGE_KEYS.cards),
     getReviewStates(),
     getReviewLogs(),
-    getStorage<Settings>(STORAGE_KEYS.settings),
     getReviewSession(),
   ])
   const subjects = subjectsValue ?? []
   const cards = cardsValue ?? []
-  const queueData = { cards, states, logs, settings }
+  const queueData = { cards, states }
   const subjectIds = new Set(subjects.map((subject) => subject.id))
   const today = startOfDay(now)
   const todaySubjectIds: string[] = []

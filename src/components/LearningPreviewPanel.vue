@@ -3,6 +3,7 @@ import type { KnowledgeCard } from '@/types/card'
 
 defineProps<{
   cards: KnowledgeCard[]
+  title: string
   loading: boolean
 }>()
 
@@ -14,10 +15,10 @@ const emit = defineEmits<{
 <template>
   <view class="learning-panel">
     <view class="learning-notice surface">
-      <text class="learning-label">新知识 · 先学后背</text>
-      <button class="text-button skip-preview" :disabled="loading" @click="emit('begin')">
-        跳过预览
-      </button>
+      <view>
+        <text class="learning-label">新知识 · 先学后背</text>
+        <text class="section-title">{{ title }}</text>
+      </view>
     </view>
 
     <view class="learning-list">
@@ -58,10 +59,12 @@ const emit = defineEmits<{
   font-weight: 750;
 }
 
-.skip-preview {
-  padding: 4rpx 0;
-  color: var(--color-subtle);
-  font-size: 21rpx;
+.section-title {
+  display: block;
+  margin-top: 7rpx;
+  color: var(--color-text);
+  font-size: 25rpx;
+  font-weight: 680;
 }
 
 .learning-list {

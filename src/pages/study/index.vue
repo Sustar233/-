@@ -153,7 +153,7 @@ function startStudy(): void {
     <view class="page-heading">
       <text class="eyebrow">沿脉络掌握</text>
       <text class="page-title">路径学习</text>
-      <text class="page-subtitle">按前置关系安排学习顺序：先理解上下文，再尝试独立回忆。</text>
+      <text class="page-subtitle">每次学习一个小节，全部记住后再进入下一节。</text>
     </view>
 
     <LoadErrorState v-if="loadError" @retry="load" />
@@ -181,8 +181,8 @@ function startStudy(): void {
 
     <view class="queue-preview surface">
       <view>
-        <text class="preview-label">本次待复习</text>
-        <text class="preview-note">仅安排当前知识库，前置知识和到期内容优先</text>
+        <text class="preview-label">本次学习</text>
+        <text class="preview-note">到期内容优先，新知识按下一小节安排</text>
       </view>
       <view class="preview-number-row">
         <text class="preview-number">{{ loading ? '—' : queueCount }}</text>
@@ -191,7 +191,7 @@ function startStudy(): void {
     </view>
 
     <button class="primary-button start-button" :disabled="loading || !subjectId || !queueCount" @click="startStudy">
-      开始路径学习
+      开始学习
     </button>
     </template>
   </view>

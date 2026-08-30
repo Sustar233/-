@@ -21,6 +21,8 @@ function normalizeInput(input: KnowledgeCardInput): KnowledgeCardInput {
     answer,
     tags: (input.tags ?? []).map((tag) => tag.trim()).filter(Boolean),
     note: input.note?.trim() || undefined,
+    sectionId: input.sectionId?.trim() || undefined,
+    sectionTitle: input.sectionTitle?.trim() || undefined,
     parentCardId: input.parentCardId?.trim() || undefined,
     connection: input.connection?.trim() || undefined,
     importance: input.importance ?? 2,
@@ -73,8 +75,11 @@ export async function updateCard(id: string, input: KnowledgeCardInput): Promise
   if (!current) throw new Error('知识卡不存在')
   const normalized = normalizeInput(input)
   validateParentCard(cards, normalized, id)
+  const sectionChangedScope =
+    current.subjectId !== normalized.subjectId || current.chapterId !== normalized.chapterId
   const updated: KnowledgeCard = {
     ...current,
+    ...(sectionChangedScope ? { sectionId: undefined, sectionTitle: undefined } : {}),
     ...normalized,
     tags: normalized.tags ?? [],
     importance: normalized.importance ?? 2,
@@ -141,7 +146,14 @@ export async function searchCards(query: string): Promise<KnowledgeCard[]> {
   const cards = await getCards()
   if (!normalized) return cards
   return cards.filter((card) =>
-    [card.question, card.answer, card.connection ?? '', card.note ?? '', ...card.tags]
+    [
+      card.question,
+      card.answer,
+      card.sectionTitle ?? '',
+      card.connection ?? '',
+      card.note ?? '',
+      ...card.tags,
+    ]
       .join(' ')
       .toLocaleLowerCase()
       .includes(normalized),

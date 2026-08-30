@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { computed, onUnmounted, ref, watch } from 'vue'
+import { computed, ref } from 'vue'
 import { onLoad } from '@dcloudio/uni-app'
 import EmptyState from '@/components/EmptyState.vue'
 import LearningPreviewPanel from '@/components/LearningPreviewPanel.vue'
+import LearningSectionPrompt from '@/components/LearningSectionPrompt.vue'
 import ReviewContinuationActions from '@/components/ReviewContinuationActions.vue'
 import ReviewQuestionPanel from '@/components/ReviewQuestionPanel.vue'
 import { useReviewStore } from '@/stores/review'
@@ -17,8 +18,6 @@ const chapters = ref<Chapter[]>([])
 const rating = ref(false)
 const startingRecall = ref(false)
 const continuing = ref(false)
-const clock = ref(Date.now())
-let retryTimer: ReturnType<typeof setTimeout> | undefined
 
 const isFocusedReview = computed(() =>
   Boolean(
@@ -29,7 +28,15 @@ const isFocusedReview = computed(() =>
   ),
 )
 const progressLabel = computed(() => {
+  if (reviewStore.isReinforcement) return '巩固背记'
   if (reviewStore.sessionMode === 'practice') return '主动练习'
+  if (
+    reviewStore.sectionPrompt ||
+    reviewStore.learning ||
+    reviewStore.canMarkCurrentEasy
+  ) {
+    return '小节学习'
+  }
   return isFocusedReview.value ? '路径学习' : '今日复习'
 })
 
@@ -43,28 +50,8 @@ const breadcrumb = computed(() => {
   if (!card) return ''
   const subject = subjects.value.find((item) => item.id === card.subjectId)?.name ?? '未命名科目'
   const chapter = chapters.value.find((item) => item.id === card.chapterId)?.name
-  return chapter ? `${subject} · ${chapter}` : `${subject} · 未分类`
+  return [subject, chapter ?? '未分类', card.sectionTitle].filter(Boolean).join(' · ')
 })
-const waitingForRetry = computed(
-  () => Boolean(reviewStore.currentRetryDueAt && reviewStore.currentRetryDueAt > clock.value),
-)
-
-onUnmounted(() => {
-  if (retryTimer) clearTimeout(retryTimer)
-})
-
-watch(
-  () => reviewStore.currentRetryDueAt,
-  (dueAt) => {
-    if (retryTimer) clearTimeout(retryTimer)
-    clock.value = Date.now()
-    if (!dueAt || dueAt <= clock.value) return
-    retryTimer = setTimeout(() => {
-      clock.value = Date.now()
-    }, dueAt - clock.value + 50)
-  },
-  { immediate: true },
-)
 
 onLoad(async (query) => {
   ;[subjects.value, chapters.value] = await Promise.all([getSubjects(), getChapters()])
@@ -121,12 +108,12 @@ async function undoLastRating(): Promise<void> {
   }
 }
 
-async function learnMore(): Promise<void> {
+async function startNextSection(): Promise<void> {
   if (continuing.value) return
   continuing.value = true
   try {
-    const count = await reviewStore.startMoreNewCards(20)
-    if (!count) uni.showToast({ title: '当前范围内没有更多新卡', icon: 'none' })
+    const count = await reviewStore.startNextSection()
+    if (!count) uni.showToast({ title: '当前范围内没有下一小节', icon: 'none' })
   } catch (error) {
     uni.showToast({ title: (error as Error).message, icon: 'none' })
   } finally {
@@ -191,7 +178,7 @@ async function goBack(): Promise<void> {
         :can-undo="reviewStore.canUndo"
         back-label="完成并返回"
         @undo="undoLastRating"
-        @learn-more="learnMore"
+        @next-section="startNextSection"
         @review="reviewWrongCards"
         @back="goBack"
       />
@@ -201,23 +188,19 @@ async function goBack(): Promise<void> {
       <view v-if="reviewStore.resumed" class="resume-notice">已恢复上次复习进度</view>
       <text class="breadcrumb">{{ breadcrumb }}</text>
 
-      <view v-if="waitingForRetry" class="retry-wait surface">
-        <text class="retry-label">当前卡片正在巩固间隔中</text>
-        <text class="retry-note">
-          到期后会自动再次出现；现在也可以继续学习后面的知识，或主动复习今天的内容。
-        </text>
-        <ReviewContinuationActions
-          :loading="continuing"
-          back-label="暂时返回"
-          @learn-more="learnMore"
-          @review="reviewWrongCards"
-          @back="goBack"
-        />
-      </view>
+      <LearningSectionPrompt
+        v-if="reviewStore.sectionPrompt"
+        :title="reviewStore.currentSectionTitle"
+        :count="reviewStore.learningBatch.length"
+        :loading="startingRecall"
+        @preview="reviewStore.previewSection"
+        @skip="startBatchRecall"
+      />
 
       <LearningPreviewPanel
         v-else-if="reviewStore.learning"
         :cards="reviewStore.learningBatch"
+        :title="reviewStore.currentSectionTitle"
         :loading="startingRecall"
         @begin="startBatchRecall"
       />
@@ -332,35 +315,6 @@ async function goBack(): Promise<void> {
   color: var(--color-primary);
   font-size: 22rpx;
   text-align: center;
-}
-
-.retry-wait {
-  display: flex;
-  min-height: 460rpx;
-  padding: 54rpx 36rpx;
-  align-items: center;
-  justify-content: center;
-  flex-direction: column;
-  text-align: center;
-}
-
-.retry-label,
-.retry-note {
-  display: block;
-}
-
-.retry-label {
-  color: var(--color-text);
-  font-size: 30rpx;
-  font-weight: 760;
-}
-
-.retry-note {
-  max-width: 520rpx;
-  margin-top: 18rpx;
-  color: var(--color-subtle);
-  font-size: 22rpx;
-  line-height: 1.65;
 }
 
 .card-stage {

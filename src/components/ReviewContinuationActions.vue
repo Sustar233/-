@@ -13,7 +13,7 @@ withDefaults(
 
 const emit = defineEmits<{
   undo: []
-  learnMore: []
+  nextSection: []
   review: []
   back: []
 }>()
@@ -21,8 +21,13 @@ const emit = defineEmits<{
 
 <template>
   <view class="continuation-actions">
-    <button class="primary-button" :loading="loading" :disabled="loading" @click="emit('learnMore')">
-      继续学习 20 张
+    <button
+      class="primary-button"
+      :loading="loading"
+      :disabled="loading"
+      @click="emit('nextSection')"
+    >
+      学习下一小节
     </button>
     <button class="secondary-button" :disabled="loading" @click="emit('review')">复习</button>
     <button class="text-button" :disabled="loading" @click="emit('back')">{{ backLabel }}</button>

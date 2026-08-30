@@ -150,7 +150,12 @@ export async function deleteChapter(id: string): Promise<void> {
       key: STORAGE_KEYS.cards,
       value: cards.map((card) => {
         if (card.chapterId !== id) return card
-        const { chapterId: _removed, ...uncategorized } = card
+        const {
+          chapterId: _chapterId,
+          sectionId: _sectionId,
+          sectionTitle: _sectionTitle,
+          ...uncategorized
+        } = card
         return { ...uncategorized, updatedAt: Date.now() }
       }),
     },

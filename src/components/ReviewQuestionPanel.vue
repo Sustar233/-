@@ -85,9 +85,6 @@ watch(
     >
       查看关联知识
     </button>
-    <text v-if="!revealed && contextRevealed" class="hint-advice">
-      已使用提示；评分时请如实选择“重来”或“困难”。
-    </text>
     <button v-if="!revealed" class="primary-button reveal-button" @click="emit('reveal')">
       显示答案
     </button>
@@ -250,15 +247,6 @@ watch(
 
 .context-button {
   margin-top: 22rpx;
-}
-
-.hint-advice {
-  display: block;
-  margin-top: 18rpx;
-  color: var(--color-accent);
-  font-size: 21rpx;
-  line-height: 1.55;
-  text-align: center;
 }
 
 .disabled {

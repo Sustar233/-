@@ -9,25 +9,14 @@ import {
   restoreAutomaticBackup as restoreAutomaticBackupData,
 } from '@/services/backupService'
 import { restorePresetKnowledge } from '@/services/presetKnowledgeService'
-import { useSettingsStore } from '@/stores/settings'
 
-const settingsStore = useSettingsStore()
-const dailyNewCards = ref('20')
 const backupText = ref('')
 const working = ref(false)
 const automaticBackupAvailable = ref(false)
 
 onShow(async () => {
-  await settingsStore.load()
-  dailyNewCards.value = String(settingsStore.settings.dailyNewCards)
   automaticBackupAvailable.value = await hasAutomaticBackup()
 })
-
-async function saveDailyLimit(): Promise<void> {
-  await settingsStore.setDailyNewCards(Number(dailyNewCards.value) || 0)
-  dailyNewCards.value = String(settingsStore.settings.dailyNewCards)
-  uni.showToast({ title: '已保存', icon: 'success' })
-}
 
 async function exportData(): Promise<void> {
   working.value = true
@@ -59,8 +48,6 @@ function importData(): void {
       working.value = true
       try {
         await importBackup(backupText.value)
-        await settingsStore.load()
-        dailyNewCards.value = String(settingsStore.settings.dailyNewCards)
         automaticBackupAvailable.value = true
         uni.showToast({ title: '导入成功', icon: 'success' })
       } catch (error) {
@@ -82,8 +69,6 @@ function restoreAutomaticBackup(): void {
       working.value = true
       try {
         await restoreAutomaticBackupData()
-        await settingsStore.load()
-        dailyNewCards.value = String(settingsStore.settings.dailyNewCards)
         uni.showToast({ title: '已恢复备份', icon: 'success' })
       } catch (error) {
         uni.showToast({ title: (error as Error).message, icon: 'none' })
@@ -121,21 +106,6 @@ function restoreDefaultKnowledge(): void {
       <text class="eyebrow">偏好与数据</text>
       <text class="page-title">设置</text>
       <text class="page-subtitle">只有真正影响复习的选项。</text>
-    </view>
-
-    <view class="section-heading">
-      <text class="section-title">复习设置</text>
-    </view>
-    <view class="setting-card surface">
-      <view class="setting-copy">
-        <text class="setting-name">每日新卡数量</text>
-        <text class="setting-description">到期旧卡不受此限制，并始终优先。</text>
-      </view>
-      <view class="limit-row">
-        <input v-model="dailyNewCards" class="limit-input" type="number" maxlength="3" />
-        <text class="limit-unit">张</text>
-        <button class="secondary-button save-limit" size="mini" @click="saveDailyLimit">保存</button>
-      </view>
     </view>
 
     <view class="section-heading">
@@ -192,7 +162,6 @@ function restoreDefaultKnowledge(): void {
 </template>
 
 <style scoped>
-.setting-card,
 .preset-card,
 .backup-card {
   padding: 30rpx;
@@ -212,34 +181,6 @@ function restoreDefaultKnowledge(): void {
   margin-top: 9rpx;
   color: var(--color-muted);
   font-size: 23rpx;
-}
-
-.limit-row {
-  display: flex;
-  align-items: center;
-  gap: 14rpx;
-  margin-top: 26rpx;
-}
-
-.limit-input {
-  width: 150rpx;
-  height: 76rpx;
-  min-height: 76rpx;
-  padding: 0 20rpx;
-  border: 1rpx solid var(--color-line);
-  border-radius: 14rpx;
-  background: var(--color-surface-strong);
-  color: var(--color-text);
-  font-size: 30rpx;
-  text-align: center;
-}
-
-.limit-unit {
-  color: var(--color-muted);
-}
-
-.save-limit {
-  margin-left: auto;
 }
 
 .restore-preset {
