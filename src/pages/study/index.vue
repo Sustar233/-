@@ -13,7 +13,7 @@ import { reviewRoute } from '@/utils/reviewFilter'
 const subjects = ref<Subject[]>([])
 const chapters = ref<Chapter[]>([])
 const cards = ref<KnowledgeCard[]>([])
-const subjectId = ref('all')
+const subjectId = ref('')
 const chapterId = ref('all')
 const tag = ref('all')
 const queueCount = ref(0)
@@ -22,9 +22,9 @@ const loadError = ref(false)
 let countRequestId = 0
 let requestedSubjectId = ''
 
-const subjectOptions = computed(() => ['全部科目', ...subjects.value.map((item) => item.name)])
+const subjectOptions = computed(() => subjects.value.map((item) => item.name))
 const availableChapters = computed(() =>
-  subjectId.value === 'all'
+  !subjectId.value
     ? []
     : chapters.value.filter((item) => item.subjectId === subjectId.value),
 )
@@ -35,7 +35,7 @@ const chapterOptions = computed(() => [
 ])
 const availableTags = computed(() => {
   const values = cards.value
-    .filter((card) => subjectId.value === 'all' || card.subjectId === subjectId.value)
+    .filter((card) => card.subjectId === subjectId.value)
     .filter((card) => {
       if (chapterId.value === 'all') return true
       if (chapterId.value === 'uncategorized') return !card.chapterId
@@ -46,9 +46,7 @@ const availableTags = computed(() => {
 })
 const tagOptions = computed(() => ['全部标签', ...availableTags.value])
 const selectedSubjectName = computed(() =>
-  subjectId.value === 'all'
-    ? '全部科目'
-    : subjects.value.find((item) => item.id === subjectId.value)?.name ?? '全部科目',
+  subjects.value.find((item) => item.id === subjectId.value)?.name ?? '请选择知识库',
 )
 const selectedChapterName = computed(() => {
   if (chapterId.value === 'all') return '全部章节'
@@ -59,7 +57,7 @@ const selectedTagName = computed(() => (tag.value === 'all' ? '全部标签' : t
 
 function currentFilter(): ReviewFilter {
   return {
-    subjectId: subjectId.value === 'all' ? undefined : subjectId.value,
+    subjectId: subjectId.value || undefined,
     chapterId:
       !['all', 'uncategorized'].includes(chapterId.value) ? chapterId.value : undefined,
     uncategorizedOnly: chapterId.value === 'uncategorized' || undefined,
@@ -69,6 +67,10 @@ function currentFilter(): ReviewFilter {
 
 async function refreshCount(): Promise<void> {
   if (loading.value) return
+  if (!subjectId.value) {
+    queueCount.value = 0
+    return
+  }
   const requestId = ++countRequestId
   try {
     const count = (await buildReviewQueue(Date.now(), currentFilter())).length
@@ -91,6 +93,10 @@ async function load(): Promise<void> {
     ])
     if (subjects.value.some((item) => item.id === requestedSubjectId)) {
       subjectId.value = requestedSubjectId
+    } else if (subjects.value.length === 1) {
+      subjectId.value = subjects.value[0]!.id
+    } else {
+      subjectId.value = ''
     }
     loading.value = false
     await refreshCount()
@@ -107,7 +113,7 @@ onLoad((query) => {
 
 function changeSubject(event: { detail: { value: string | number } }): void {
   const index = Number(event.detail.value)
-  subjectId.value = index === 0 ? 'all' : subjects.value[index - 1]?.id ?? 'all'
+  subjectId.value = subjects.value[index]?.id ?? ''
   chapterId.value = 'all'
   tag.value = 'all'
 }
@@ -129,6 +135,10 @@ function changeTag(event: { detail: { value: string | number } }): void {
 }
 
 function startStudy(): void {
+  if (!subjectId.value) {
+    uni.showToast({ title: '请先选择一个知识库', icon: 'none' })
+    return
+  }
   if (!queueCount.value) {
     uni.showToast({ title: '当前范围内没有待复习卡片', icon: 'none' })
     return
@@ -150,15 +160,15 @@ function startStudy(): void {
 
     <template v-else>
     <view class="filter-card surface">
-      <text class="field-label first-label">科目范围</text>
-      <picker :range="subjectOptions" @change="changeSubject">
+      <text class="field-label first-label">知识库</text>
+      <picker :range="subjectOptions" :disabled="!subjectOptions.length" @change="changeSubject">
         <view class="picker-field">{{ selectedSubjectName }} <text class="picker-arrow">⌄</text></view>
       </picker>
 
       <text class="field-label">章节范围</text>
-      <picker :range="chapterOptions" :disabled="subjectId === 'all'" @change="changeChapter">
-        <view class="picker-field" :class="{ disabled: subjectId === 'all' }">
-          {{ subjectId === 'all' ? '请先选择一个科目' : selectedChapterName }}
+      <picker :range="chapterOptions" :disabled="!subjectId" @change="changeChapter">
+        <view class="picker-field" :class="{ disabled: !subjectId }">
+          {{ !subjectId ? '请先选择一个知识库' : selectedChapterName }}
           <text class="picker-arrow">⌄</text>
         </view>
       </picker>
@@ -172,7 +182,7 @@ function startStudy(): void {
     <view class="queue-preview surface">
       <view>
         <text class="preview-label">本次待复习</text>
-        <text class="preview-note">前置知识优先，同时遵循 FSRS 到期时间</text>
+        <text class="preview-note">仅安排当前知识库，前置知识和到期内容优先</text>
       </view>
       <view class="preview-number-row">
         <text class="preview-number">{{ loading ? '—' : queueCount }}</text>
@@ -180,7 +190,7 @@ function startStudy(): void {
       </view>
     </view>
 
-    <button class="primary-button start-button" :disabled="loading || !queueCount" @click="startStudy">
+    <button class="primary-button start-button" :disabled="loading || !subjectId || !queueCount" @click="startStudy">
       开始路径学习
     </button>
     </template>

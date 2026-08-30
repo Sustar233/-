@@ -12,6 +12,7 @@ const props = defineProps<{
   practice: boolean
   rating: boolean
   canUndo: boolean
+  showSimple: boolean
 }>()
 
 const emit = defineEmits<{
@@ -34,6 +35,14 @@ watch(
 <template>
   <view class="question-panel">
     <view class="review-card surface">
+      <button
+        v-if="revealed && showSimple"
+        class="text-button simple-rating"
+        :disabled="rating"
+        @click="emit('rate', 4)"
+      >
+        简单
+      </button>
       <text class="card-kicker">问题</text>
       <text class="review-question">{{ card.question }}</text>
 
@@ -97,9 +106,19 @@ watch(
 
 <style scoped>
 .review-card {
+  position: relative;
   min-height: 570rpx;
   padding: 48rpx 38rpx;
   border-top: 4rpx solid var(--color-accent);
+}
+
+.simple-rating {
+  position: absolute;
+  top: 28rpx;
+  right: 30rpx;
+  padding: 8rpx 12rpx;
+  color: #466b83;
+  font-size: 22rpx;
 }
 
 .card-kicker {

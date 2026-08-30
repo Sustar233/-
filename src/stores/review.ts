@@ -42,6 +42,7 @@ export const useReviewStore = defineStore('review', () => {
   const previewedCardIds = ref<string[]>([])
   const learningBatch = ref<KnowledgeCard[]>([])
   const retryDueAtByCardId = ref<Record<string, number>>({})
+  const seenCardIds = ref<string[]>([])
   const sessionMode = ref<ReviewMode>('scheduled')
 
   const currentCard = computed(() => queue.value[currentIndex.value] ?? null)
@@ -53,6 +54,12 @@ export const useReviewStore = defineStore('review', () => {
   const currentRetryDueAt = computed(() => {
     const card = currentCard.value
     return card ? retryDueAtByCardId.value[card.id] : undefined
+  })
+  const canMarkCurrentEasy = computed(() => {
+    const card = currentCard.value
+    return Boolean(
+      card && sessionMode.value === 'scheduled' && !seenCardIds.value.includes(card.id),
+    )
   })
 
   function prepareCurrent(): void {
@@ -98,6 +105,7 @@ export const useReviewStore = defineStore('review', () => {
       ])
       allCards.value = cards
       const reviewedCardIds = new Set(states.map((state) => state.cardId))
+      seenCardIds.value = [...reviewedCardIds]
       newCardIds.value = cards
         .filter((card) => !reviewedCardIds.has(card.id))
         .map((card) => card.id)
@@ -184,7 +192,7 @@ export const useReviewStore = defineStore('review', () => {
     lastCommit.value = await commit(card, rating, reviewedAt, (reviewCommit) => {
       if (
         sessionMode.value === 'scheduled' &&
-        shouldRepeatInCurrentSession(reviewCommit.nextState, reviewedAt)
+        shouldRepeatInCurrentSession(reviewCommit.nextState, reviewCommit.log.rating)
       ) {
         nextQueue.push(card)
         nextRetryDueAtByCardId[card.id] = reviewCommit.nextState.dueAt
@@ -198,6 +206,7 @@ export const useReviewStore = defineStore('review', () => {
     })
     queue.value = nextQueue
     retryDueAtByCardId.value = nextRetryDueAtByCardId
+    if (!seenCardIds.value.includes(card.id)) seenCardIds.value = [...seenCardIds.value, card.id]
     currentIndex.value += 1
     prepareCurrent()
     resumed.value = false
@@ -209,7 +218,7 @@ export const useReviewStore = defineStore('review', () => {
     const restoredQueue = [...queue.value]
     if (
       commit.log.mode !== 'practice' &&
-      shouldRepeatInCurrentSession(commit.nextState, commit.log.reviewedAt)
+      shouldRepeatInCurrentSession(commit.nextState, commit.log.rating)
     ) {
       const repeatedIndex = restoredQueue.map((card) => card.id).lastIndexOf(commit.cardId)
       if (repeatedIndex >= currentIndex.value) restoredQueue.splice(repeatedIndex, 1)
@@ -226,6 +235,9 @@ export const useReviewStore = defineStore('review', () => {
     await undoReview(commit, restoredSession)
     queue.value = restoredQueue
     retryDueAtByCardId.value = restoredRetryDueAtByCardId
+    if (!commit.previousState) {
+      seenCardIds.value = seenCardIds.value.filter((cardId) => cardId !== commit.cardId)
+    }
     currentIndex.value = Math.max(0, currentIndex.value - 1)
     lastCommit.value = undefined
     prepareCurrent()
@@ -250,6 +262,7 @@ export const useReviewStore = defineStore('review', () => {
       allCards.value = cards
       sessionMode.value = 'scheduled'
       const reviewedCardIds = new Set(states.map((state) => state.cardId))
+      seenCardIds.value = [...reviewedCardIds]
       newCardIds.value = cards
         .filter((card) => !reviewedCardIds.has(card.id))
         .map((card) => card.id)
@@ -311,6 +324,7 @@ export const useReviewStore = defineStore('review', () => {
     learningBatch.value = []
     previewedCardIds.value = []
     retryDueAtByCardId.value = {}
+    seenCardIds.value = []
     sessionMode.value = 'scheduled'
     contextRevealed.value = false
     contextCards.value = []
@@ -329,6 +343,7 @@ export const useReviewStore = defineStore('review', () => {
     learningBatch,
     sessionMode,
     currentRetryDueAt,
+    canMarkCurrentEasy,
     currentCard,
     completed,
     total,

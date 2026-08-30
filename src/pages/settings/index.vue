@@ -15,15 +15,11 @@ const settingsStore = useSettingsStore()
 const dailyNewCards = ref('20')
 const backupText = ref('')
 const working = ref(false)
-const desiredRetention = ref('90')
-const enableFuzz = ref(true)
 const automaticBackupAvailable = ref(false)
 
 onShow(async () => {
   await settingsStore.load()
   dailyNewCards.value = String(settingsStore.settings.dailyNewCards)
-  desiredRetention.value = String(Math.round(settingsStore.settings.desiredRetention * 100))
-  enableFuzz.value = settingsStore.settings.enableFuzz
   automaticBackupAvailable.value = await hasAutomaticBackup()
 })
 
@@ -31,20 +27,6 @@ async function saveDailyLimit(): Promise<void> {
   await settingsStore.setDailyNewCards(Number(dailyNewCards.value) || 0)
   dailyNewCards.value = String(settingsStore.settings.dailyNewCards)
   uni.showToast({ title: '已保存', icon: 'success' })
-}
-
-async function saveFsrsPreferences(): Promise<void> {
-  await settingsStore.setFsrsPreferences(
-    Number(desiredRetention.value) / 100,
-    enableFuzz.value,
-  )
-  desiredRetention.value = String(Math.round(settingsStore.settings.desiredRetention * 100))
-  enableFuzz.value = settingsStore.settings.enableFuzz
-  uni.showToast({ title: '调度偏好已保存', icon: 'success' })
-}
-
-function changeFuzz(event: Event): void {
-  enableFuzz.value = (event as Event & { detail: { value: boolean } }).detail.value
 }
 
 async function exportData(): Promise<void> {
@@ -79,10 +61,6 @@ function importData(): void {
         await importBackup(backupText.value)
         await settingsStore.load()
         dailyNewCards.value = String(settingsStore.settings.dailyNewCards)
-        desiredRetention.value = String(
-          Math.round(settingsStore.settings.desiredRetention * 100),
-        )
-        enableFuzz.value = settingsStore.settings.enableFuzz
         automaticBackupAvailable.value = true
         uni.showToast({ title: '导入成功', icon: 'success' })
       } catch (error) {
@@ -106,10 +84,6 @@ function restoreAutomaticBackup(): void {
         await restoreAutomaticBackupData()
         await settingsStore.load()
         dailyNewCards.value = String(settingsStore.settings.dailyNewCards)
-        desiredRetention.value = String(
-          Math.round(settingsStore.settings.desiredRetention * 100),
-        )
-        enableFuzz.value = settingsStore.settings.enableFuzz
         uni.showToast({ title: '已恢复备份', icon: 'success' })
       } catch (error) {
         uni.showToast({ title: (error as Error).message, icon: 'none' })
@@ -162,25 +136,6 @@ function restoreDefaultKnowledge(): void {
         <text class="limit-unit">张</text>
         <button class="secondary-button save-limit" size="mini" @click="saveDailyLimit">保存</button>
       </view>
-    </view>
-
-    <view class="fsrs-card surface">
-      <view class="setting-copy">
-        <text class="setting-name">目标记忆率</text>
-        <text class="setting-description">越高复习越频繁，推荐保持在 85%～95%，从下一次评分生效。</text>
-      </view>
-      <view class="retention-row">
-        <input v-model="desiredRetention" class="limit-input" type="number" maxlength="2" />
-        <text class="limit-unit">%</text>
-      </view>
-      <view class="fuzz-row">
-        <view>
-          <text class="setting-name small-name">分散到期日期</text>
-          <text class="setting-description">为较长间隔加入轻微浮动，避免卡片集中到期。</text>
-        </view>
-        <switch :checked="enableFuzz" color="#28624f" @change="changeFuzz" />
-      </view>
-      <button class="secondary-button save-fsrs" @click="saveFsrsPreferences">保存调度偏好</button>
     </view>
 
     <view class="section-heading">
@@ -238,14 +193,9 @@ function restoreDefaultKnowledge(): void {
 
 <style scoped>
 .setting-card,
-.fsrs-card,
 .preset-card,
 .backup-card {
   padding: 30rpx;
-}
-
-.fsrs-card {
-  margin-top: 18rpx;
 }
 
 .setting-name,
@@ -290,32 +240,6 @@ function restoreDefaultKnowledge(): void {
 
 .save-limit {
   margin-left: auto;
-}
-
-.retention-row {
-  display: flex;
-  align-items: center;
-  gap: 12rpx;
-  margin-top: 22rpx;
-}
-
-.fuzz-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 24rpx;
-  margin-top: 28rpx;
-  padding-top: 25rpx;
-  border-top: 1rpx solid var(--color-line);
-}
-
-.small-name {
-  font-size: 26rpx;
-}
-
-.save-fsrs {
-  width: 100%;
-  margin-top: 26rpx;
 }
 
 .restore-preset {

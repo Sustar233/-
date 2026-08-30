@@ -2,7 +2,7 @@
   "name": "kuzuozhou",
   "version": "1.0.0",
   "private": true,
-  "description": "苦作舟：一款由 FSRS 驱动的轻量个人知识复习工具。",
+  "description": "苦作舟：一款轻量、连贯的个人知识背记工具。",
   "scripts": {
     "dev:h5": "uni",
     "dev:lan": "uni --host 0.0.0.0",

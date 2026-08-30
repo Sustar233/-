@@ -5,6 +5,7 @@ import EmptyState from '@/components/EmptyState.vue'
 import KnowledgeCardItem from '@/components/KnowledgeCard.vue'
 import { useCardStore } from '@/stores/card'
 import { useSubjectStore } from '@/stores/subject'
+import { getReviewStates, restoreMasteredCard } from '@/services/reviewService'
 
 const subjectStore = useSubjectStore()
 const cardStore = useCardStore()
@@ -14,6 +15,7 @@ const chapterName = ref('')
 const editingChapterId = ref('')
 const searchQuery = ref('')
 const displayLimit = ref(20)
+const masteredCardIds = ref(new Set<string>())
 
 const subject = computed(() => subjectStore.subjects.find((item) => item.id === subjectId.value))
 const chapters = computed(() =>
@@ -56,7 +58,14 @@ onShow(refresh)
 
 async function refresh(): Promise<void> {
   if (!subjectId.value) return
-  await Promise.all([subjectStore.load(), cardStore.load(subjectId.value)])
+  const [, , states] = await Promise.all([
+    subjectStore.load(),
+    cardStore.load(subjectId.value),
+    getReviewStates(),
+  ])
+  masteredCardIds.value = new Set(
+    states.filter((state) => Boolean(state.masteredAt)).map((state) => state.cardId),
+  )
   if (subject.value) uni.setNavigationBarTitle({ title: subject.value.name })
 }
 
@@ -138,6 +147,16 @@ async function toggleCard(id: string): Promise<void> {
   const card = cardStore.cards.find((item) => item.id === id)
   if (!card) return
   await cardStore.setSuspended(id, card.status !== 'suspended', subjectId.value)
+}
+
+async function restoreCard(id: string): Promise<void> {
+  try {
+    await restoreMasteredCard(id)
+    await refresh()
+    uni.showToast({ title: '已恢复学习', icon: 'success' })
+  } catch (error) {
+    uni.showToast({ title: (error as Error).message, icon: 'none' })
+  }
 }
 </script>
 
@@ -236,9 +255,11 @@ async function toggleCard(id: string): Promise<void> {
       v-for="card in displayedCards"
       :key="card.id"
       :card="card"
+      :mastered="masteredCardIds.has(card.id)"
       :parent-question="parentQuestion(card.parentCardId)"
       @edit="openCardEditor(card.id)"
       @toggle="toggleCard(card.id)"
+      @restore="restoreCard(card.id)"
       @remove="removeCard(card.id)"
     />
     <button v-if="hasMoreCards" class="secondary-button load-more" @click="displayLimit += 20">

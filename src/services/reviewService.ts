@@ -19,11 +19,14 @@ import type {
 } from '@/types/review'
 import type { Settings } from '@/types/settings'
 import { normalizeSettings } from '@/types/settings'
-import { startOfDay } from '@/utils/date'
+import { addDays, startOfDay } from '@/utils/date'
 import { generateId } from '@/utils/id'
 import { getCards, orderCardsByKnowledgePath } from './cardService'
 
 export const LEARNING_PREVIEW_BATCH_SIZE = 8
+export const FORGOT_RETRY_MS = 10 * 60_000
+
+const REMEMBER_INTERVAL_DAYS = [1, 2] as const
 
 export interface ReviewQueueOptions {
   includeDueCards?: boolean
@@ -35,6 +38,68 @@ export interface ReviewQueueData {
   states: ReviewState[]
   logs: ReviewLog[]
   settings?: Settings | null
+}
+
+function withDueAt(state: ReviewState, dueAt: number): ReviewState {
+  const fsrsData =
+    state.fsrsData && typeof state.fsrsData === 'object' && !Array.isArray(state.fsrsData)
+      ? { ...(state.fsrsData as Record<string, unknown>), due: new Date(dueAt).toISOString() }
+      : state.fsrsData
+  return { ...state, dueAt, fsrsData }
+}
+
+export function applyKnowledgeReview(
+  current: ReviewState,
+  rating: ReviewRating,
+  now: number,
+  settings: Settings,
+): ReviewState {
+  const scheduled = { ...current, ...applyReview(current, rating, now, settings) }
+  const today = startOfDay(now)
+
+  if (rating === 1) {
+    return withDueAt(
+      {
+        ...scheduled,
+        rememberedDayStreak: 0,
+        lastRememberedDay: undefined,
+        lastForgottenDay: today,
+        masteredAt: undefined,
+      },
+      now + FORGOT_RETRY_MS,
+    )
+  }
+
+  if (rating === 4) {
+    return {
+      ...scheduled,
+      rememberedDayStreak: 3,
+      lastRememberedDay: today,
+      masteredAt: now,
+    }
+  }
+
+  // Rating 2 remains readable for legacy data, but the simplified UI no longer emits it.
+  if (rating !== 3) return scheduled
+
+  const forgotToday = current.lastForgottenDay === today
+  const alreadyRememberedToday = current.lastRememberedDay === today
+  const previousStreak = Math.min(3, Math.max(0, current.rememberedDayStreak ?? 0))
+  const rememberedDayStreak = forgotToday
+    ? 0
+    : alreadyRememberedToday
+      ? previousStreak
+      : Math.min(3, previousStreak + 1)
+  const rememberedState: ReviewState = {
+    ...scheduled,
+    rememberedDayStreak,
+    lastRememberedDay: forgotToday ? current.lastRememberedDay : today,
+    masteredAt: rememberedDayStreak >= 3 ? now : undefined,
+  }
+
+  if (rememberedDayStreak >= 3) return rememberedState
+  const intervalDays = REMEMBER_INTERVAL_DAYS[rememberedDayStreak >= 2 ? 1 : 0]
+  return withDueAt(rememberedState, addDays(now, intervalDays))
 }
 
 export async function getReviewStates(): Promise<ReviewState[]> {
@@ -111,7 +176,7 @@ export function buildReviewQueueFromData(
           activeCards
             .filter((card) => {
               const state = stateByCard.get(card.id)
-              return state && state.dueAt <= now
+              return state && !state.masteredAt && state.dueAt <= now
             })
             .sort(
               (first, second) =>
@@ -127,8 +192,14 @@ export function buildReviewQueueFromData(
     }
   }
   const today = startOfDay(now)
-  const studiedNewCardsToday = [...firstReviewByCard.values()].filter(
-    (reviewedAt) => startOfDay(reviewedAt) === today,
+  const dailyScopeCardIds = new Set(
+    cards
+      .filter((card) => !filter.subjectId || card.subjectId === filter.subjectId)
+      .map((card) => card.id),
+  )
+  const studiedNewCardsToday = [...firstReviewByCard.entries()].filter(
+    ([cardId, reviewedAt]) =>
+      dailyScopeCardIds.has(cardId) && startOfDay(reviewedAt) === today,
   ).length
   const normalizedSettings = normalizeSettings(settings)
   const remainingNewCardLimit =
@@ -207,10 +278,11 @@ export async function buildTodayReviewQueue(
   return buildTodayReviewQueueFromData(cards, logs, now, filter, wrongOnly)
 }
 
-export function shouldRepeatInCurrentSession(state: ReviewState, _reviewedAt: number): boolean {
-  if (!state.fsrsData || typeof state.fsrsData !== 'object') return false
-  const fsrsState = (state.fsrsData as Record<string, unknown>).state
-  return fsrsState === 1 || fsrsState === 3
+export function shouldRepeatInCurrentSession(
+  state: ReviewState,
+  rating: ReviewRating,
+): boolean {
+  return rating === 1 && !state.masteredAt
 }
 
 export async function previewCard(cardId: string, now = Date.now()): Promise<ReviewPreview[]> {
@@ -235,7 +307,7 @@ export async function commitReview(
   ])
   const previousState = states.find((state) => state.cardId === card.id)
   const current = previousState ?? createReviewState(card.id, now)
-  const next = applyReview(current, rating, now, normalizeSettings(settingsValue))
+  const next = applyKnowledgeReview(current, rating, now, normalizeSettings(settingsValue))
   const log: ReviewLog = {
     id: generateId('review'),
     cardId: card.id,
@@ -308,6 +380,17 @@ export async function reviewCard(
   now = Date.now(),
 ): Promise<ReviewState> {
   return (await commitReview(card, rating, now)).nextState
+}
+
+export async function restoreMasteredCard(cardId: string, now = Date.now()): Promise<void> {
+  const states = await getReviewStates()
+  const current = states.find((state) => state.cardId === cardId)
+  if (!current?.masteredAt) throw new Error('这张知识卡尚未标记为已掌握')
+  const restored = createReviewState(cardId, now)
+  await setStorage(
+    STORAGE_KEYS.reviewStates,
+    [...states.filter((state) => state.cardId !== cardId), restored],
+  )
 }
 
 export async function undoReview(commit: ReviewCommit, session?: ReviewSession): Promise<void> {

@@ -69,6 +69,10 @@ watch(
 onLoad(async (query) => {
   ;[subjects.value, chapters.value] = await Promise.all([getSubjects(), getChapters()])
   const filter: ReviewFilter = reviewFilterFromQuery(query)
+  if (!filter.subjectId) {
+    uni.redirectTo({ url: '/pages/study/index' })
+    return
+  }
   await reviewStore.start(filter, query?.fresh !== '1')
   const todayMode = Array.isArray(query?.today) ? query.today[0] : query?.today
   if (todayMode === 'all' || todayMode === 'wrong') {
@@ -227,6 +231,7 @@ async function goBack(): Promise<void> {
         :practice="reviewStore.sessionMode === 'practice'"
         :rating="rating"
         :can-undo="reviewStore.canUndo"
+        :show-simple="reviewStore.canMarkCurrentEasy"
         @show-context="reviewStore.showContext"
         @reveal="reviewStore.reveal"
         @rate="rateCard"

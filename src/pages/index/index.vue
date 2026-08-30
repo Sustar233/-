@@ -19,12 +19,13 @@ const resumableSession = ref<ReviewSession | null>(null)
 const loading = ref(false)
 const loadError = ref(false)
 const summary = ref(createEmptyStatistics())
-const todayWrongCount = ref(0)
+const todaySubjectIds = ref<string[]>([])
 
 const recentSubjects = computed(() =>
   [...subjects.value].sort((first, second) => second.updatedAt - first.updatedAt).slice(0, 3),
 )
 const isResuming = computed(() => Boolean(resumableSession.value))
+const hasStartedToday = computed(() => todaySubjectIds.value.length > 0)
 const cardCounts = computed(() =>
   cards.value.reduce<Record<string, number>>((counts, card) => {
     counts[card.subjectId] = (counts[card.subjectId] ?? 0) + 1
@@ -36,6 +37,16 @@ const reviewCount = computed(() =>
     ? Math.max(0, resumableSession.value.cardIds.length - resumableSession.value.currentIndex)
     : dueCount.value,
 )
+const heroLabel = computed(() => {
+  if (!hasStartedToday.value) return '今日学习'
+  return isResuming.value ? '继续上次学习' : '今日待学习'
+})
+const heroButtonLabel = computed(() => {
+  if (loading.value) return '正在准备…'
+  if (!hasStartedToday.value) return '开始学习'
+  if (isResuming.value) return '继续复习'
+  return reviewCount.value ? '继续学习' : '今日已完成'
+})
 
 async function refresh(): Promise<void> {
   loading.value = true
@@ -47,10 +58,11 @@ async function refresh(): Promise<void> {
     cards.value = snapshot.cards
     dueCount.value = snapshot.dueCount
     summary.value = snapshot.statistics
-    todayWrongCount.value = snapshot.todayWrongCount
+    todaySubjectIds.value = snapshot.todaySubjectIds
     resumableSession.value =
       snapshot.session &&
       startOfDay(snapshot.session.startedAt) === startOfDay(now) &&
+      Boolean(snapshot.session.filter.subjectId) &&
       snapshot.session.currentIndex < snapshot.session.cardIds.length
         ? snapshot.session
         : null
@@ -64,11 +76,15 @@ async function refresh(): Promise<void> {
 onShow(refresh)
 
 function startReview(): void {
-  if (!reviewCount.value) {
+  if (resumableSession.value) {
+    uni.navigateTo({ url: reviewRoute(resumableSession.value.filter) })
+    return
+  }
+  if (hasStartedToday.value && !reviewCount.value) {
     uni.showToast({ title: '今天的复习已经完成', icon: 'none' })
     return
   }
-  uni.navigateTo({ url: reviewRoute(resumableSession.value?.filter) })
+  openStudy()
 }
 
 function openSubject(id: string): void {
@@ -84,11 +100,29 @@ function openStudy(): void {
 }
 
 function openTodayReview(): void {
-  if (!todayWrongCount.value) {
-    uni.showToast({ title: '今天还没有背错的知识', icon: 'none' })
+  const todaySubjects = todaySubjectIds.value
+    .map((id) => subjects.value.find((subject) => subject.id === id))
+    .filter((subject): subject is Subject => Boolean(subject))
+  if (!todaySubjects.length) {
+    uni.showToast({ title: '今天还没有开始学习', icon: 'none' })
     return
   }
-  uni.navigateTo({ url: '/pages/review/index?fresh=1&today=wrong' })
+  const openSubjectReview = (subjectId: string): void => {
+    uni.navigateTo({
+      url: `/pages/review/index?fresh=1&today=all&subjectId=${encodeURIComponent(subjectId)}`,
+    })
+  }
+  if (todaySubjects.length === 1) {
+    openSubjectReview(todaySubjects[0]!.id)
+    return
+  }
+  uni.showActionSheet({
+    itemList: todaySubjects.map((subject) => subject.name),
+    success: ({ tapIndex }) => {
+      const subject = todaySubjects[tapIndex]
+      if (subject) openSubjectReview(subject.id)
+    },
+  })
 }
 </script>
 
@@ -103,13 +137,13 @@ function openTodayReview(): void {
 
     <template v-else>
     <view class="review-hero surface">
-      <text class="hero-label">{{ isResuming ? '继续上次复习' : '今日待复习' }}</text>
+      <text class="hero-label">{{ heroLabel }}</text>
       <view class="hero-number-row">
         <text class="hero-number">{{ reviewCount }}</text>
         <text class="hero-unit">张</text>
       </view>
       <button class="primary-button hero-button" :disabled="loading" @click="startReview">
-        {{ loading ? '正在准备…' : isResuming ? '继续复习' : reviewCount ? '开始今日复习' : '今日已完成' }}
+        {{ heroButtonLabel }}
       </button>
     </view>
 
@@ -120,10 +154,10 @@ function openTodayReview(): void {
     <view class="stat-grid">
       <StatCard label="已复习" :value="summary.todayReviews" hint="次回答" />
       <StatCard label="新学习" :value="summary.todayNewCards" hint="张新卡" />
-      <StatCard label="重来" :value="summary.todayAgain" hint="次遗忘" />
+      <StatCard label="忘了" :value="summary.todayAgain" hint="次遗忘" />
       <StatCard label="连续" :value="`${summary.streakDays} 天`" hint="学习节奏" />
     </view>
-    <view class="today-review-actions">
+    <view v-if="hasStartedToday" class="today-review-actions">
       <button class="secondary-button compact-action" @click="openTodayReview">复习</button>
     </view>
 

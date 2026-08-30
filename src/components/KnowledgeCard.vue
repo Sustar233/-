@@ -4,7 +4,7 @@ import type { KnowledgeCard } from '@/types/card'
 
 const importanceLabels = ['', '一般', '重要', '非常重要']
 
-const props = defineProps<{ card: KnowledgeCard; parentQuestion?: string }>()
+const props = defineProps<{ card: KnowledgeCard; parentQuestion?: string; mastered?: boolean }>()
 const noteVisible = ref(false)
 const hasNote = computed(() =>
   Boolean(props.card.parentCardId || props.card.connection || props.card.note),
@@ -13,15 +13,20 @@ const hasNote = computed(() =>
 defineEmits<{
   edit: []
   toggle: []
+  restore: []
   remove: []
 }>()
 </script>
 
 <template>
-  <view class="knowledge-card surface" :class="{ suspended: card.status === 'suspended' }">
+  <view
+    class="knowledge-card surface"
+    :class="{ suspended: card.status === 'suspended', mastered }"
+  >
     <view class="card-topline">
       <text class="importance">{{ importanceLabels[card.importance] }}知识</text>
-      <text v-if="card.status === 'suspended'" class="status">已暂停</text>
+      <text v-if="mastered" class="status mastered-status">已掌握</text>
+      <text v-else-if="card.status === 'suspended'" class="status">已暂停</text>
     </view>
     <text class="question">{{ card.question }}</text>
     <text class="answer-preview">{{ card.answer }}</text>
@@ -44,7 +49,16 @@ defineEmits<{
     </button>
     <view class="card-actions">
       <button class="text-button" size="mini" aria-label="编辑知识卡" @click="$emit('edit')">编辑</button>
-      <button class="text-button" size="mini" aria-label="切换知识卡状态" @click="$emit('toggle')">
+      <button
+        v-if="mastered"
+        class="text-button"
+        size="mini"
+        aria-label="恢复学习知识卡"
+        @click="$emit('restore')"
+      >
+        恢复学习
+      </button>
+      <button v-else class="text-button" size="mini" aria-label="切换知识卡状态" @click="$emit('toggle')">
         {{ card.status === 'suspended' ? '恢复' : '暂停' }}
       </button>
       <button class="text-button remove" size="mini" aria-label="删除知识卡" @click="$emit('remove')">删除</button>
@@ -64,6 +78,10 @@ defineEmits<{
   opacity: 0.72;
 }
 
+.mastered {
+  border-left-color: #a8c9b7;
+}
+
 .card-topline {
   display: flex;
   justify-content: space-between;
@@ -74,6 +92,10 @@ defineEmits<{
 .status {
   color: var(--color-muted);
   font-size: 22rpx;
+}
+
+.mastered-status {
+  color: var(--color-primary);
 }
 
 .status {

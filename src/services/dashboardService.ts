@@ -4,6 +4,7 @@ import type { KnowledgeCard } from '@/types/card'
 import type { ReviewSession } from '@/types/review'
 import type { Settings } from '@/types/settings'
 import type { Subject } from '@/types/subject'
+import { startOfDay } from '@/utils/date'
 import { ensurePresetKnowledge } from './presetKnowledgeService'
 import {
   buildReviewQueueFromData,
@@ -21,6 +22,7 @@ export interface DashboardSnapshot {
   statistics: StatisticsSummary
   session: ReviewSession | null
   todayWrongCount: number
+  todaySubjectIds: string[]
 }
 
 export async function getDashboardSnapshot(now = Date.now()): Promise<DashboardSnapshot> {
@@ -36,13 +38,32 @@ export async function getDashboardSnapshot(now = Date.now()): Promise<DashboardS
   const subjects = subjectsValue ?? []
   const cards = cardsValue ?? []
   const queueData = { cards, states, logs, settings }
+  const subjectIds = new Set(subjects.map((subject) => subject.id))
+  const today = startOfDay(now)
+  const todaySubjectIds: string[] = []
+  const addTodaySubject = (subjectId?: string): void => {
+    if (subjectId && subjectIds.has(subjectId) && !todaySubjectIds.includes(subjectId)) {
+      todaySubjectIds.push(subjectId)
+    }
+  }
+  if (session && startOfDay(session.startedAt) === today) {
+    addTodaySubject(session.filter.subjectId)
+  }
+  for (const log of [...logs].sort((first, second) => second.reviewedAt - first.reviewedAt)) {
+    if (startOfDay(log.reviewedAt) === today) addTodaySubject(log.subjectId)
+  }
 
   return {
     subjects,
     cards,
-    dueCount: buildReviewQueueFromData(queueData, now).length,
+    dueCount: subjects.reduce(
+      (count, subject) =>
+        count + buildReviewQueueFromData(queueData, now, { subjectId: subject.id }).length,
+      0,
+    ),
     statistics: calculateStatistics(cards, logs, now),
     session,
     todayWrongCount: buildTodayReviewQueueFromData(cards, logs, now, {}, true).length,
+    todaySubjectIds,
   }
 }

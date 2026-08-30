@@ -75,7 +75,19 @@ function isReviewState(value: unknown): value is ReviewState {
     isStoredFsrsCard(fsrsData) &&
     (!('lastReviewAt' in value) ||
       value.lastReviewAt === undefined ||
-      hasNumber(value, 'lastReviewAt'))
+      hasNumber(value, 'lastReviewAt')) &&
+    (!('rememberedDayStreak' in value) ||
+      (hasNumber(value, 'rememberedDayStreak') &&
+        Number.isInteger(value.rememberedDayStreak) &&
+        (value.rememberedDayStreak as number) >= 0 &&
+        (value.rememberedDayStreak as number) <= 3)) &&
+    (!('lastRememberedDay' in value) ||
+      value.lastRememberedDay === undefined ||
+      hasNumber(value, 'lastRememberedDay')) &&
+    (!('lastForgottenDay' in value) ||
+      value.lastForgottenDay === undefined ||
+      hasNumber(value, 'lastForgottenDay')) &&
+    (!('masteredAt' in value) || value.masteredAt === undefined || hasNumber(value, 'masteredAt'))
   )
 }
 

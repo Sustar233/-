@@ -6,6 +6,10 @@ export interface ReviewState {
   dueAt: number
   fsrsData: unknown
   lastReviewAt?: number
+  rememberedDayStreak?: number
+  lastRememberedDay?: number
+  lastForgottenDay?: number
+  masteredAt?: number
 }
 
 export interface ReviewLog {

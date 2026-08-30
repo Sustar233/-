@@ -66,4 +66,46 @@ test('dashboard snapshot derives queue, statistics, and wrong-card count from on
   assert.equal(snapshot.dueCount, 2)
   assert.equal(snapshot.statistics.todayReviews, 1)
   assert.equal(snapshot.todayWrongCount, 1)
+  assert.deepEqual(snapshot.todaySubjectIds, ['subject-1'])
+})
+
+test('dashboard totals separate daily queues for different subjects', async () => {
+  const now = new Date(2026, 6, 30, 12).getTime()
+  const cards: KnowledgeCard[] = [
+    {
+      id: 'subject-a-card',
+      subjectId: 'subject-a',
+      question: 'A?',
+      answer: 'A',
+      tags: [],
+      importance: 2,
+      status: 'active',
+      createdAt: now,
+      updatedAt: now,
+    },
+    {
+      id: 'subject-b-card',
+      subjectId: 'subject-b',
+      question: 'B?',
+      answer: 'B',
+      tags: [],
+      importance: 2,
+      status: 'active',
+      createdAt: now + 1,
+      updatedAt: now + 1,
+    },
+  ]
+  await Promise.all([
+    setStorage(STORAGE_KEYS.presetKnowledgeDismissed, true),
+    setStorage(STORAGE_KEYS.subjects, [
+      { id: 'subject-a', name: 'A', createdAt: now, updatedAt: now },
+      { id: 'subject-b', name: 'B', createdAt: now, updatedAt: now },
+    ]),
+    setStorage(STORAGE_KEYS.cards, cards),
+    setStorage(STORAGE_KEYS.settings, { dailyNewCards: 1 }),
+  ])
+
+  const snapshot = await getDashboardSnapshot(now)
+  assert.equal(snapshot.dueCount, 2)
+  assert.deepEqual(snapshot.todaySubjectIds, [])
 })

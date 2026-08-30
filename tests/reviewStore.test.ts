@@ -64,7 +64,7 @@ test('a previewed new-card batch enters recall once and resumes without previewi
   assert.equal(resumedStore.learning, false)
 })
 
-test('a learning-step rating stays in the session until its real due time', async () => {
+test('forgot stays in the session until its ten-minute retry time', async () => {
   const target = newCard('retry-card', 1)
   await Promise.all([
     setStorage(STORAGE_KEYS.cards, [target]),
@@ -82,14 +82,37 @@ test('a learning-step rating stays in the session until its real due time', asyn
   assert.equal(store.finished, false)
   assert.equal(store.currentCard?.id, target.id)
   assert.ok(retryDueAt)
-  assert.ok(retryDueAt - Date.now() > 50_000)
-  assert.ok(retryDueAt - Date.now() <= 61_000)
+  assert.ok(retryDueAt - Date.now() > 599_000)
+  assert.ok(retryDueAt - Date.now() <= 601_000)
   assert.equal(store.currentRetryDueAt, retryDueAt)
 
   await store.undoLast()
   assert.equal(store.total, 1)
   assert.equal(store.currentIndex, 0)
   assert.equal(store.currentRetryDueAt, undefined)
+})
+
+test('simple is available only on first sight and undo restores that state', async () => {
+  const target = newCard('simple-card', 1)
+  await Promise.all([
+    setStorage(STORAGE_KEYS.cards, [target]),
+    setStorage(STORAGE_KEYS.settings, { dailyNewCards: 20 }),
+  ])
+
+  const store = useReviewStore()
+  await store.start({ subjectId: target.subjectId }, false)
+  await store.beginRecall()
+  assert.equal(store.canMarkCurrentEasy, true)
+
+  await store.reveal()
+  await store.rate(4)
+  assert.equal(readStored<ReviewState[]>(STORAGE_KEYS.reviewStates)?.[0]?.masteredAt !== undefined, true)
+  assert.equal(store.finished, true)
+
+  await store.undoLast()
+  assert.equal(store.currentCard?.id, target.id)
+  assert.equal(store.canMarkCurrentEasy, true)
+  assert.deepEqual(readStored(STORAGE_KEYS.reviewStates), [])
 })
 
 test('a finished session can load another 20 new cards or review today\'s knowledge', async () => {

@@ -140,6 +140,27 @@ test('backup validation rejects corrupt or inconsistent FSRS state', () => {
   }
 
   assert.equal(validateBackupData(backup), true)
+  assert.equal(
+    validateBackupData({
+      ...backup,
+      reviewStates: [
+        {
+          ...validState,
+          rememberedDayStreak: 3,
+          lastRememberedDay: validState.dueAt,
+          masteredAt: validState.dueAt,
+        },
+      ],
+    }),
+    true,
+  )
+  assert.equal(
+    validateBackupData({
+      ...backup,
+      reviewStates: [{ ...validState, rememberedDayStreak: 4 }],
+    }),
+    false,
+  )
   const practiceBackup = {
     ...backup,
     reviewLogs: [

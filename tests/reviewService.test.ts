@@ -1,14 +1,17 @@
 import assert from 'node:assert/strict'
 import { beforeEach, test } from 'node:test'
-import { applyReview, createReviewState } from '../src/scheduler/fsrs'
+import { createReviewState } from '../src/scheduler/fsrs'
 import {
+  applyKnowledgeReview,
   buildLearningPreviewBatch,
   buildReviewQueue,
   buildTodayReviewQueue,
   clearReviewSession,
   commitPracticeReview,
   commitReview,
+  FORGOT_RETRY_MS,
   getReviewSession,
+  restoreMasteredCard,
   reviewCard,
   saveReviewSession,
   shouldRepeatInCurrentSession,
@@ -17,6 +20,8 @@ import {
 import { STORAGE_KEYS } from '../src/storage/keys'
 import { setStorage } from '../src/storage/storage'
 import type { KnowledgeCard } from '../src/types/card'
+import type { ReviewState } from '../src/types/review'
+import { DEFAULT_SETTINGS } from '../src/types/settings'
 import { installStorageMock, readStored, resetStorage } from './helpers/storageMock'
 
 installStorageMock()
@@ -101,21 +106,62 @@ test('learning preview batches consecutive new cards from one chapter', () => {
   )
 })
 
-test('FSRS learning steps repeat in the current session, including across midnight', () => {
+test('forgot repeats after ten minutes while remembered and simple leave the session', () => {
   const now = new Date('2026-07-30T08:00:00.000Z').getTime()
   const initial = createReviewState('card_1', now)
-
-  assert.equal(shouldRepeatInCurrentSession(applyReview(initial, 1, now), now), true)
-  assert.equal(shouldRepeatInCurrentSession(applyReview(initial, 2, now), now), true)
-  assert.equal(shouldRepeatInCurrentSession(applyReview(initial, 3, now), now), true)
-  assert.equal(shouldRepeatInCurrentSession(applyReview(initial, 4, now), now), false)
-
-  const nearMidnight = new Date(2026, 6, 30, 23, 59, 30).getTime()
-  const midnightInitial = createReviewState('midnight-card', nearMidnight)
-  assert.equal(
-    shouldRepeatInCurrentSession(applyReview(midnightInitial, 1, nearMidnight), nearMidnight),
-    true,
+  const forgotten = applyKnowledgeReview(initial, 1, now, DEFAULT_SETTINGS)
+  const recovered = applyKnowledgeReview(
+    forgotten,
+    3,
+    now + FORGOT_RETRY_MS,
+    DEFAULT_SETTINGS,
   )
+
+  assert.equal(forgotten.dueAt, now + FORGOT_RETRY_MS)
+  assert.equal(forgotten.rememberedDayStreak, 0)
+  assert.equal(shouldRepeatInCurrentSession(forgotten, 1), true)
+  assert.equal(recovered.rememberedDayStreak, 0)
+  assert.equal(shouldRepeatInCurrentSession(recovered, 3), false)
+  assert.equal(shouldRepeatInCurrentSession(applyKnowledgeReview(initial, 4, now, DEFAULT_SETTINGS), 4), false)
+})
+
+test('three remembered reviews on different clean days automatically master a card', () => {
+  const firstAt = new Date('2026-07-30T08:00:00.000Z').getTime()
+  const initial = createReviewState('card_streak', firstAt)
+  const first = applyKnowledgeReview(initial, 3, firstAt, DEFAULT_SETTINGS)
+  const second = applyKnowledgeReview(first, 3, first.dueAt, DEFAULT_SETTINGS)
+  const third = applyKnowledgeReview(second, 3, second.dueAt, DEFAULT_SETTINGS)
+
+  assert.equal(first.rememberedDayStreak, 1)
+  assert.equal(first.dueAt, firstAt + 86_400_000)
+  assert.equal(second.rememberedDayStreak, 2)
+  assert.equal(second.dueAt, first.dueAt + 2 * 86_400_000)
+  assert.equal(third.rememberedDayStreak, 3)
+  assert.equal(third.masteredAt, second.dueAt)
+})
+
+test('a forgotten day resets the streak and later recovery that day does not count', () => {
+  const firstAt = new Date('2026-07-30T08:00:00.000Z').getTime()
+  const initial = createReviewState('card_reset', firstAt)
+  const first = applyKnowledgeReview(initial, 3, firstAt, DEFAULT_SETTINGS)
+  const forgotten = applyKnowledgeReview(first, 1, first.dueAt, DEFAULT_SETTINGS)
+  const recovered = applyKnowledgeReview(
+    forgotten,
+    3,
+    forgotten.dueAt,
+    DEFAULT_SETTINGS,
+  )
+  const nextDay = applyKnowledgeReview(
+    recovered,
+    3,
+    recovered.dueAt,
+    DEFAULT_SETTINGS,
+  )
+
+  assert.equal(forgotten.rememberedDayStreak, 0)
+  assert.equal(recovered.rememberedDayStreak, 0)
+  assert.equal(recovered.masteredAt, undefined)
+  assert.equal(nextDay.rememberedDayStreak, 1)
 })
 
 test('explicit new-card limit loads another batch without due cards', async () => {
@@ -223,6 +269,27 @@ test('rebuilding the queue does not refill new cards already studied today', asy
   )
 })
 
+test('daily new-card limits are isolated per subject', async () => {
+  const now = new Date(2026, 6, 30, 12).getTime()
+  const subjectA = [card('a-1', now), card('a-2', now + 1)]
+  const subjectB = [
+    { ...card('b-1', now + 2), subjectId: 'subject_2' },
+    { ...card('b-2', now + 3), subjectId: 'subject_2' },
+  ]
+  await Promise.all([
+    setStorage(STORAGE_KEYS.cards, [...subjectA, ...subjectB]),
+    setStorage(STORAGE_KEYS.settings, { dailyNewCards: 1 }),
+  ])
+
+  await reviewCard(subjectA[0]!, 4, now)
+
+  assert.deepEqual(await buildReviewQueue(now, { subjectId: 'subject_1' }), [])
+  assert.deepEqual(
+    (await buildReviewQueue(now, { subjectId: 'subject_2' })).map((item) => item.id),
+    ['b-1'],
+  )
+})
+
 test('reviewing a card saves its FSRS state and a compact log', async () => {
   const now = new Date('2026-07-30T08:00:00.000Z').getTime()
   const target = card('card_1', now)
@@ -239,6 +306,37 @@ test('reviewing a card saves its FSRS state and a compact log', async () => {
   assert.deepEqual(
     { cardId: logs?.[0].cardId, subjectId: logs?.[0].subjectId, rating: logs?.[0].rating },
     { cardId: 'card_1', subjectId: 'subject_1', rating: 3 },
+  )
+})
+
+test('simple immediately masters a first-seen card and remains undoable', async () => {
+  const now = new Date('2026-07-30T08:00:00.000Z').getTime()
+  const target = card('card_easy', now)
+  await setStorage(STORAGE_KEYS.cards, [target])
+
+  const commit = await commitReview(target, 4, now)
+  assert.equal(commit.nextState.masteredAt, now)
+  assert.equal((await buildReviewQueue(now + 1, { subjectId: target.subjectId })).length, 0)
+
+  await undoReview(commit)
+  assert.deepEqual(readStored(STORAGE_KEYS.reviewStates), [])
+  assert.deepEqual(readStored(STORAGE_KEYS.reviewLogs), [])
+})
+
+test('a mastered card can be restored without becoming first-seen again', async () => {
+  const now = new Date('2026-07-30T08:00:00.000Z').getTime()
+  const restoredAt = now + 86_400_000
+  const target = card('card_restore', now)
+  await setStorage(STORAGE_KEYS.cards, [target])
+  await commitReview(target, 4, now)
+
+  await restoreMasteredCard(target.id, restoredAt)
+  const restored = readStored<ReviewState[]>(STORAGE_KEYS.reviewStates)?.[0]
+  assert.equal(restored?.masteredAt, undefined)
+  assert.equal(restored?.dueAt, restoredAt)
+  assert.deepEqual(
+    (await buildReviewQueue(restoredAt, { subjectId: target.subjectId })).map((item) => item.id),
+    [target.id],
   )
 })
 
