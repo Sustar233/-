@@ -6,6 +6,7 @@ import KnowledgeCardItem from '@/components/KnowledgeCard.vue'
 import { useCardStore } from '@/stores/card'
 import { useSubjectStore } from '@/stores/subject'
 import { getReviewStates, restoreMasteredCard } from '@/services/reviewService'
+import { resetSubjectProgress } from '@/services/subjectService'
 
 const subjectStore = useSubjectStore()
 const cardStore = useCardStore()
@@ -16,6 +17,7 @@ const editingChapterId = ref('')
 const searchQuery = ref('')
 const displayLimit = ref(20)
 const masteredCardIds = ref(new Set<string>())
+const resettingProgress = ref(false)
 
 const subject = computed(() => subjectStore.subjects.find((item) => item.id === subjectId.value))
 const chapters = computed(() =>
@@ -158,6 +160,31 @@ async function restoreCard(id: string): Promise<void> {
     uni.showToast({ title: (error as Error).message, icon: 'none' })
   }
 }
+
+function resetProgress(): void {
+  const currentSubject = subject.value
+  if (!currentSubject || resettingProgress.value) return
+
+  uni.showModal({
+    title: '重置学习进度',
+    content: `将清除“${currentSubject.name}”的复习进度和作答记录，知识卡与章节会保留。此操作无法撤销。`,
+    confirmText: '确认重置',
+    confirmColor: '#a3453e',
+    success: async ({ confirm }) => {
+      if (!confirm) return
+      resettingProgress.value = true
+      try {
+        await resetSubjectProgress(currentSubject.id)
+        await refresh()
+        uni.showToast({ title: '学习进度已重置', icon: 'success' })
+      } catch (error) {
+        uni.showToast({ title: (error as Error).message, icon: 'none' })
+      } finally {
+        resettingProgress.value = false
+      }
+    },
+  })
+}
 </script>
 
 <template>
@@ -171,6 +198,13 @@ async function restoreCard(id: string): Promise<void> {
         <button class="secondary-button header-action" @click="openStudy">脉络学习</button>
         <button class="primary-button header-action" @click="openCardEditor()">+ 添加卡片</button>
       </view>
+    </view>
+    <view class="library-actions">
+      <button
+        class="text-button reset-progress"
+        :disabled="resettingProgress"
+        @click="resetProgress"
+      >{{ resettingProgress ? '正在重置…' : '重置学习进度' }}</button>
     </view>
 
     <view class="section-heading">
@@ -310,6 +344,18 @@ async function restoreCard(id: string): Promise<void> {
 .header-action {
   padding: 22rpx 24rpx;
   font-size: 24rpx;
+}
+
+.library-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin: -10rpx 2rpx 8rpx;
+}
+
+.reset-progress {
+  color: var(--color-danger);
+  font-size: 21rpx;
+  opacity: 0.78;
 }
 
 .chapter-scroll {

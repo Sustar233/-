@@ -1,7 +1,7 @@
 import { STORAGE_KEYS } from '@/storage/keys'
 import { getStorage, setStorage, setStorageBatch, type StorageMutation } from '@/storage/storage'
 import type { KnowledgeCard } from '@/types/card'
-import type { ReviewLog, ReviewState } from '@/types/review'
+import type { ReviewLog, ReviewSession, ReviewState } from '@/types/review'
 import type { Chapter, Subject } from '@/types/subject'
 import { generateId } from '@/utils/id'
 import { ensurePresetKnowledge, isPresetKnowledgeId } from './presetKnowledgeService'
@@ -55,6 +55,52 @@ export async function updateSubject(
     subjects.map((subject) => (subject.id === id ? updated : subject)),
   )
   return updated
+}
+
+export interface ResetSubjectProgressResult {
+  logCount: number
+  stateCount: number
+}
+
+export async function resetSubjectProgress(
+  subjectId: string,
+): Promise<ResetSubjectProgressResult> {
+  const [subjects, cards, reviewStates, reviewLogs, reviewSession] = await Promise.all([
+    getStorage<Subject[]>(STORAGE_KEYS.subjects).then((value) => value ?? []),
+    getStorage<KnowledgeCard[]>(STORAGE_KEYS.cards).then((value) => value ?? []),
+    getStorage<ReviewState[]>(STORAGE_KEYS.reviewStates).then((value) => value ?? []),
+    getStorage<ReviewLog[]>(STORAGE_KEYS.reviewLogs).then((value) => value ?? []),
+    getStorage<ReviewSession>(STORAGE_KEYS.reviewSession),
+  ])
+  if (!subjects.some((subject) => subject.id === subjectId)) {
+    throw new Error('知识库不存在')
+  }
+
+  const cardIds = new Set(
+    cards.filter((card) => card.subjectId === subjectId).map((card) => card.id),
+  )
+  const remainingStates = reviewStates.filter((state) => !cardIds.has(state.cardId))
+  const remainingLogs = reviewLogs.filter(
+    (log) => log.subjectId !== subjectId && !cardIds.has(log.cardId),
+  )
+  const mutations: StorageMutation[] = [
+    { type: 'set', key: STORAGE_KEYS.reviewStates, value: remainingStates },
+    { type: 'set', key: STORAGE_KEYS.reviewLogs, value: remainingLogs },
+  ]
+
+  if (
+    reviewSession &&
+    (reviewSession.filter.subjectId === subjectId ||
+      reviewSession.cardIds.some((cardId) => cardIds.has(cardId)))
+  ) {
+    mutations.push({ type: 'remove', key: STORAGE_KEYS.reviewSession })
+  }
+
+  await setStorageBatch(mutations)
+  return {
+    logCount: reviewLogs.length - remainingLogs.length,
+    stateCount: reviewStates.length - remainingStates.length,
+  }
 }
 
 export async function deleteSubject(id: string): Promise<void> {

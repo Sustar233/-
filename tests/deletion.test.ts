@@ -2,10 +2,11 @@ import assert from 'node:assert/strict'
 import { beforeEach, test } from 'node:test'
 import { PRESET_ID_PREFIX } from '../src/data/presetKnowledge'
 import { deleteCard } from '../src/services/cardService'
-import { deleteSubject } from '../src/services/subjectService'
+import { deleteSubject, resetSubjectProgress } from '../src/services/subjectService'
 import { STORAGE_KEYS } from '../src/storage/keys'
 import { setStorage } from '../src/storage/storage'
 import type { KnowledgeCard } from '../src/types/card'
+import type { ReviewSession } from '../src/types/review'
 import { installStorageMock, readStored, resetStorage } from './helpers/storageMock'
 
 installStorageMock()
@@ -115,4 +116,50 @@ test('deleting a subject cascades chapters, cards, states and logs', async () =>
     readStored<Array<{ cardId: string }>>(STORAGE_KEYS.reviewLogs)?.map((item) => item.cardId),
     ['card_2'],
   )
+})
+
+test('resetting a subject clears only its learning progress and matching session', async () => {
+  await seed()
+  await setStorage(STORAGE_KEYS.reviewSession, {
+    version: 1,
+    cardIds: ['card_1'],
+    currentIndex: 0,
+    startedAt: 1,
+    filter: { subjectId: 'subject_1' },
+  } satisfies ReviewSession)
+
+  const result = await resetSubjectProgress('subject_1')
+
+  assert.deepEqual(result, { logCount: 1, stateCount: 1 })
+  assert.deepEqual(
+    readStored<KnowledgeCard[]>(STORAGE_KEYS.cards)
+      ?.filter((card) => !card.id.startsWith(PRESET_ID_PREFIX))
+      .map((card) => card.id),
+    ['card_1', 'card_2'],
+  )
+  assert.deepEqual(
+    readStored<Array<{ cardId: string }>>(STORAGE_KEYS.reviewStates)?.map((item) => item.cardId),
+    ['card_2'],
+  )
+  assert.deepEqual(
+    readStored<Array<{ cardId: string }>>(STORAGE_KEYS.reviewLogs)?.map((item) => item.cardId),
+    ['card_2'],
+  )
+  assert.equal(readStored(STORAGE_KEYS.reviewSession), undefined)
+})
+
+test('resetting a subject keeps another subject active session', async () => {
+  await seed()
+  const otherSession: ReviewSession = {
+    version: 1,
+    cardIds: ['card_2'],
+    currentIndex: 0,
+    startedAt: 1,
+    filter: { subjectId: 'subject_2' },
+  }
+  await setStorage(STORAGE_KEYS.reviewSession, otherSession)
+
+  await resetSubjectProgress('subject_1')
+
+  assert.deepEqual(readStored<ReviewSession>(STORAGE_KEYS.reviewSession), otherSession)
 })
