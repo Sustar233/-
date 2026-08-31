@@ -2,6 +2,7 @@
 import { computed, ref, watch } from 'vue'
 import { onLoad } from '@dcloudio/uni-app'
 import LoadErrorState from '@/components/LoadErrorState.vue'
+import { SEEDANCE_PRESET_SUBJECT_ID } from '@/data/seedancePresetKnowledge'
 import { getCards } from '@/services/cardService'
 import { buildReviewQueue } from '@/services/reviewService'
 import { getChapters, getSubjects } from '@/services/subjectService'
@@ -81,6 +82,8 @@ async function load(): Promise<void> {
     ])
     if (subjects.value.some((item) => item.id === requestedSubjectId)) {
       subjectId.value = requestedSubjectId
+    } else if (subjects.value.some((item) => item.id === SEEDANCE_PRESET_SUBJECT_ID)) {
+      subjectId.value = SEEDANCE_PRESET_SUBJECT_ID
     } else if (subjects.value.length === 1) {
       subjectId.value = subjects.value[0]!.id
     } else {

@@ -50,10 +50,17 @@ export async function updateSubject(
     description: changes.description?.trim() || undefined,
     updatedAt: Date.now(),
   }
-  await setStorage(
-    STORAGE_KEYS.subjects,
-    subjects.map((subject) => (subject.id === id ? updated : subject)),
-  )
+  const mutations: StorageMutation[] = [
+    {
+      type: 'set',
+      key: STORAGE_KEYS.subjects,
+      value: subjects.map((subject) => (subject.id === id ? updated : subject)),
+    },
+  ]
+  if (isPresetKnowledgeId(id)) {
+    mutations.push({ type: 'set', key: STORAGE_KEYS.presetKnowledgeDismissed, value: true })
+  }
+  await setStorageBatch(mutations)
   return updated
 }
 
@@ -181,10 +188,17 @@ export async function updateChapter(id: string, name: string): Promise<Chapter> 
   const current = chapters.find((chapter) => chapter.id === id)
   if (!current) throw new Error('章节不存在')
   const updated = { ...current, name: trimmedName, updatedAt: Date.now() }
-  await setStorage(
-    STORAGE_KEYS.chapters,
-    chapters.map((chapter) => (chapter.id === id ? updated : chapter)),
-  )
+  const mutations: StorageMutation[] = [
+    {
+      type: 'set',
+      key: STORAGE_KEYS.chapters,
+      value: chapters.map((chapter) => (chapter.id === id ? updated : chapter)),
+    },
+  ]
+  if (isPresetKnowledgeId(id)) {
+    mutations.push({ type: 'set', key: STORAGE_KEYS.presetKnowledgeDismissed, value: true })
+  }
+  await setStorageBatch(mutations)
   return updated
 }
 

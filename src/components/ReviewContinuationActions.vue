@@ -4,6 +4,7 @@ withDefaults(
     loading: boolean
     backLabel?: string
     nextLabel?: string
+    canUndo?: boolean
   }>(),
   {
     backLabel: '返回',
@@ -14,6 +15,7 @@ withDefaults(
 const emit = defineEmits<{
   nextStudy: []
   review: []
+  undo: []
   back: []
 }>()
 </script>
@@ -30,6 +32,14 @@ const emit = defineEmits<{
       {{ nextLabel }}
     </button>
     <button class="secondary-button" :disabled="loading" @click="emit('review')">复习</button>
+    <button
+      v-if="canUndo"
+      class="text-button"
+      :disabled="loading"
+      @click="emit('undo')"
+    >
+      撤销上次操作
+    </button>
     <button class="text-button" :disabled="loading" @click="emit('back')">{{ backLabel }}</button>
   </view>
 </template>

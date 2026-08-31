@@ -4,11 +4,20 @@ import {
   buildPresetKnowledgeData,
   PRESET_ID_PREFIX,
   PRESET_KNOWLEDGE_VERSION,
+  PRESET_SUBJECT_ID,
 } from '../src/data/presetKnowledge'
+import {
+  buildSeedancePresetKnowledgeData,
+  SEEDANCE_PRESET_ID_PREFIX,
+  SEEDANCE_PRESET_SUBJECT_ID,
+} from '../src/data/seedancePresetKnowledge'
 import {
   ensurePresetKnowledge,
   restorePresetKnowledge,
 } from '../src/services/presetKnowledgeService'
+import { updateCard } from '../src/services/cardService'
+import { updateChapter, updateSubject } from '../src/services/subjectService'
+import { buildReviewQueue } from '../src/services/reviewService'
 import { STORAGE_KEYS } from '../src/storage/keys'
 import { setStorage } from '../src/storage/storage'
 import type { KnowledgeCard } from '../src/types/card'
@@ -66,12 +75,46 @@ test('operating-system preset contains semantic sections with variable card coun
   )
 })
 
+test('Seedance preset merges both PDFs into one connected default knowledge library', () => {
+  const data = buildSeedancePresetKnowledgeData()
+  const chapterIds = new Set(data.chapters.map((chapter) => chapter.id))
+
+  assert.equal(data.subject.id, SEEDANCE_PRESET_SUBJECT_ID)
+  assert.match(data.subject.name, /Seedance 2\.0（默认）/)
+  assert.equal(data.chapters.length, 8)
+  assert.equal(data.cards.length, 76)
+  assert.equal(new Set(data.cards.map((card) => card.sectionId)).size, 16)
+  assert.equal(new Set(data.cards.map((card) => card.id)).size, 76)
+  assert.equal(
+    data.cards.every(
+      (card) =>
+        card.id.startsWith(SEEDANCE_PRESET_ID_PREFIX) &&
+        card.question.trim() &&
+        card.answer.trim() &&
+        card.tags.length > 0 &&
+        card.chapterId &&
+        card.sectionId &&
+        card.sectionTitle &&
+        chapterIds.has(card.chapterId),
+    ),
+    true,
+  )
+  for (const chapter of data.chapters) {
+    const chapterCards = data.cards.filter((card) => card.chapterId === chapter.id)
+    assert.equal(chapterCards[0]?.parentCardId, undefined)
+    chapterCards.slice(1).forEach((card, index) => {
+      assert.equal(card.parentCardId, chapterCards[index]?.id)
+    })
+  }
+})
+
 test('empty knowledge storage is seeded and an explicit dismissal is respected', async () => {
   await ensurePresetKnowledge()
 
-  assert.equal(readStored<Subject[]>(STORAGE_KEYS.subjects)?.length, 1)
-  assert.equal(readStored<Chapter[]>(STORAGE_KEYS.chapters)?.length, 8)
-  assert.equal(readStored<KnowledgeCard[]>(STORAGE_KEYS.cards)?.length, 160)
+  assert.equal(readStored<Subject[]>(STORAGE_KEYS.subjects)?.length, 2)
+  assert.equal(readStored<Subject[]>(STORAGE_KEYS.subjects)?.[0]?.id, SEEDANCE_PRESET_SUBJECT_ID)
+  assert.equal(readStored<Chapter[]>(STORAGE_KEYS.chapters)?.length, 16)
+  assert.equal(readStored<KnowledgeCard[]>(STORAGE_KEYS.cards)?.length, 236)
   assert.equal(
     readStored<number>(STORAGE_KEYS.presetKnowledgeVersion),
     PRESET_KNOWLEDGE_VERSION,
@@ -88,9 +131,9 @@ test('empty knowledge storage is seeded and an explicit dismissal is respected',
   assert.deepEqual(readStored(STORAGE_KEYS.cards), [])
 
   await restorePresetKnowledge()
-  assert.equal(readStored<Subject[]>(STORAGE_KEYS.subjects)?.length, 1)
-  assert.equal(readStored<Chapter[]>(STORAGE_KEYS.chapters)?.length, 8)
-  assert.equal(readStored<KnowledgeCard[]>(STORAGE_KEYS.cards)?.length, 160)
+  assert.equal(readStored<Subject[]>(STORAGE_KEYS.subjects)?.length, 2)
+  assert.equal(readStored<Chapter[]>(STORAGE_KEYS.chapters)?.length, 16)
+  assert.equal(readStored<KnowledgeCard[]>(STORAGE_KEYS.cards)?.length, 236)
   assert.equal(readStored(STORAGE_KEYS.presetKnowledgeDismissed), false)
 })
 
@@ -99,9 +142,33 @@ test('current version with missing preset self-heals unless explicitly dismissed
 
   await ensurePresetKnowledge()
 
-  assert.equal(readStored<Subject[]>(STORAGE_KEYS.subjects)?.length, 1)
-  assert.equal(readStored<Chapter[]>(STORAGE_KEYS.chapters)?.length, 8)
-  assert.equal(readStored<KnowledgeCard[]>(STORAGE_KEYS.cards)?.length, 160)
+  assert.equal(readStored<Subject[]>(STORAGE_KEYS.subjects)?.length, 2)
+  assert.equal(readStored<Chapter[]>(STORAGE_KEYS.chapters)?.length, 16)
+  assert.equal(readStored<KnowledgeCard[]>(STORAGE_KEYS.cards)?.length, 236)
+})
+
+test('the two bundled knowledge libraries build separate study queues', async () => {
+  await ensurePresetKnowledge()
+
+  const seedanceQueue = await buildReviewQueue(Date.now(), {
+    subjectId: SEEDANCE_PRESET_SUBJECT_ID,
+  })
+  const operatingSystemQueue = await buildReviewQueue(Date.now(), {
+    subjectId: PRESET_SUBJECT_ID,
+  })
+
+  assert.ok(seedanceQueue.length > 0)
+  assert.ok(operatingSystemQueue.length > 0)
+  assert.equal(
+    seedanceQueue.every((card) => card.subjectId === SEEDANCE_PRESET_SUBJECT_ID),
+    true,
+  )
+  assert.equal(operatingSystemQueue.every((card) => card.subjectId === PRESET_SUBJECT_ID), true)
+  assert.equal(seedanceQueue.some((card) => card.id.startsWith(PRESET_ID_PREFIX)), false)
+  assert.equal(
+    operatingSystemQueue.some((card) => card.id.startsWith(SEEDANCE_PRESET_ID_PREFIX)),
+    false,
+  )
 })
 
 test('existing user knowledge is preserved alongside the default preset', async () => {
@@ -121,8 +188,8 @@ test('existing user knowledge is preserved alongside the default preset', async 
   const subjects = readStored<Subject[]>(STORAGE_KEYS.subjects) ?? []
   assert.equal(subjects.some((subject) => subject.id === existingSubject.id), true)
   assert.equal(subjects.some((subject) => subject.id.startsWith(PRESET_ID_PREFIX)), true)
-  assert.equal(readStored<Chapter[]>(STORAGE_KEYS.chapters)?.length, 8)
-  assert.equal(readStored<KnowledgeCard[]>(STORAGE_KEYS.cards)?.length, 160)
+  assert.equal(readStored<Chapter[]>(STORAGE_KEYS.chapters)?.length, 16)
+  assert.equal(readStored<KnowledgeCard[]>(STORAGE_KEYS.cards)?.length, 236)
   assert.equal(
     readStored<number>(STORAGE_KEYS.presetKnowledgeVersion),
     PRESET_KNOWLEDGE_VERSION,
@@ -225,9 +292,9 @@ test('an interrupted preset write is repaired before marking completion', async 
 
   await ensurePresetKnowledge()
 
-  assert.equal(readStored<Subject[]>(STORAGE_KEYS.subjects)?.length, 1)
-  assert.equal(readStored<Chapter[]>(STORAGE_KEYS.chapters)?.length, 8)
-  assert.equal(readStored<KnowledgeCard[]>(STORAGE_KEYS.cards)?.length, 160)
+  assert.equal(readStored<Subject[]>(STORAGE_KEYS.subjects)?.length, 2)
+  assert.equal(readStored<Chapter[]>(STORAGE_KEYS.chapters)?.length, 16)
+  assert.equal(readStored<KnowledgeCard[]>(STORAGE_KEYS.cards)?.length, 236)
 })
 
 test('version upgrade removes the previous food preset and its review data', async () => {
@@ -293,4 +360,61 @@ test('version upgrade removes the previous food preset and its review data', asy
     readStored<Array<{ id: string }>>(STORAGE_KEYS.reviewLogs)?.map((item) => item.id),
     ['user_log'],
   )
+})
+
+test('editing a bundled subject is preserved instead of being silently restored', async () => {
+  await ensurePresetKnowledge()
+  await updateSubject(SEEDANCE_PRESET_SUBJECT_ID, { name: '我的 Seedance 知识库' })
+
+  await ensurePresetKnowledge()
+
+  assert.equal(
+    readStored<Subject[]>(STORAGE_KEYS.subjects)?.find(
+      (subject) => subject.id === SEEDANCE_PRESET_SUBJECT_ID,
+    )?.name,
+    '我的 Seedance 知识库',
+  )
+  assert.equal(readStored(STORAGE_KEYS.presetKnowledgeDismissed), true)
+})
+
+test('editing a bundled chapter is preserved instead of being silently restored', async () => {
+  await ensurePresetKnowledge()
+  const chapter = buildSeedancePresetKnowledgeData().chapters[0]
+  assert.ok(chapter)
+  await updateChapter(chapter.id, '自定义第一章')
+
+  await ensurePresetKnowledge()
+
+  assert.equal(
+    readStored<Chapter[]>(STORAGE_KEYS.chapters)?.find((item) => item.id === chapter.id)?.name,
+    '自定义第一章',
+  )
+  assert.equal(readStored(STORAGE_KEYS.presetKnowledgeDismissed), true)
+})
+
+test('editing a bundled card is preserved instead of being silently restored', async () => {
+  await ensurePresetKnowledge()
+  const card = buildSeedancePresetKnowledgeData().cards[0]
+  assert.ok(card)
+  await updateCard(card.id, {
+    subjectId: card.subjectId,
+    chapterId: card.chapterId,
+    sectionId: card.sectionId,
+    sectionTitle: card.sectionTitle,
+    parentCardId: card.parentCardId,
+    connection: card.connection,
+    question: '我自定义的问题',
+    answer: card.answer,
+    tags: card.tags,
+    importance: card.importance,
+    note: card.note,
+  })
+
+  await ensurePresetKnowledge()
+
+  assert.equal(
+    readStored<KnowledgeCard[]>(STORAGE_KEYS.cards)?.find((item) => item.id === card.id)?.question,
+    '我自定义的问题',
+  )
+  assert.equal(readStored(STORAGE_KEYS.presetKnowledgeDismissed), true)
 })

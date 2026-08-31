@@ -1,12 +1,12 @@
 import { STORAGE_KEYS } from '@/storage/keys'
 import { isStoredFsrsCard } from '@/scheduler/fsrs'
-import { PRESET_ID_PREFIX } from '@/data/presetKnowledge'
 import { getStorage, setStorage, setStorageBatch } from '@/storage/storage'
 import type { KnowledgeCard } from '@/types/card'
 import type { ReviewLog, ReviewState } from '@/types/review'
 import type { BackupData, Settings } from '@/types/settings'
 import { normalizeSettings } from '@/types/settings'
 import type { Chapter, Subject } from '@/types/subject'
+import { isPresetKnowledgeId } from './presetKnowledgeService'
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value)
@@ -128,7 +128,11 @@ export function validateBackupData(value: unknown): value is BackupData {
         (settings.desiredRetention as number) <= 0.97)) &&
     (!('enableFuzz' in settings) || typeof settings.enableFuzz === 'boolean')
 
-  if (!shapeIsValid) return false
+  const presetStateIsValid =
+    !('presetKnowledgeDismissed' in value) ||
+    typeof value.presetKnowledgeDismissed === 'boolean'
+
+  if (!shapeIsValid || !presetStateIsValid) return false
 
   const data = value as unknown as BackupData
   const unique = (ids: string[]) => new Set(ids).size === ids.length
@@ -181,22 +185,43 @@ export function validateBackupData(value: unknown): value is BackupData {
 }
 
 async function readCurrentBackup(): Promise<BackupData> {
-  const [subjects, chapters, cards, reviewStates, reviewLogs, settings] = await Promise.all([
+  const [
+    subjects,
+    chapters,
+    cards,
+    reviewStates,
+    reviewLogs,
+    settings,
+    storedPresetDismissed,
+  ] = await Promise.all([
     getStorage<Subject[]>(STORAGE_KEYS.subjects).then((value) => value ?? []),
     getStorage<Chapter[]>(STORAGE_KEYS.chapters).then((value) => value ?? []),
     getStorage<KnowledgeCard[]>(STORAGE_KEYS.cards).then((value) => value ?? []),
     getStorage<ReviewState[]>(STORAGE_KEYS.reviewStates).then((value) => value ?? []),
     getStorage<ReviewLog[]>(STORAGE_KEYS.reviewLogs).then((value) => value ?? []),
     getStorage<Settings>(STORAGE_KEYS.settings).then((value) => normalizeSettings(value)),
+    getStorage<boolean>(STORAGE_KEYS.presetKnowledgeDismissed),
   ])
-  return { version: 1, subjects, chapters, cards, reviewStates, reviewLogs, settings }
+  const includesPreset = [...subjects, ...chapters, ...cards].some((item) =>
+    isPresetKnowledgeId(item.id),
+  )
+  return {
+    version: 1,
+    subjects,
+    chapters,
+    cards,
+    reviewStates,
+    reviewLogs,
+    settings,
+    presetKnowledgeDismissed: storedPresetDismissed ?? !includesPreset,
+  }
 }
 
 async function writeBackupData(data: BackupData): Promise<void> {
-  const includesPreset =
-    data.subjects.some((item) => item.id.startsWith(PRESET_ID_PREFIX)) ||
-    data.chapters.some((item) => item.id.startsWith(PRESET_ID_PREFIX)) ||
-    data.cards.some((item) => item.id.startsWith(PRESET_ID_PREFIX))
+  const includesPreset = [...data.subjects, ...data.chapters, ...data.cards].some((item) =>
+    isPresetKnowledgeId(item.id),
+  )
+  const presetKnowledgeDismissed = data.presetKnowledgeDismissed ?? !includesPreset
   await setStorageBatch([
     { type: 'set', key: STORAGE_KEYS.subjects, value: data.subjects },
     { type: 'set', key: STORAGE_KEYS.chapters, value: data.chapters },
@@ -209,7 +234,7 @@ async function writeBackupData(data: BackupData): Promise<void> {
       value: normalizeSettings(data.settings),
     },
     { type: 'remove', key: STORAGE_KEYS.reviewSession },
-    { type: 'set', key: STORAGE_KEYS.presetKnowledgeDismissed, value: !includesPreset },
+    { type: 'set', key: STORAGE_KEYS.presetKnowledgeDismissed, value: presetKnowledgeDismissed },
   ])
 }
 

@@ -9,6 +9,7 @@ import {
   validateBackupData,
 } from '../src/services/backupService'
 import { createReviewState } from '../src/scheduler/fsrs'
+import { SEEDANCE_PRESET_SUBJECT_ID } from '../src/data/seedancePresetKnowledge'
 import { STORAGE_KEYS } from '../src/storage/keys'
 import { setStorage } from '../src/storage/storage'
 import { installStorageMock, readStored, resetStorage } from './helpers/storageMock'
@@ -229,4 +230,25 @@ test('import creates a restorable snapshot of the previous data', async () => {
 
   await restoreAutomaticBackup()
   assert.deepEqual(readStored(STORAGE_KEYS.subjects), original.subjects)
+})
+
+test('a Seedance-only legacy backup is recognized as containing bundled knowledge', async () => {
+  const backup = backupWithSubject(SEEDANCE_PRESET_SUBJECT_ID, 'Seedance 2.0（默认）')
+
+  await importBackup(JSON.stringify(backup))
+
+  assert.equal(readStored(STORAGE_KEYS.presetKnowledgeDismissed), false)
+})
+
+test('backup round trips the explicit bundled-knowledge customization state', async () => {
+  const backup = {
+    ...backupWithSubject(SEEDANCE_PRESET_SUBJECT_ID, '自定义 Seedance'),
+    presetKnowledgeDismissed: true,
+  }
+
+  await importBackup(JSON.stringify(backup))
+  const exported = JSON.parse(await exportBackup())
+
+  assert.equal(readStored(STORAGE_KEYS.presetKnowledgeDismissed), true)
+  assert.equal(exported.presetKnowledgeDismissed, true)
 })

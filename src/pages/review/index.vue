@@ -184,9 +184,11 @@ async function goBack(): Promise<void> {
       <ReviewContinuationActions
         :loading="continuing"
         :next-label="reviewStore.nextStudyLabel"
+        :can-undo="reviewStore.canUndo && !rating"
         back-label="完成并返回"
         @next-study="startNextStudy"
         @review="reviewWrongCards"
+        @undo="undoLastRating"
         @back="goBack"
       />
     </EmptyState>

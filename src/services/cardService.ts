@@ -115,6 +115,9 @@ export async function updateCard(id: string, input: KnowledgeCardInput): Promise
   ) {
     mutations.push({ type: 'remove', key: STORAGE_KEYS.reviewSession })
   }
+  if (isPresetKnowledgeId(id)) {
+    mutations.push({ type: 'set', key: STORAGE_KEYS.presetKnowledgeDismissed, value: true })
+  }
   await setStorageBatch(mutations)
   return updated
 }

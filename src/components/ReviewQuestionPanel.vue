@@ -35,6 +35,15 @@ watch(
 <template>
   <view class="question-panel">
     <view class="review-card surface">
+      <button
+        v-if="showSimple"
+        class="easy-button"
+        :disabled="rating"
+        aria-label="标记为简单并停止学习这张卡片"
+        @click="emit('rate', 4)"
+      >
+        简单
+      </button>
       <text class="card-kicker">问题</text>
       <text class="review-question">{{ card.question }}</text>
 
@@ -87,7 +96,6 @@ watch(
     <ReviewButtons
       v-if="revealed"
       :class="{ disabled: rating }"
-      :show-simple="showSimple"
       @rate="emit('rate', $event)"
     />
     <text v-if="revealed && practice" class="practice-note">
@@ -113,6 +121,24 @@ watch(
   font-size: 21rpx;
   font-weight: 750;
   letter-spacing: 2rpx;
+}
+
+.easy-button {
+  position: absolute;
+  z-index: 1;
+  top: 24rpx;
+  right: 26rpx;
+  width: auto;
+  min-height: 54rpx;
+  margin: 0;
+  padding: 10rpx 20rpx;
+  border: 1rpx solid #cbd9e2;
+  border-radius: 999rpx;
+  background: #f2f6f8;
+  color: #466b83;
+  font-size: 22rpx;
+  font-weight: 700;
+  line-height: 1.35;
 }
 
 .review-question,

@@ -1,7 +1,7 @@
 import type { CardImportance, KnowledgeCard } from '@/types/card'
 import type { Chapter, Subject } from '@/types/subject'
 
-export const PRESET_KNOWLEDGE_VERSION = 6
+export const PRESET_KNOWLEDGE_VERSION = 7
 export const PRESET_SUBJECT_ID = 'preset_operating_system_subject_v2'
 export const PRESET_ID_PREFIX = 'preset_operating_system_'
 export const LEGACY_PRESET_ID_PREFIXES = ['preset_food_health_'] as const
@@ -293,8 +293,8 @@ export interface PresetKnowledgeData {
 export function buildPresetKnowledgeData(): PresetKnowledgeData {
   const subject: Subject = {
     id: PRESET_SUBJECT_ID,
-    name: '操作系统考纲知识点（默认）',
-    description: '内置默认背记库，依据《操作系统考纲知识点总结》整理，覆盖8章核心概念、机制、算法与常考综合应用。',
+    name: '操作系统考纲知识点',
+    description: '内置背记库，依据《操作系统考纲知识点总结》整理，覆盖8章核心概念、机制、算法与常考综合应用。',
     createdAt: PRESET_CREATED_AT,
     updatedAt: PRESET_CREATED_AT,
   }
@@ -344,7 +344,7 @@ export function buildPresetKnowledgeData(): PresetKnowledgeData {
         tags: [...tags],
         importance,
         status: 'active',
-        note: `默认知识库｜《操作系统考纲知识点总结》｜${chapterDefinition.sourcePages}`,
+        note: `内置知识库｜《操作系统考纲知识点总结》｜${chapterDefinition.sourcePages}`,
         createdAt: PRESET_CREATED_AT + index,
         updatedAt: PRESET_CREATED_AT + index,
       })

@@ -16,6 +16,7 @@ export interface BackupData {
   reviewStates: ReviewState[]
   reviewLogs: ReviewLog[]
   settings: Settings
+  presetKnowledgeDismissed?: boolean
 }
 
 export const DEFAULT_SETTINGS: Settings = {
