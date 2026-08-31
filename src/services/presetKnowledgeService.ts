@@ -5,9 +5,10 @@ import {
   PRESET_KNOWLEDGE_VERSION,
 } from '@/data/presetKnowledge'
 import {
-  buildSeedancePresetKnowledgeData,
-  SEEDANCE_PRESET_ID_PREFIX,
-} from '@/data/seedancePresetKnowledge'
+  buildComputerSystemPrinciplesPresetKnowledgeData,
+  COMPUTER_SYSTEM_PRESET_ID_PREFIX,
+  COMPUTER_SYSTEM_PRESET_INTRODUCED_VERSION,
+} from '@/data/computerSystemPrinciplesPresetKnowledge'
 import { STORAGE_KEYS } from '@/storage/keys'
 import { getStorage, setStorageBatch, type StorageMutation } from '@/storage/storage'
 import type { KnowledgeCard } from '@/types/card'
@@ -16,15 +17,18 @@ import type { Chapter, Subject } from '@/types/subject'
 
 let initializationPromise: Promise<void> | null = null
 
-const CURRENT_PRESET_PREFIXES = [SEEDANCE_PRESET_ID_PREFIX, PRESET_ID_PREFIX] as const
+const CURRENT_PRESET_PREFIXES = [
+  PRESET_ID_PREFIX,
+  COMPUTER_SYSTEM_PRESET_ID_PREFIX,
+] as const
 const ALL_PRESET_PREFIXES = [...CURRENT_PRESET_PREFIXES, ...LEGACY_PRESET_ID_PREFIXES]
 
 export function isPresetKnowledgeId(id: string): boolean {
   return ALL_PRESET_PREFIXES.some((prefix) => id.startsWith(prefix))
 }
 
-function isCurrentPresetId(id: string): boolean {
-  return CURRENT_PRESET_PREFIXES.some((prefix) => id.startsWith(prefix))
+function isLegacyPresetId(id: string): boolean {
+  return LEGACY_PRESET_ID_PREFIXES.some((prefix) => id.startsWith(prefix))
 }
 
 async function initializePresetKnowledge(force = false): Promise<void> {
@@ -53,22 +57,133 @@ async function initializePresetKnowledge(force = false): Promise<void> {
   const cards = cardsValue ?? []
   const states = statesValue ?? []
   const logs = logsValue ?? []
-  if (dismissed && !force) return
+  const legacySubjectIds = new Set(
+    subjects.filter((subject) => isLegacyPresetId(subject.id)).map((subject) => subject.id),
+  )
+  const legacyChapterIds = new Set(
+    chapters
+      .filter(
+        (chapter) =>
+          isLegacyPresetId(chapter.id) ||
+          isLegacyPresetId(chapter.subjectId) ||
+          legacySubjectIds.has(chapter.subjectId),
+      )
+      .map((chapter) => chapter.id),
+  )
+  const legacyCardIds = new Set(
+    cards
+      .filter(
+        (card) =>
+          isLegacyPresetId(card.id) ||
+          isLegacyPresetId(card.subjectId) ||
+          legacySubjectIds.has(card.subjectId) ||
+          Boolean(card.chapterId && legacyChapterIds.has(card.chapterId)),
+      )
+      .map((card) => card.id),
+  )
+  const hasLegacyPresetData =
+    legacySubjectIds.size > 0 || legacyChapterIds.size > 0 || legacyCardIds.size > 0
 
-  // Seedance is first because it is the default selection. The operating-system
-  // library remains bundled as a separate subject for multi-library testing.
-  const seedancePreset = buildSeedancePresetKnowledgeData()
   const operatingSystemPreset = buildPresetKnowledgeData()
-  const presetSubjects = [seedancePreset.subject, operatingSystemPreset.subject]
-  const presetChapters = [...seedancePreset.chapters, ...operatingSystemPreset.chapters]
-  const presetCards = [...seedancePreset.cards, ...operatingSystemPreset.cards]
+  const computerSystemPreset = buildComputerSystemPrinciplesPresetKnowledgeData()
+  const currentPresets = [operatingSystemPreset, computerSystemPreset]
+  const presetSubjects = currentPresets.map((preset) => preset.subject)
+  const presetChapters = currentPresets.flatMap((preset) => preset.chapters)
+  const presetCards = currentPresets.flatMap((preset) => preset.cards)
+
+  if (dismissed && !force) {
+    const shouldIntroduceComputerSystemPreset =
+      version != null && version < COMPUTER_SYSTEM_PRESET_INTRODUCED_VERSION
+    if (!hasLegacyPresetData && !shouldIntroduceComputerSystemPreset) return
+
+    const shouldRemoveDuringMigration = (id: string): boolean =>
+      isLegacyPresetId(id) ||
+      (shouldIntroduceComputerSystemPreset &&
+        id.startsWith(COMPUTER_SYSTEM_PRESET_ID_PREFIX))
+    const introducedSubjects = shouldIntroduceComputerSystemPreset
+      ? [computerSystemPreset.subject]
+      : []
+    const introducedChapters = shouldIntroduceComputerSystemPreset
+      ? computerSystemPreset.chapters
+      : []
+    const introducedCards = shouldIntroduceComputerSystemPreset
+      ? computerSystemPreset.cards
+      : []
+
+    const remainingSubjectIds = new Set(
+      [
+        ...subjects.filter((subject) => !shouldRemoveDuringMigration(subject.id)),
+        ...introducedSubjects,
+      ].map((subject) => subject.id),
+    )
+    const remainingCards = [
+      ...cards.filter(
+        (card) =>
+          !shouldRemoveDuringMigration(card.id) &&
+          !shouldRemoveDuringMigration(card.subjectId) &&
+          remainingSubjectIds.has(card.subjectId),
+      ),
+      ...introducedCards,
+    ]
+      .map((card) =>
+        card.parentCardId && shouldRemoveDuringMigration(card.parentCardId)
+          ? { ...card, parentCardId: undefined, updatedAt: Date.now() }
+          : card,
+      )
+    const remainingCardIds = new Set(remainingCards.map((card) => card.id))
+    const sessionBecameInvalid = Boolean(
+      reviewSession &&
+        ((reviewSession.filter.subjectId &&
+          !remainingSubjectIds.has(reviewSession.filter.subjectId)) ||
+          reviewSession.cardIds.some((cardId) => !remainingCardIds.has(cardId)) ||
+          (reviewSession.lastCommit &&
+            !remainingCardIds.has(reviewSession.lastCommit.cardId))),
+    )
+    const mutations: StorageMutation[] = [
+      {
+        type: 'set',
+        key: STORAGE_KEYS.subjects,
+        value: [
+          ...subjects.filter((subject) => !shouldRemoveDuringMigration(subject.id)),
+          ...introducedSubjects,
+        ],
+      },
+      {
+        type: 'set',
+        key: STORAGE_KEYS.chapters,
+        value: [
+          ...chapters.filter(
+            (chapter) =>
+              !shouldRemoveDuringMigration(chapter.id) &&
+              !shouldRemoveDuringMigration(chapter.subjectId) &&
+              remainingSubjectIds.has(chapter.subjectId),
+          ),
+          ...introducedChapters,
+        ],
+      },
+      { type: 'set', key: STORAGE_KEYS.cards, value: remainingCards },
+      {
+        type: 'set',
+        key: STORAGE_KEYS.reviewStates,
+        value: states.filter((state) => remainingCardIds.has(state.cardId)),
+      },
+      {
+        type: 'set',
+        key: STORAGE_KEYS.reviewLogs,
+        value: logs.filter((log) => remainingCardIds.has(log.cardId)),
+      },
+      { type: 'set', key: STORAGE_KEYS.presetKnowledgeVersion, value: PRESET_KNOWLEDGE_VERSION },
+    ]
+    if (sessionBecameInvalid) {
+      mutations.push({ type: 'remove', key: STORAGE_KEYS.reviewSession })
+    }
+    await setStorageBatch(mutations)
+    return
+  }
 
   const subjectById = new Map(subjects.map((subject) => [subject.id, subject]))
   const chapterById = new Map(chapters.map((chapter) => [chapter.id, chapter]))
   const cardById = new Map(cards.map((card) => [card.id, card]))
-  const hasLegacyPresetData = [...subjects, ...chapters, ...cards].some((item) =>
-    LEGACY_PRESET_ID_PREFIXES.some((prefix) => item.id.startsWith(prefix)),
-  )
   const hasAllCurrentPresetIds =
     presetSubjects.every((subject) => subjectById.has(subject.id)) &&
     presetChapters.every((chapter) => chapterById.has(chapter.id)) &&
@@ -112,13 +227,16 @@ async function initializePresetKnowledge(force = false): Promise<void> {
 
   const nextPresetSubjectIds = new Set(presetSubjects.map((subject) => subject.id))
   const nextPresetCardIds = new Set(presetCards.map((card) => card.id))
-  const shouldKeepReviewForCard = (cardId: string): boolean => {
-    if (LEGACY_PRESET_ID_PREFIXES.some((prefix) => cardId.startsWith(prefix))) return false
-    if (isCurrentPresetId(cardId)) return nextPresetCardIds.has(cardId)
-    return true
-  }
+  const finalSubjectIds = new Set([
+    ...subjects
+      .filter((subject) => !isPresetKnowledgeId(subject.id))
+      .map((subject) => subject.id),
+    ...nextPresetSubjectIds,
+  ])
   const userCards = cards
-    .filter((card) => !isPresetKnowledgeId(card.id))
+    .filter(
+      (card) => !isPresetKnowledgeId(card.id) && !legacySubjectIds.has(card.subjectId),
+    )
     .map((card) =>
       card.parentCardId &&
       isPresetKnowledgeId(card.parentCardId) &&
@@ -126,18 +244,15 @@ async function initializePresetKnowledge(force = false): Promise<void> {
         ? { ...card, parentCardId: undefined, updatedAt: Date.now() }
         : card,
     )
+  const finalCardIds = new Set([...userCards, ...presetCards].map((card) => card.id))
 
   const sessionBecameInvalid = Boolean(
     reviewSession &&
       ((reviewSession.filter.subjectId &&
-        isPresetKnowledgeId(reviewSession.filter.subjectId) &&
-        !nextPresetSubjectIds.has(reviewSession.filter.subjectId)) ||
-        reviewSession.cardIds.some(
-          (cardId) => isPresetKnowledgeId(cardId) && !nextPresetCardIds.has(cardId),
-        ) ||
+        !finalSubjectIds.has(reviewSession.filter.subjectId)) ||
+        reviewSession.cardIds.some((cardId) => !finalCardIds.has(cardId)) ||
         (reviewSession.lastCommit &&
-          isPresetKnowledgeId(reviewSession.lastCommit.cardId) &&
-          !nextPresetCardIds.has(reviewSession.lastCommit.cardId))),
+          !finalCardIds.has(reviewSession.lastCommit.cardId))),
   )
 
   const mutations: StorageMutation[] = [
@@ -161,12 +276,12 @@ async function initializePresetKnowledge(force = false): Promise<void> {
     {
       type: 'set',
       key: STORAGE_KEYS.reviewStates,
-      value: states.filter((state) => shouldKeepReviewForCard(state.cardId)),
+      value: states.filter((state) => finalCardIds.has(state.cardId)),
     },
     {
       type: 'set',
       key: STORAGE_KEYS.reviewLogs,
-      value: logs.filter((log) => shouldKeepReviewForCard(log.cardId)),
+      value: logs.filter((log) => finalCardIds.has(log.cardId)),
     },
     { type: 'set', key: STORAGE_KEYS.presetKnowledgeVersion, value: PRESET_KNOWLEDGE_VERSION },
     { type: 'set', key: STORAGE_KEYS.presetKnowledgeDismissed, value: false },

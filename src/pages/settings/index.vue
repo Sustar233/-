@@ -88,7 +88,7 @@ function restoreAutomaticBackup(): void {
 function restoreDefaultKnowledge(): void {
   uni.showModal({
     title: '恢复内置知识库',
-    content: '将补齐默认的 Seedance 2.0 知识库和操作系统知识库，并保留你自行创建的科目和卡片。',
+    content: '将补齐默认的操作系统与计算机系统原理知识库，并保留你自行创建的科目和卡片。',
     confirmColor: '#28624f',
     success: async ({ confirm }) => {
       if (!confirm) return
@@ -164,8 +164,8 @@ function importKnowledgePackage(): void {
     </view>
     <view class="preset-card surface">
       <view class="setting-copy">
-        <text class="setting-name">Seedance 2.0（默认）+ 操作系统</text>
-        <text class="setting-description">内置知识库缺失或不完整时，可以在这里重新补齐。</text>
+        <text class="setting-name">操作系统、计算机系统原理（默认）</text>
+        <text class="setting-description">两套内置知识库缺失或不完整时，可以在这里重新补齐。</text>
       </view>
       <button class="secondary-button restore-preset" :disabled="working" @click="restoreDefaultKnowledge">
         恢复内置知识库

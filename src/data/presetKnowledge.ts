@@ -1,10 +1,13 @@
 import type { CardImportance, KnowledgeCard } from '@/types/card'
 import type { Chapter, Subject } from '@/types/subject'
 
-export const PRESET_KNOWLEDGE_VERSION = 7
+export const PRESET_KNOWLEDGE_VERSION = 9
 export const PRESET_SUBJECT_ID = 'preset_operating_system_subject_v2'
 export const PRESET_ID_PREFIX = 'preset_operating_system_'
-export const LEGACY_PRESET_ID_PREFIXES = ['preset_food_health_'] as const
+export const LEGACY_PRESET_ID_PREFIXES = [
+  'preset_food_health_',
+  'preset_seedance_2_0_',
+] as const
 
 const PRESET_CREATED_AT = 1_787_417_600_000
 
