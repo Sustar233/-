@@ -34,7 +34,6 @@ function packageText(): string {
               {
                 question: '协议是什么？',
                 answer: '协议是通信双方共同遵守的规则集合。',
-                connection: '从分层进一步明确同层通信规则。',
               },
             ],
           },
@@ -119,6 +118,10 @@ test('AI knowledge packages are appended with generated chapter, section, and pa
   assert.equal(importedCards[1]?.parentCardId, importedCards[0]?.id)
   assert.equal(importedCards[2]?.parentCardId, importedCards[1]?.id)
   assert.equal(importedCards[3]?.parentCardId, undefined)
+  assert.equal(importedCards[0]?.connection, undefined)
+  assert.equal(importedCards[1]?.connection, '网络基础')
+  assert.equal(importedCards[2]?.connection, '网络基础')
+  assert.equal(importedCards[3]?.connection, undefined)
   assert.deepEqual(importedCards[0]?.tags, ['基础'])
 })
 

@@ -229,7 +229,7 @@ export async function importAiKnowledgePackage(text: string): Promise<AiKnowledg
           sectionId,
           sectionTitle: section.title,
           parentCardId: previousCardId,
-          connection: packageCard.connection,
+          connection: previousCardId ? packageChapter.name : undefined,
           question: packageCard.question,
           answer: packageCard.answer,
           tags: packageCard.tags ?? [],

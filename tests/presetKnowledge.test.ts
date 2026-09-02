@@ -55,7 +55,9 @@ test('operating-system preset contains semantic sections with variable card coun
     assert.equal(chapterCards[0]?.parentCardId, undefined)
     chapterCards.slice(1).forEach((card, index) => {
       assert.equal(card.parentCardId, chapterCards[index]?.id)
+      assert.equal(card.connection, chapter.name)
     })
+    assert.equal(chapterCards.every((card) => card.note?.startsWith('PDF第')), true)
   }
   const sectionSizes = [...new Set(data.cards.map((card) => card.sectionId))].map(
     (sectionId) => data.cards.filter((card) => card.sectionId === sectionId).length,
@@ -108,6 +110,18 @@ test('computer-system-principles preset contains the complete syllabus knowledge
     ),
     10,
   )
+  for (const chapter of data.chapters) {
+    const chapterCards = data.cards.filter((card) => card.chapterId === chapter.id)
+    assert.equal(chapterCards[0]?.parentCardId, undefined)
+    chapterCards.slice(1).forEach((card, index) => {
+      assert.equal(card.parentCardId, chapterCards[index]?.id)
+      assert.equal(card.connection, chapter.name)
+    })
+    assert.equal(
+      chapterCards.every((card) => !card.note?.includes('内置知识库')),
+      true,
+    )
+  }
 })
 
 test('empty knowledge storage is seeded and an explicit dismissal is respected', async () => {

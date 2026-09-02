@@ -202,7 +202,9 @@ async function initializePresetKnowledge(force = false): Promise<void> {
         stored?.chapterId !== card.chapterId ||
         stored?.sectionId !== card.sectionId ||
         stored?.sectionTitle !== card.sectionTitle ||
-        stored?.parentCardId !== card.parentCardId
+        stored?.parentCardId !== card.parentCardId ||
+        stored?.connection !== card.connection ||
+        stored?.note !== card.note
       )
     })
 

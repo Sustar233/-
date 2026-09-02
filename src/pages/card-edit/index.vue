@@ -13,7 +13,6 @@ const cardId = ref('')
 const subjectId = ref('')
 const chapterId = ref('')
 const parentCardId = ref('')
-const connection = ref('')
 const question = ref('')
 const answer = ref('')
 const tags = ref('')
@@ -71,7 +70,6 @@ onLoad(async (query) => {
         subjectId.value = card.subjectId
         chapterId.value = card.chapterId ?? ''
         parentCardId.value = card.parentCardId ?? ''
-        connection.value = card.connection ?? ''
         question.value = card.question
         answer.value = card.answer
         tags.value = card.tags.join(', ')
@@ -125,7 +123,13 @@ async function save(): Promise<void> {
       subjectId: subjectId.value,
       chapterId: chapterId.value || undefined,
       parentCardId: parentCardId.value || undefined,
-      connection: connection.value,
+      connection: parentCardId.value
+        ? chapters.value.find(
+            (chapter) =>
+              chapter.id ===
+              cards.value.find((card) => card.id === parentCardId.value)?.chapterId,
+          )?.name
+        : undefined,
       question: question.value,
       answer: answer.value,
       tags: tags.value.split(/[,，]/),
@@ -179,14 +183,6 @@ async function save(): Promise<void> {
       </picker>
       <text class="field-help">复习时会先呈现前置知识，再学习当前内容；不选择时按章节录入顺序衔接。</text>
 
-      <text class="field-label">关联说明</text>
-      <textarea
-        v-model="connection"
-        class="field-textarea connection-input"
-        maxlength="500"
-        placeholder="例如：由定义推导应用，或说明它与前置知识的关系"
-      />
-
       <view class="form-divider" />
 
       <text class="field-label required">问题</text>
@@ -218,7 +214,7 @@ async function save(): Promise<void> {
         v-model="note"
         class="field-textarea note-input"
         maxlength="2000"
-        placeholder="补充说明（可选）"
+        placeholder="来源或页码（可选）"
       />
 
       <button class="primary-button save-button" :loading="saving" :disabled="saving || loading || !chapterId" @click="save">保存知识卡</button>
@@ -298,10 +294,6 @@ async function save(): Promise<void> {
 
 .answer-input {
   min-height: 300rpx;
-}
-
-.connection-input {
-  min-height: 140rpx;
 }
 
 .note-input {

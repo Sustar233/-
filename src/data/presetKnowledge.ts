@@ -1,7 +1,7 @@
 import type { CardImportance, KnowledgeCard } from '@/types/card'
 import type { Chapter, Subject } from '@/types/subject'
 
-export const PRESET_KNOWLEDGE_VERSION = 9
+export const PRESET_KNOWLEDGE_VERSION = 10
 export const PRESET_SUBJECT_ID = 'preset_operating_system_subject_v2'
 export const PRESET_ID_PREFIX = 'preset_operating_system_'
 export const LEGACY_PRESET_ID_PREFIXES = [
@@ -341,13 +341,13 @@ export function buildPresetKnowledgeData(): PresetKnowledgeData {
         sectionId: `${chapterDefinition.id}_section_${sectionNumber}`,
         sectionTitle: `${sectionNumber} ${sectionPlan[sectionIndex]!.title}`,
         parentCardId: previousCardId,
-        connection: previousCardId ? `沿“${chapterDefinition.name}”的知识脉络继续学习。` : undefined,
+        connection: previousCardId ? chapterDefinition.name : undefined,
         question,
         answer,
         tags: [...tags],
         importance,
         status: 'active',
-        note: `内置知识库｜《操作系统考纲知识点总结》｜${chapterDefinition.sourcePages}`,
+        note: chapterDefinition.sourcePages,
         createdAt: PRESET_CREATED_AT + index,
         updatedAt: PRESET_CREATED_AT + index,
       })

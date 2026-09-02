@@ -87,9 +87,7 @@ test('forgot moves to the section tail immediately and remains until remembered'
   assert.equal(store.progressCurrent, 1)
   assert.equal(store.isReinforcement, true)
   assert.equal(store.forgottenCount, 1)
-  assert.deepEqual(store.progressSegments, [
-    { cardId: target.id, status: 'forgotten' },
-  ])
+  assert.deepEqual(store.progressWidths, { remembered: '0%', forgotten: '100%' })
 
   await store.reveal()
   await store.rate(1)
@@ -100,15 +98,13 @@ test('forgot moves to the section tail immediately and remains until remembered'
   await store.rate(3)
   assert.equal(store.finished, true)
   assert.equal(store.forgottenCount, 0)
-  assert.deepEqual(store.progressSegments, [
-    { cardId: target.id, status: 'remembered' },
-  ])
+  assert.deepEqual(store.progressWidths, { remembered: '100%', forgotten: '0%' })
 
   await store.undoLast()
   assert.equal(store.total, 1)
   assert.equal(store.currentIndex, 2)
   assert.equal(store.forgottenCount, 1)
-  assert.equal(store.progressSegments[0]?.status, 'forgotten')
+  assert.deepEqual(store.progressWidths, { remembered: '0%', forgotten: '100%' })
 })
 
 test('forgotten progress survives a session resume and keeps the total card count fixed', async () => {
@@ -125,20 +121,14 @@ test('forgotten progress survives a session resume and keeps the total card coun
   await store.rate(1)
 
   assert.equal(store.total, 2)
-  assert.deepEqual(
-    store.progressSegments.map((segment) => segment.status),
-    ['forgotten', 'pending'],
-  )
+  assert.deepEqual(store.progressWidths, { remembered: '0%', forgotten: '50%' })
 
   setActivePinia(createPinia())
   const resumedStore = useReviewStore()
   await resumedStore.start({ subjectId: 'subject_batch' }, true)
   assert.equal(resumedStore.total, 2)
   assert.equal(resumedStore.forgottenCount, 1)
-  assert.deepEqual(
-    resumedStore.progressSegments.map((segment) => segment.status),
-    ['forgotten', 'pending'],
-  )
+  assert.deepEqual(resumedStore.progressWidths, { remembered: '0%', forgotten: '50%' })
 })
 
 test('simple is available only on first sight and undo restores that state', async () => {

@@ -75,11 +75,6 @@ function countFor(chapterId?: string): number {
   return cardStore.cards.filter((card) => card.chapterId === chapterId).length
 }
 
-function parentQuestion(parentCardId?: string): string {
-  if (!parentCardId) return ''
-  return cardStore.cards.find((card) => card.id === parentCardId)?.question ?? ''
-}
-
 async function saveChapter(): Promise<void> {
   try {
     if (editingChapterId.value) {
@@ -304,7 +299,6 @@ function resetProgress(): void {
       :key="card.id"
       :card="card"
       :mastered="masteredCardIds.has(card.id)"
-      :parent-question="parentQuestion(card.parentCardId)"
       @edit="openCardEditor(card.id)"
       @toggle="toggleCard(card.id)"
       @restore="restoreCard(card.id)"

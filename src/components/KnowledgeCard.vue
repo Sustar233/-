@@ -4,11 +4,9 @@ import type { KnowledgeCard } from '@/types/card'
 
 const importanceLabels = ['', '一般', '重要', '非常重要']
 
-const props = defineProps<{ card: KnowledgeCard; parentQuestion?: string; mastered?: boolean }>()
+const props = defineProps<{ card: KnowledgeCard; mastered?: boolean }>()
 const noteVisible = ref(false)
-const hasNote = computed(() =>
-  Boolean(props.card.parentCardId || props.card.connection || props.card.note),
-)
+const hasNote = computed(() => Boolean(props.card.connection || props.card.note))
 
 defineEmits<{
   edit: []
@@ -34,10 +32,8 @@ defineEmits<{
       <text v-for="tag in card.tags" :key="tag" class="tag"># {{ tag }}</text>
     </view>
     <view v-if="hasNote && noteVisible" class="note-panel">
-      <text v-if="card.parentCardId || card.connection" class="note-copy">
-        {{ card.connection || (parentQuestion ? `承接：${parentQuestion}` : '已关联前置知识') }}
-      </text>
-      <text v-if="card.note" class="note-copy">{{ card.note }}</text>
+      <text v-if="card.connection" class="note-copy">章节：{{ card.connection }}</text>
+      <text v-if="card.note" class="note-copy">备注：{{ card.note }}</text>
     </view>
     <button
       v-if="hasNote"

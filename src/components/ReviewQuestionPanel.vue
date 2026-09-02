@@ -34,7 +34,7 @@ watch(
 
 <template>
   <view class="question-panel">
-    <view class="review-card surface">
+    <view class="review-card surface" :class="{ 'has-easy': showSimple }">
       <button
         v-if="showSimple"
         class="easy-button"
@@ -44,7 +44,6 @@ watch(
       >
         简单
       </button>
-      <text class="card-kicker">问题</text>
       <text class="review-question">{{ card.question }}</text>
 
       <view v-if="contextRevealed" class="inline-context">
@@ -57,15 +56,14 @@ watch(
 
       <view v-if="revealed" class="answer-block">
         <view class="divider" />
-        <text class="card-kicker">标准答案</text>
         <text class="review-answer">{{ card.answer }}</text>
         <view v-if="(card.connection || card.note) && noteVisible" class="note-block">
           <view v-if="card.connection" class="note-item">
-            <text class="note-label">知识关联</text>
+            <text class="note-label">章节</text>
             <text class="note-copy">{{ card.connection }}</text>
           </view>
           <view v-if="card.note" class="note-item">
-            <text class="note-label">其他备注</text>
+            <text class="note-label">备注</text>
             <text class="note-copy">{{ card.note }}</text>
           </view>
         </view>
@@ -113,14 +111,6 @@ watch(
   min-height: 570rpx;
   padding: 48rpx 38rpx;
   border-top: 4rpx solid var(--color-accent);
-}
-
-.card-kicker {
-  display: block;
-  color: var(--color-primary);
-  font-size: 21rpx;
-  font-weight: 750;
-  letter-spacing: 2rpx;
 }
 
 .easy-button {
@@ -189,11 +179,14 @@ watch(
 }
 
 .review-question {
-  margin-top: 28rpx;
   color: var(--color-text);
   font-size: 38rpx;
   font-weight: 780;
   line-height: 1.65;
+}
+
+.review-card.has-easy .review-question {
+  padding-right: 126rpx;
 }
 
 .answer-block {
@@ -208,7 +201,6 @@ watch(
 }
 
 .review-answer {
-  margin-top: 24rpx;
   color: var(--color-text);
   font-size: 30rpx;
   line-height: 1.8;

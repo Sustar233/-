@@ -58,17 +58,13 @@ export function buildComputerSystemPrinciplesPresetKnowledgeData(): PresetKnowle
           sectionId,
           sectionTitle: section.title,
           parentCardId: previousCardId,
-          connection:
-            sourceCard.connection ??
-            (previousCardId ? `沿“${chapterEntity.name}”的知识脉络继续学习。` : undefined),
+          connection: previousCardId ? chapterEntity.name : undefined,
           question: sourceCard.question,
           answer: sourceCard.answer,
           tags: [...(sourceCard.tags ?? [])],
           importance: (sourceCard.importance ?? 2) as CardImportance,
           status: 'active',
-          note: sourceCard.note
-            ? `内置知识库｜${sourceCard.note}`
-            : '内置知识库｜《计算机系统原理（2023年版）》',
+          note: sourceCard.note,
           createdAt: PRESET_CREATED_AT + cardNumber,
           updatedAt: PRESET_CREATED_AT + cardNumber,
         })

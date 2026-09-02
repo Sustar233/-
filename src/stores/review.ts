@@ -34,8 +34,6 @@ interface StudyContinuation {
   kind: 'chapter' | 'section'
 }
 
-export type ReviewProgressStatus = 'pending' | 'forgotten' | 'remembered'
-
 export const useReviewStore = defineStore('review', () => {
   const queue = ref<KnowledgeCard[]>([])
   const currentIndex = ref(0)
@@ -72,22 +70,14 @@ export const useReviewStore = defineStore('review', () => {
   const canUndo = computed(() => Boolean(lastCommit.value))
   const sessionCardCount = computed(() => total.value)
   const forgottenCount = computed(() => forgottenCardIds.value.length)
-  const progressSegments = computed(() => {
-    const uniqueCardIds = [...new Set(queue.value.map((card) => card.id))]
-    const attemptedCardIds = new Set(
-      queue.value.slice(0, currentIndex.value).map((card) => card.id),
-    )
-    const forgottenIds = new Set(forgottenCardIds.value)
-    return uniqueCardIds.map((cardId) => ({
-      cardId,
-      status: (
-        forgottenIds.has(cardId)
-          ? 'forgotten'
-          : attemptedCardIds.has(cardId)
-            ? 'remembered'
-            : 'pending'
-      ) as ReviewProgressStatus,
-    }))
+  const progressWidths = computed(() => {
+    if (!total.value) return { remembered: '0%', forgotten: '0%' }
+    const forgotten = Math.min(forgottenCount.value, total.value)
+    const remembered = Math.min(queueProgress.value.completed, total.value - forgotten)
+    return {
+      remembered: `${(remembered / total.value) * 100}%`,
+      forgotten: `${(forgotten / total.value) * 100}%`,
+    }
   })
   const nextStudyLabel = computed(() =>
     nextStudy.value?.kind === 'chapter'
@@ -469,7 +459,7 @@ export const useReviewStore = defineStore('review', () => {
     progressCurrent,
     total,
     forgottenCount,
-    progressSegments,
+    progressWidths,
     sessionCardCount,
     finished,
     canUndo,

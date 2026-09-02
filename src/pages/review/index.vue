@@ -7,14 +7,10 @@ import LearningSectionPrompt from '@/components/LearningSectionPrompt.vue'
 import ReviewContinuationActions from '@/components/ReviewContinuationActions.vue'
 import ReviewQuestionPanel from '@/components/ReviewQuestionPanel.vue'
 import { useReviewStore } from '@/stores/review'
-import { getChapters, getSubjects } from '@/services/subjectService'
 import type { ReviewFilter, ReviewRating } from '@/types/review'
-import type { Chapter, Subject } from '@/types/subject'
 import { reviewFilterFromQuery } from '@/utils/reviewFilter'
 
 const reviewStore = useReviewStore()
-const subjects = ref<Subject[]>([])
-const chapters = ref<Chapter[]>([])
 const rating = ref(false)
 const startingRecall = ref(false)
 const continuing = ref(false)
@@ -27,29 +23,7 @@ const isFocusedReview = computed(() =>
       reviewStore.activeFilter.tag,
   ),
 )
-const progressLabel = computed(() => {
-  if (reviewStore.isReinforcement) return '巩固背记'
-  if (reviewStore.sessionMode === 'practice') return '主动练习'
-  if (
-    reviewStore.sectionPrompt ||
-    reviewStore.learning ||
-    reviewStore.canMarkCurrentEasy
-  ) {
-    return '小节学习'
-  }
-  return isFocusedReview.value ? '路径学习' : '今日复习'
-})
-
-const breadcrumb = computed(() => {
-  const card = reviewStore.currentCard
-  if (!card) return ''
-  const subject = subjects.value.find((item) => item.id === card.subjectId)?.name ?? '未命名科目'
-  const chapter = chapters.value.find((item) => item.id === card.chapterId)?.name
-  return [subject, chapter ?? '未分类', card.sectionTitle].filter(Boolean).join(' · ')
-})
-
 onLoad(async (query) => {
-  ;[subjects.value, chapters.value] = await Promise.all([getSubjects(), getChapters()])
   const filter: ReviewFilter = reviewFilterFromQuery(query)
   if (!filter.subjectId) {
     uni.redirectTo({ url: '/pages/study/index' })
@@ -143,25 +117,18 @@ async function goBack(): Promise<void> {
       <button class="close-button" aria-label="退出复习" @click="goBack">×</button>
       <view class="progress-copy">
         <view class="progress-meta">
-          <view class="progress-status">
-            <text class="progress-label">{{ progressLabel }}</text>
-            <text v-if="reviewStore.forgottenCount" class="forgotten-label">
-              待巩固 {{ reviewStore.forgottenCount }}
-            </text>
-          </view>
           <text class="progress-count">
             {{ reviewStore.progressCurrent }} / {{ reviewStore.total }}
           </text>
         </view>
-        <view
-          class="progress-track"
-          :class="{ dense: reviewStore.progressSegments.length > 24 }"
-        >
+        <view class="progress-track">
           <view
-            v-for="segment in reviewStore.progressSegments"
-            :key="segment.cardId"
-            class="progress-segment"
-            :class="segment.status"
+            class="progress-fill remembered"
+            :style="{ width: reviewStore.progressWidths.remembered }"
+          />
+          <view
+            class="progress-fill forgotten"
+            :style="{ width: reviewStore.progressWidths.forgotten }"
           />
         </view>
       </view>
@@ -195,7 +162,6 @@ async function goBack(): Promise<void> {
 
     <view v-else-if="reviewStore.currentCard" class="card-stage">
       <view v-if="reviewStore.resumed" class="resume-notice">已恢复上次复习进度</view>
-      <text class="breadcrumb">{{ breadcrumb }}</text>
 
       <LearningSectionPrompt
         v-if="reviewStore.sectionPrompt"
@@ -276,19 +242,7 @@ async function goBack(): Promise<void> {
 .progress-meta {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-}
-
-.progress-status {
-  display: flex;
-  min-width: 0;
-  align-items: center;
-  gap: 10rpx;
-}
-
-.progress-label {
-  color: var(--color-muted);
-  font-size: 21rpx;
+  justify-content: flex-end;
 }
 
 .progress-count {
@@ -297,44 +251,26 @@ async function goBack(): Promise<void> {
   font-weight: 720;
 }
 
-.forgotten-label {
-  padding: 3rpx 8rpx;
-  border-radius: 999rpx;
-  background: #fff1e3;
-  color: #c97828;
-  font-size: 18rpx;
-  font-weight: 680;
-  line-height: 1.2;
-}
-
 .progress-track {
   display: flex;
   width: 100%;
-  height: 8rpx;
+  height: 10rpx;
   overflow: hidden;
-  gap: 3rpx;
   border-radius: 999rpx;
-  background: transparent;
-}
-
-.progress-track.dense {
-  gap: 1rpx;
-}
-
-.progress-segment {
-  height: 100%;
-  min-width: 1rpx;
-  flex: 1;
-  border-radius: inherit;
   background: #e4e7e3;
-  transition: background-color 180ms ease;
 }
 
-.progress-segment.remembered {
+.progress-fill {
+  height: 100%;
+  flex: 0 0 auto;
+  transition: width 180ms ease;
+}
+
+.progress-fill.remembered {
   background: var(--color-primary);
 }
 
-.progress-segment.forgotten {
+.progress-fill.forgotten {
   background: #d88a32;
 }
 
@@ -361,14 +297,6 @@ async function goBack(): Promise<void> {
 
 .card-stage {
   padding-top: 24rpx;
-}
-
-.breadcrumb {
-  display: block;
-  margin-bottom: 18rpx;
-  color: var(--color-muted);
-  font-size: 23rpx;
-  text-align: center;
 }
 
 </style>
