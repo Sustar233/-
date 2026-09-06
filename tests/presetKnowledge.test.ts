@@ -23,7 +23,7 @@ import { setStorage } from '../src/storage/storage'
 import type { KnowledgeCard } from '../src/types/card'
 import type { ReviewLog, ReviewState } from '../src/types/review'
 import type { Chapter, Subject } from '../src/types/subject'
-import { installStorageMock, readStored, resetStorage } from './helpers/storageMock'
+import { installStorageMock, readStored, resetStorage, storageOperations } from './helpers/storageMock'
 
 installStorageMock()
 beforeEach(resetStorage)
@@ -597,4 +597,17 @@ test('editing a bundled card is preserved instead of being silently restored', a
     '我自定义的问题',
   )
   assert.equal(readStored(STORAGE_KEYS.presetKnowledgeDismissed), true)
+})
+
+
+test('reading an up-to-date preset does not rewrite markers or read review history', async () => {
+  await ensurePresetKnowledge()
+  const before = storageOperations().length
+  await ensurePresetKnowledge()
+  const operations = storageOperations().slice(before)
+  assert.ok(operations.every((operation) => operation.type === 'get'))
+  const progressKeys = new Set<string>([
+    STORAGE_KEYS.reviewLogs, STORAGE_KEYS.reviewStates, STORAGE_KEYS.reviewSession,
+  ])
+  assert.ok(!operations.some((operation) => progressKeys.has(operation.key)))
 })

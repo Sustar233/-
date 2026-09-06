@@ -3,11 +3,12 @@ import { computed, ref } from 'vue'
 import { onShow } from '@dcloudio/uni-app'
 import EmptyState from '@/components/EmptyState.vue'
 import LoadErrorState from '@/components/LoadErrorState.vue'
+import LoadingState from '@/components/LoadingState.vue'
 import StatCard from '@/components/StatCard.vue'
 import { createEmptyStatistics, getStatistics } from '@/services/statisticsService'
 
 const summary = ref(createEmptyStatistics())
-const loading = ref(false)
+const loading = ref(true)
 const loadError = ref(false)
 
 const maximumDayCount = computed(() =>
@@ -48,7 +49,8 @@ function editWeakCard(cardId: string, subjectId: string): void {
       <text class="page-subtitle">看见节奏，也看见容易遗忘的知识。</text>
     </view>
 
-    <LoadErrorState v-if="loadError" @retry="refresh" />
+    <LoadingState v-if="loading" label="正在整理学习记录…" />
+    <LoadErrorState v-else-if="loadError" @retry="refresh" />
 
     <template v-else>
     <view class="stat-grid">
@@ -199,5 +201,8 @@ function editWeakCard(cardId: string, subjectId: string): void {
 .chevron {
   color: var(--color-muted);
   font-size: 40rpx;
+}
+@media (min-width: 900px) {
+  .stat-grid { grid-template-columns: repeat(4, 1fr); }
 }
 </style>

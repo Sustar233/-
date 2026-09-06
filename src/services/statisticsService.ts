@@ -47,18 +47,25 @@ export function calculateWeakCards(
   logs: ReviewLog[],
 ): Array<{ card: KnowledgeCard; score: number; reviewCount: number }> {
   const logsByCard = new Map<string, ReviewLog[]>()
+  const activeCardIds = new Set(cards.filter((card) => card.status === 'active').map((card) => card.id))
   for (const log of logs) {
+    if (!activeCardIds.has(log.cardId)) continue
     const cardLogs = logsByCard.get(log.cardId) ?? []
-    cardLogs.push(log)
+    // Keep only the ten newest logs, preserving input order for equal timestamps.
+    const index = cardLogs.findIndex((item) => item.reviewedAt < log.reviewedAt)
+    if (index < 0) {
+      if (cardLogs.length < 10) cardLogs.push(log)
+    } else {
+      cardLogs.splice(index, 0, log)
+      if (cardLogs.length > 10) cardLogs.pop()
+    }
     logsByCard.set(log.cardId, cardLogs)
   }
 
   return cards
     .filter((card) => card.status === 'active')
     .map((card) => {
-      const recent = (logsByCard.get(card.id) ?? [])
-        .sort((first, second) => second.reviewedAt - first.reviewedAt)
-        .slice(0, 10)
+      const recent = logsByCard.get(card.id) ?? []
       const weights: Record<number, number> = { 1: 3, 2: 1, 3: 0, 4: -1 }
       const score = recent.reduce((total, log) => total + weights[log.rating], 0)
       return { card, score, reviewCount: recent.length }

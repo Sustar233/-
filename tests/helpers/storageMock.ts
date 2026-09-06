@@ -1,5 +1,10 @@
 const memory = new Map<string, unknown>()
 const pendingSetFailures = new Map<string, number>()
+const operations: Array<{ type: 'get' | 'set' | 'remove'; key: string }> = []
+
+export function storageOperations() {
+  return [...operations]
+}
 
 export function installStorageMock(): void {
   const mock = {
@@ -8,6 +13,7 @@ export function installStorageMock(): void {
       success?: (result: { data: unknown }) => void
       fail?: (error: { errMsg: string }) => void
     }) {
+      operations.push({ type: 'get', key: options.key })
       if (memory.has(options.key)) {
         options.success?.({ data: memory.get(options.key) })
       } else {
@@ -21,6 +27,7 @@ export function installStorageMock(): void {
       fail?: (error: { errMsg: string }) => void
     }) {
       const failures = pendingSetFailures.get(options.key) ?? 0
+      operations.push({ type: 'set', key: options.key })
       if (failures > 0) {
         pendingSetFailures.set(options.key, failures - 1)
         options.fail?.({ errMsg: 'setStorage:fail simulated write error' })
@@ -30,6 +37,7 @@ export function installStorageMock(): void {
       options.success?.()
     },
     removeStorage(options: { key: string; success?: () => void }) {
+      operations.push({ type: 'remove', key: options.key })
       memory.delete(options.key)
       options.success?.()
     },
@@ -44,6 +52,7 @@ export function installStorageMock(): void {
 export function resetStorage(): void {
   memory.clear()
   pendingSetFailures.clear()
+  operations.length = 0
 }
 
 export function readStored<T>(key: string): T | undefined {

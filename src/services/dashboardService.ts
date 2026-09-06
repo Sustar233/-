@@ -1,7 +1,7 @@
 import { STORAGE_KEYS } from '@/storage/keys'
 import { getStorage } from '@/storage/storage'
 import type { KnowledgeCard } from '@/types/card'
-import type { ReviewSession } from '@/types/review'
+import type { ReviewSession, ReviewState } from '@/types/review'
 import type { Subject } from '@/types/subject'
 import { startOfDay } from '@/utils/date'
 import { ensurePresetKnowledge } from './presetKnowledgeService'
@@ -35,7 +35,22 @@ export async function getDashboardSnapshot(now = Date.now()): Promise<DashboardS
   ])
   const subjects = subjectsValue ?? []
   const cards = cardsValue ?? []
-  const queueData = { cards, states }
+  const cardsBySubject = new Map<string, KnowledgeCard[]>()
+  const subjectByCard = new Map<string, string>()
+  const statesBySubject = new Map<string, ReviewState[]>()
+  for (const card of cards) {
+    const group = cardsBySubject.get(card.subjectId) ?? []
+    group.push(card)
+    cardsBySubject.set(card.subjectId, group)
+    subjectByCard.set(card.id, card.subjectId)
+  }
+  for (const state of states) {
+    const subjectId = subjectByCard.get(state.cardId)
+    if (!subjectId) continue
+    const group = statesBySubject.get(subjectId) ?? []
+    group.push(state)
+    statesBySubject.set(subjectId, group)
+  }
   const subjectIds = new Set(subjects.map((subject) => subject.id))
   const today = startOfDay(now)
   const todaySubjectIds: string[] = []
@@ -47,8 +62,13 @@ export async function getDashboardSnapshot(now = Date.now()): Promise<DashboardS
   if (session && startOfDay(session.startedAt) === today) {
     addTodaySubject(session.filter.subjectId)
   }
-  for (const log of [...logs].sort((first, second) => second.reviewedAt - first.reviewedAt)) {
-    if (startOfDay(log.reviewedAt) === today) addTodaySubject(log.subjectId)
+  const latestTodayBySubject = new Map<string, number>()
+  for (const log of logs) {
+    if (startOfDay(log.reviewedAt) !== today) continue
+    latestTodayBySubject.set(log.subjectId, Math.max(latestTodayBySubject.get(log.subjectId) ?? 0, log.reviewedAt))
+  }
+  for (const [subjectId] of [...latestTodayBySubject].sort((first, second) => second[1] - first[1])) {
+    addTodaySubject(subjectId)
   }
 
   return {
@@ -56,7 +76,10 @@ export async function getDashboardSnapshot(now = Date.now()): Promise<DashboardS
     cards,
     dueCount: subjects.reduce(
       (count, subject) =>
-        count + buildReviewQueueFromData(queueData, now, { subjectId: subject.id }).length,
+        count + buildReviewQueueFromData({
+          cards: cardsBySubject.get(subject.id) ?? [],
+          states: statesBySubject.get(subject.id) ?? [],
+        }, now, { subjectId: subject.id }).length,
       0,
     ),
     statistics: calculateStatistics(cards, logs, states, now),

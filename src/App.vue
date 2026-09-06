@@ -62,19 +62,30 @@ button[disabled] {
   opacity: 0.5;
 }
 
+/* #ifdef H5 */
+button:focus-visible {
+  outline: 2px solid #7a9f8f;
+  outline-offset: 3px;
+}
+/* #endif */
+
 .page-shell {
   width: 100%;
   max-width: 860rpx;
-  min-height: 100vh;
+  min-height: calc(100vh - var(--window-top, 0px) - var(--window-bottom, 0px));
   margin: 0 auto;
   padding: 34rpx 30rpx calc(72rpx + env(safe-area-inset-bottom));
   overflow-x: hidden;
 }
 
 @media (min-width: 900px) {
-  .page-shell,
-  .review-page {
-    max-width: 960rpx;
+  .page-shell {
+    max-width: 920px;
+    padding: 40px 32px 56px;
+  }
+  .page-shell.form-page,
+  .page-shell.study-page {
+    max-width: 680px;
   }
 }
 
@@ -221,6 +232,7 @@ textarea {
 }
 
 .inline-form .field-input {
+  min-width: 0;
   flex: 1;
 }
 

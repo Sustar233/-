@@ -2,6 +2,8 @@
 import { computed, ref } from 'vue'
 import { onLoad } from '@dcloudio/uni-app'
 import EmptyState from '@/components/EmptyState.vue'
+import LoadErrorState from '@/components/LoadErrorState.vue'
+import { useAsyncAction } from '@/composables/useAsyncAction'
 import LearningPreviewPanel from '@/components/LearningPreviewPanel.vue'
 import LearningSectionPrompt from '@/components/LearningSectionPrompt.vue'
 import ReviewContinuationActions from '@/components/ReviewContinuationActions.vue'
@@ -11,9 +13,9 @@ import type { ReviewFilter, ReviewRating } from '@/types/review'
 import { reviewFilterFromQuery } from '@/utils/reviewFilter'
 
 const reviewStore = useReviewStore()
-const rating = ref(false)
-const startingRecall = ref(false)
-const continuing = ref(false)
+const { running: busy, run } = useAsyncAction()
+const loadError = ref(false)
+let initialQuery: Record<string, string | string[] | undefined> = {}
 
 const isFocusedReview = computed(() =>
   Boolean(
@@ -23,98 +25,68 @@ const isFocusedReview = computed(() =>
       reviewStore.activeFilter.tag,
   ),
 )
-onLoad(async (query) => {
+async function load(): Promise<void> {
+  loadError.value = false
+  const query = initialQuery
   const filter: ReviewFilter = reviewFilterFromQuery(query)
   if (!filter.subjectId) {
     uni.redirectTo({ url: '/pages/study/index' })
     return
   }
-  await reviewStore.start(filter, query?.fresh !== '1')
-  const todayMode = Array.isArray(query?.today) ? query.today[0] : query?.today
-  if (todayMode === 'all' || todayMode === 'wrong') {
-    const count = await reviewStore.startTodayReview(todayMode === 'wrong')
-    if (!count) {
-      await reviewStore.finishSession()
-      uni.showToast({
-        title: todayMode === 'wrong' ? '今天还没有背错的知识' : '今天还没有复习记录',
-        icon: 'none',
-      })
+  try {
+    await reviewStore.start(filter, query.fresh !== '1')
+    const todayMode = Array.isArray(query.today) ? query.today[0] : query.today
+    if (todayMode === 'all' || todayMode === 'wrong') {
+      const count = await reviewStore.startTodayReview(todayMode === 'wrong')
+      if (!count) {
+        await reviewStore.finishSession()
+        uni.showToast({ title: todayMode === 'wrong' ? '今天还没有背错的知识' : '今天还没有复习记录', icon: 'none' })
+      }
     }
+  } catch {
+    loadError.value = true
   }
-})
+}
+
+onLoad((query) => { initialQuery = query ?? {}; void load() })
 
 async function rateCard(value: ReviewRating): Promise<void> {
-  if (rating.value) return
-  rating.value = true
-  try {
-    await reviewStore.rate(value)
-  } catch (error) {
-    uni.showToast({ title: (error as Error).message, icon: 'none' })
-  } finally {
-    rating.value = false
-  }
+  await run(() => reviewStore.rate(value))
 }
 
 async function startBatchRecall(): Promise<void> {
-  if (startingRecall.value) return
-  startingRecall.value = true
-  try {
-    await reviewStore.beginRecall()
-  } catch (error) {
-    uni.showToast({ title: (error as Error).message, icon: 'none' })
-  } finally {
-    startingRecall.value = false
-  }
+  await run(() => reviewStore.beginRecall())
 }
 
 async function undoLastRating(): Promise<void> {
-  if (rating.value || continuing.value) return
-  try {
-    if (!(await reviewStore.undoLast())) {
-      uni.showToast({ title: '没有可撤销的评分', icon: 'none' })
-    }
-  } catch (error) {
-    uni.showToast({ title: (error as Error).message, icon: 'none' })
-  }
+  await run(async () => {
+    if (!(await reviewStore.undoLast())) uni.showToast({ title: '没有可撤销的评分', icon: 'none' })
+  })
 }
 
 async function startNextStudy(): Promise<void> {
-  if (continuing.value) return
-  continuing.value = true
-  try {
-    await reviewStore.startNextStudy()
-  } catch (error) {
-    uni.showToast({ title: (error as Error).message, icon: 'none' })
-  } finally {
-    continuing.value = false
-  }
+  await run(() => reviewStore.startNextStudy())
 }
 
 async function reviewWrongCards(): Promise<void> {
-  if (continuing.value) return
-  continuing.value = true
-  try {
-    const count = await reviewStore.startTodayReview(true)
-    if (!count) {
-      uni.showToast({ title: '今天还没有背错的知识', icon: 'none' })
-    }
-  } catch (error) {
-    uni.showToast({ title: (error as Error).message, icon: 'none' })
-  } finally {
-    continuing.value = false
-  }
+  await run(async () => {
+    if (!(await reviewStore.startTodayReview(true))) uni.showToast({ title: '今天还没有背错的知识', icon: 'none' })
+  })
 }
 
 async function goBack(): Promise<void> {
-  if (reviewStore.finished) await reviewStore.finishSession()
-  uni.navigateBack()
+  if (reviewStore.loading) return
+  await run(async () => {
+    if (!loadError.value && reviewStore.finished) await reviewStore.finishSession()
+    uni.navigateBack()
+  })
 }
 </script>
 
 <template>
   <view class="review-page safe-top">
     <view class="review-header">
-      <button class="close-button" aria-label="退出复习" @click="goBack">×</button>
+      <button class="close-button" :disabled="busy || reviewStore.loading" aria-label="退出复习" @click="goBack">×</button>
       <view class="progress-copy">
         <view class="progress-meta">
           <text class="progress-count">
@@ -135,7 +107,8 @@ async function goBack(): Promise<void> {
       <view class="header-space" />
     </view>
 
-    <view v-if="reviewStore.loading" class="loading-copy">正在准备今日复习…</view>
+    <LoadErrorState v-if="loadError" @retry="load" />
+    <view v-else-if="reviewStore.loading" class="loading-copy">正在准备今日复习…</view>
 
     <EmptyState
       v-else-if="reviewStore.finished"
@@ -149,9 +122,9 @@ async function goBack(): Promise<void> {
       :description="reviewStore.sessionCardCount ? `完成了 ${reviewStore.sessionCardCount} 张知识卡` : '当前没有到期卡片或新卡。'"
     >
       <ReviewContinuationActions
-        :loading="continuing"
+        :loading="busy"
         :next-label="reviewStore.nextStudyLabel"
-        :can-undo="reviewStore.canUndo && !rating"
+        :can-undo="reviewStore.canUndo && !busy"
         back-label="完成并返回"
         @next-study="startNextStudy"
         @review="reviewWrongCards"
@@ -167,7 +140,7 @@ async function goBack(): Promise<void> {
         v-if="reviewStore.sectionPrompt"
         :title="reviewStore.currentSectionTitle"
         :count="reviewStore.learningBatch.length"
-        :loading="startingRecall"
+        :loading="busy"
         @preview="reviewStore.previewSection"
         @skip="startBatchRecall"
       />
@@ -176,7 +149,7 @@ async function goBack(): Promise<void> {
         v-else-if="reviewStore.learning"
         :cards="reviewStore.learningBatch"
         :title="reviewStore.currentSectionTitle"
-        :loading="startingRecall"
+        :loading="busy"
         @begin="startBatchRecall"
       />
 
@@ -187,8 +160,8 @@ async function goBack(): Promise<void> {
         :context-revealed="reviewStore.contextRevealed"
         :revealed="reviewStore.revealed"
         :practice="reviewStore.sessionMode === 'practice'"
-        :rating="rating"
-        :can-undo="reviewStore.canUndo && !rating"
+        :rating="busy"
+        :can-undo="reviewStore.canUndo && !busy"
         :show-simple="reviewStore.canMarkCurrentEasy"
         @show-context="reviewStore.showContext"
         @reveal="reviewStore.reveal"

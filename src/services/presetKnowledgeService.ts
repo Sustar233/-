@@ -31,6 +31,15 @@ function isLegacyPresetId(id: string): boolean {
   return LEGACY_PRESET_ID_PREFIXES.some((prefix) => id.startsWith(prefix))
 }
 
+async function readProgressData() {
+  const [states, logs, reviewSession] = await Promise.all([
+    getStorage<ReviewState[]>(STORAGE_KEYS.reviewStates),
+    getStorage<ReviewLog[]>(STORAGE_KEYS.reviewLogs),
+    getStorage<ReviewSession>(STORAGE_KEYS.reviewSession),
+  ])
+  return { states: states ?? [], logs: logs ?? [], reviewSession }
+}
+
 async function initializePresetKnowledge(force = false): Promise<void> {
   const [
     version,
@@ -38,25 +47,17 @@ async function initializePresetKnowledge(force = false): Promise<void> {
     subjectsValue,
     chaptersValue,
     cardsValue,
-    statesValue,
-    logsValue,
-    reviewSession,
   ] = await Promise.all([
     getStorage<number>(STORAGE_KEYS.presetKnowledgeVersion),
     getStorage<boolean>(STORAGE_KEYS.presetKnowledgeDismissed),
     getStorage<Subject[]>(STORAGE_KEYS.subjects),
     getStorage<Chapter[]>(STORAGE_KEYS.chapters),
     getStorage<KnowledgeCard[]>(STORAGE_KEYS.cards),
-    getStorage<ReviewState[]>(STORAGE_KEYS.reviewStates),
-    getStorage<ReviewLog[]>(STORAGE_KEYS.reviewLogs),
-    getStorage<ReviewSession>(STORAGE_KEYS.reviewSession),
   ])
 
   const subjects = subjectsValue ?? []
   const chapters = chaptersValue ?? []
   const cards = cardsValue ?? []
-  const states = statesValue ?? []
-  const logs = logsValue ?? []
   const legacySubjectIds = new Set(
     subjects.filter((subject) => isLegacyPresetId(subject.id)).map((subject) => subject.id),
   )
@@ -95,6 +96,7 @@ async function initializePresetKnowledge(force = false): Promise<void> {
     const shouldIntroduceComputerSystemPreset =
       version != null && version < COMPUTER_SYSTEM_PRESET_INTRODUCED_VERSION
     if (!hasLegacyPresetData && !shouldIntroduceComputerSystemPreset) return
+    const { states, logs, reviewSession } = await readProgressData()
 
     const shouldRemoveDuringMigration = (id: string): boolean =>
       isLegacyPresetId(id) ||
@@ -215,18 +217,9 @@ async function initializePresetKnowledge(force = false): Promise<void> {
     !hasAllCurrentPresetIds ||
     presetContentChanged
 
-  if (!needsRefresh) {
-    await setStorageBatch([
-      {
-        type: 'set',
-        key: STORAGE_KEYS.presetKnowledgeVersion,
-        value: PRESET_KNOWLEDGE_VERSION,
-      },
-      { type: 'set', key: STORAGE_KEYS.presetKnowledgeDismissed, value: false },
-    ])
-    return
-  }
+  if (!needsRefresh) return
 
+  const { states, logs, reviewSession } = await readProgressData()
   const nextPresetSubjectIds = new Set(presetSubjects.map((subject) => subject.id))
   const nextPresetCardIds = new Set(presetCards.map((card) => card.id))
   const finalSubjectIds = new Set([

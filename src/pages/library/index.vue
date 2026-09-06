@@ -4,6 +4,8 @@ import { onShow } from '@dcloudio/uni-app'
 import SubjectCard from '@/components/SubjectCard.vue'
 import EmptyState from '@/components/EmptyState.vue'
 import LoadErrorState from '@/components/LoadErrorState.vue'
+import LoadingState from '@/components/LoadingState.vue'
+import { useAsyncAction } from '@/composables/useAsyncAction'
 import { getCards } from '@/services/cardService'
 import { useSubjectStore } from '@/stores/subject'
 
@@ -12,22 +14,27 @@ const cardCounts = ref<Record<string, number>>({})
 const name = ref('')
 const description = ref('')
 const editingId = ref('')
-const saving = ref(false)
+const { running: saving, run } = useAsyncAction()
 const loadError = ref(false)
+const loading = ref(true)
+const editorOpen = ref(false)
 
 const formTitle = computed(() => (editingId.value ? '编辑科目' : '新建科目'))
 
 async function refresh(): Promise<void> {
+  loading.value = true
   loadError.value = false
   try {
-    await subjectStore.load()
-    const cards = await getCards()
+    const [, cards] = await Promise.all([subjectStore.load(), getCards()])
     cardCounts.value = cards.reduce<Record<string, number>>((counts, card) => {
       counts[card.subjectId] = (counts[card.subjectId] ?? 0) + 1
       return counts
     }, {})
+    if (!subjectStore.subjects.length) editorOpen.value = true
   } catch {
     loadError.value = true
+  } finally {
+    loading.value = false
   }
 }
 
@@ -37,33 +44,29 @@ function resetForm(): void {
   editingId.value = ''
   name.value = ''
   description.value = ''
+  editorOpen.value = false
 }
 
 async function submit(): Promise<void> {
-  if (saving.value) return
-  saving.value = true
-  try {
+  await run(async () => {
     if (editingId.value) {
       await subjectStore.editSubject(editingId.value, name.value, description.value)
     } else {
       await subjectStore.addSubject(name.value, description.value)
     }
     resetForm()
-    await refresh()
     uni.showToast({ title: '已保存', icon: 'success' })
-  } catch (error) {
-    uni.showToast({ title: (error as Error).message, icon: 'none' })
-  } finally {
-    saving.value = false
-  }
+  })
 }
 
 function editSubject(id: string): void {
   const subject = subjectStore.subjects.find((item) => item.id === id)
   if (!subject) return
+  editorOpen.value = true
   editingId.value = subject.id
   name.value = subject.name
   description.value = subject.description ?? ''
+  uni.pageScrollTo({ scrollTop: 0, duration: 200 })
 }
 
 function removeSubject(id: string): void {
@@ -75,9 +78,12 @@ function removeSubject(id: string): void {
     confirmColor: '#a3453e',
     success: async ({ confirm }) => {
       if (!confirm) return
-      await subjectStore.removeSubject(id)
-      if (editingId.value === id) resetForm()
-      await refresh()
+      await run(async () => {
+        await subjectStore.removeSubject(id)
+        if (editingId.value === id) resetForm()
+        if (!subjectStore.subjects.length) editorOpen.value = true
+        uni.showToast({ title: '科目已删除', icon: 'success' })
+      })
     },
   })
 }
@@ -94,20 +100,22 @@ function openSubject(id: string): void {
         <text class="eyebrow">知识归档</text>
         <text class="page-title">知识库</text>
       </view>
-      <text class="subject-total">{{ subjectStore.subjects.length }} 个科目</text>
+      <button class="secondary-button create-subject" :disabled="saving || loading || loadError" :aria-expanded="editorOpen" @click="editorOpen ? resetForm() : editorOpen = true">{{ editorOpen ? '收起表单' : '+ 新建科目' }}</button>
     </view>
 
-    <LoadErrorState v-if="loadError" @retry="refresh" />
+    <LoadingState v-if="loading" />
+    <LoadErrorState v-else-if="loadError" @retry="refresh" />
 
     <template v-else>
-    <view class="editor surface">
+    <view v-if="editorOpen" class="editor surface">
       <view class="editor-heading">
         <text class="editor-title">{{ formTitle }}</text>
         <button v-if="editingId" class="text-button" size="mini" @click="resetForm">取消</button>
       </view>
-      <input v-model="name" class="field-input" maxlength="40" placeholder="科目名称，例如：操作系统" />
+      <input v-model="name" :disabled="saving" class="field-input" maxlength="40" placeholder="科目名称，例如：操作系统" />
       <input
         v-model="description"
+        :disabled="saving"
         class="field-input description-input"
         maxlength="100"
         placeholder="一句话说明（可选）"
@@ -119,7 +127,7 @@ function openSubject(id: string): void {
 
     <view class="section-heading">
       <text class="section-title">全部科目</text>
-      <text class="muted">点击进入</text>
+      <text class="muted">{{ subjectStore.subjects.length }} 个科目 · 点击进入</text>
     </view>
 
     <EmptyState
@@ -132,6 +140,7 @@ function openSubject(id: string): void {
       :key="subject.id"
       :subject="subject"
       :card-count="cardCounts[subject.id] ?? 0"
+      :busy="saving"
       @open="openSubject(subject.id)"
       @edit="editSubject(subject.id)"
       @remove="removeSubject(subject.id)"
@@ -148,10 +157,9 @@ function openSubject(id: string): void {
   margin: 10rpx 2rpx 32rpx;
 }
 
-.subject-total {
-  margin-bottom: 5rpx;
-  color: var(--color-muted);
-  font-size: 22rpx;
+.create-subject {
+  padding: 20rpx 24rpx;
+  font-size: 24rpx;
 }
 
 .editor {

@@ -1,12 +1,13 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
-import { onLoad } from '@dcloudio/uni-app'
+import { computed, ref } from 'vue'
+import { onLoad, onShow } from '@dcloudio/uni-app'
+import LoadingState from '@/components/LoadingState.vue'
 import LoadErrorState from '@/components/LoadErrorState.vue'
 import { PRESET_SUBJECT_ID } from '@/data/presetKnowledge'
 import { getCards } from '@/services/cardService'
-import { buildReviewQueue } from '@/services/reviewService'
+import { buildReviewQueueFromData, getReviewStates } from '@/services/reviewService'
 import { getChapters, getSubjects } from '@/services/subjectService'
-import type { ReviewFilter } from '@/types/review'
+import type { ReviewFilter, ReviewState } from '@/types/review'
 import type { KnowledgeCard } from '@/types/card'
 import type { Chapter, Subject } from '@/types/subject'
 import { reviewRoute } from '@/utils/reviewFilter'
@@ -16,10 +17,12 @@ const chapters = ref<Chapter[]>([])
 const cards = ref<KnowledgeCard[]>([])
 const subjectId = ref('')
 const chapterId = ref('all')
-const queueCount = ref(0)
+const states = ref<ReviewState[]>([])
+const queueCount = computed(() => subjectId.value && !loading.value
+  ? buildReviewQueueFromData({ cards: cards.value, states: states.value }, Date.now(), currentFilter()).length
+  : 0)
 const loading = ref(true)
 const loadError = ref(false)
-let countRequestId = 0
 let requestedSubjectId = ''
 
 const subjectOptions = computed(() => subjects.value.map((item) => item.name))
@@ -54,34 +57,19 @@ function currentFilter(): ReviewFilter {
   }
 }
 
-async function refreshCount(): Promise<void> {
-  if (loading.value) return
-  if (!subjectId.value) {
-    queueCount.value = 0
-    return
-  }
-  const requestId = ++countRequestId
-  try {
-    const count = (await buildReviewQueue(Date.now(), currentFilter())).length
-    if (requestId === countRequestId) queueCount.value = count
-  } catch {
-    if (requestId === countRequestId) loadError.value = true
-  }
-}
-
-watch([subjectId, chapterId], refreshCount)
-
 async function load(): Promise<void> {
   loading.value = true
   loadError.value = false
   try {
-    ;[subjects.value, chapters.value, cards.value] = await Promise.all([
+    ;[subjects.value, chapters.value, cards.value, states.value] = await Promise.all([
       getSubjects(),
       getChapters(),
       getCards(),
+      getReviewStates(),
     ])
-    if (subjects.value.some((item) => item.id === requestedSubjectId)) {
-      subjectId.value = requestedSubjectId
+    const preferredSubjectId = subjectId.value || requestedSubjectId
+    if (subjects.value.some((item) => item.id === preferredSubjectId)) {
+      subjectId.value = preferredSubjectId
     } else if (subjects.value.some((item) => item.id === PRESET_SUBJECT_ID)) {
       subjectId.value = PRESET_SUBJECT_ID
     } else if (subjects.value.length === 1) {
@@ -90,7 +78,7 @@ async function load(): Promise<void> {
       subjectId.value = ''
     }
     loading.value = false
-    await refreshCount()
+    if (!chapterOptionItems.value.some((item) => item.value === chapterId.value)) chapterId.value = 'all'
   } catch {
     loadError.value = true
     loading.value = false
@@ -99,8 +87,9 @@ async function load(): Promise<void> {
 
 onLoad((query) => {
   requestedSubjectId = String(query?.subjectId ?? '')
-  void load()
 })
+
+onShow(load)
 
 function changeSubject(event: { detail: { value: string | number } }): void {
   const index = Number(event.detail.value)
@@ -114,6 +103,7 @@ function changeChapter(event: { detail: { value: string | number } }): void {
 }
 
 function startStudy(): void {
+  if (loading.value || loadError.value) return
   if (!subjectId.value) {
     uni.showToast({ title: '请先选择一个知识库', icon: 'none' })
     return
@@ -135,17 +125,18 @@ function startStudy(): void {
       <text class="page-subtitle">每次学习一个小节，全部记住后再进入下一节。</text>
     </view>
 
-    <LoadErrorState v-if="loadError" @retry="load" />
+    <LoadingState v-if="loading" />
+    <LoadErrorState v-else-if="loadError" @retry="load" />
 
     <template v-else>
     <view class="filter-card surface">
       <text class="field-label first-label">知识库</text>
-      <picker :range="subjectOptions" :disabled="!subjectOptions.length" @change="changeSubject">
+      <picker :range="subjectOptions" :value="Math.max(0, subjects.findIndex((item) => item.id === subjectId))" :disabled="!subjectOptions.length" @change="changeSubject">
         <view class="picker-field">{{ selectedSubjectName }} <text class="picker-arrow">⌄</text></view>
       </picker>
 
       <text class="field-label">章节范围</text>
-      <picker :range="chapterOptions" :disabled="!subjectId" @change="changeChapter">
+      <picker :range="chapterOptions" :value="Math.max(0, chapterOptionItems.findIndex((item) => item.value === chapterId))" :disabled="!subjectId" @change="changeChapter">
         <view class="picker-field" :class="{ disabled: !subjectId }">
           {{ !subjectId ? '请先选择一个知识库' : selectedChapterName }}
           <text class="picker-arrow">⌄</text>

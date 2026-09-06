@@ -4,6 +4,7 @@ import type { Subject } from '@/types/subject'
 defineProps<{
   subject: Subject
   cardCount: number
+  busy?: boolean
 }>()
 
 defineEmits<{
@@ -14,16 +15,18 @@ defineEmits<{
 </script>
 
 <template>
-  <view class="subject-card surface" @click="$emit('open')">
+  <view class="subject-card surface">
+    <button class="subject-open" :disabled="busy" :aria-label="`打开科目：${subject.name}`" @click="$emit('open')">
     <view class="subject-mark">{{ subject.name.slice(0, 1) }}</view>
     <view class="subject-copy">
       <text class="subject-name">{{ subject.name }}</text>
       <text v-if="subject.description" class="subject-description">{{ subject.description }}</text>
       <text class="subject-count">{{ cardCount }} 张知识卡</text>
     </view>
+    </button>
     <view class="subject-actions">
-      <button class="text-button" size="mini" aria-label="编辑科目" @click.stop="$emit('edit')">编辑</button>
-      <button class="text-button remove" size="mini" aria-label="删除科目" @click.stop="$emit('remove')">删除</button>
+      <button class="text-button" size="mini" :disabled="busy" aria-label="编辑科目" @click="$emit('edit')">编辑</button>
+      <button class="text-button remove" size="mini" :disabled="busy" aria-label="删除科目" @click="$emit('remove')">删除</button>
     </view>
   </view>
 </template>
@@ -35,6 +38,18 @@ defineEmits<{
   gap: 22rpx;
   margin-bottom: 18rpx;
   padding: 26rpx;
+}
+
+.subject-open {
+  display: flex;
+  align-items: center;
+  gap: 22rpx;
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+  background: transparent;
+  color: var(--color-text);
+  text-align: left;
 }
 
 .subject-mark {
@@ -60,6 +75,8 @@ defineEmits<{
 }
 
 .subject-name {
+  overflow-wrap: anywhere;
+  line-height: 1.5;
   font-size: 30rpx;
   font-weight: 760;
 }

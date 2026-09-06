@@ -59,7 +59,7 @@ watch(
         <text class="review-answer">{{ card.answer }}</text>
         <view v-if="(card.connection || card.note) && noteVisible" class="note-block">
           <view v-if="card.connection" class="note-item">
-            <text class="note-label">章节</text>
+            <text class="note-label">知识连接</text>
             <text class="note-copy">{{ card.connection }}</text>
           </view>
           <view v-if="card.note" class="note-item">
@@ -81,11 +81,11 @@ watch(
       v-if="!revealed && contextCards.length && !contextRevealed"
       class="context-action-row"
     >
-      <button class="context-button" @click="emit('showContext')">
+      <button class="context-button" :disabled="rating" @click="emit('showContext')">
         查看关联知识
       </button>
     </view>
-    <button v-if="!revealed" class="primary-button reveal-button" @click="emit('reveal')">
+    <button v-if="!revealed" class="primary-button reveal-button" :disabled="rating" @click="emit('reveal')">
       显示答案
     </button>
     <view v-if="!revealed && canUndo" class="session-actions">
@@ -93,7 +93,7 @@ watch(
     </view>
     <ReviewButtons
       v-if="revealed"
-      :class="{ disabled: rating }"
+      :disabled="rating"
       @rate="emit('rate', $event)"
     />
     <text v-if="revealed && practice" class="practice-note">
@@ -271,11 +271,6 @@ watch(
   background: transparent;
   color: var(--color-primary);
   font-size: 22rpx;
-}
-
-.disabled {
-  opacity: 0.55;
-  pointer-events: none;
 }
 
 .practice-note {

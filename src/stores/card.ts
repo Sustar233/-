@@ -1,18 +1,21 @@
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
+import { ref, shallowRef } from 'vue'
 import { deleteCard, getCards, setCardSuspended } from '@/services/cardService'
 import type { KnowledgeCard } from '@/types/card'
 
 export const useCardStore = defineStore('cards', () => {
-  const cards = ref<KnowledgeCard[]>([])
+  const cards = shallowRef<KnowledgeCard[]>([])
   const loading = ref(false)
+  let loadRequest = 0
 
   async function load(subjectId?: string): Promise<void> {
+    const request = ++loadRequest
     loading.value = true
     try {
-      cards.value = await getCards(subjectId)
+      const result = await getCards(subjectId)
+      if (request === loadRequest) cards.value = result
     } finally {
-      loading.value = false
+      if (request === loadRequest) loading.value = false
     }
   }
 

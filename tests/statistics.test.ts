@@ -61,3 +61,19 @@ test('statistics remain correct when logs are not chronological', () => {
   assert.equal(summary.todayNewCards, 0)
   assert.equal(summary.last7Days.at(-1)?.count, 1)
 })
+
+
+test('weakness uses the newest ten logs with stable ties regardless of input order', () => {
+  const history: ReviewLog[] = Array.from({ length: 10000 }, (_, index) => ({
+    id: String(index), cardId: 'weak', subjectId: 'subject_1',
+    reviewedAt: Math.floor(((index * 7919) % 10000) / 3),
+    rating: ((index % 4) + 1) as ReviewLog['rating'],
+  }))
+  const weights = { 1: 3, 2: 1, 3: 0, 4: -1 }
+  const expected = [...history].sort((a, b) => b.reviewedAt - a.reviewedAt).slice(0, 10)
+    .reduce((sum, log) => sum + weights[log.rating], 0)
+  const snapshot = history.map((log) => log.id)
+  assert.equal(calculateWeakCards(cards, history)[0]?.score ?? 0, Math.max(0, expected))
+  assert.deepEqual(history.map((log) => log.id), snapshot)
+  assert.deepEqual(calculateWeakCards([{ ...cards[0], status: 'suspended' }], history), [])
+})

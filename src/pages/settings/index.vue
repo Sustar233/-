@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { onShow } from '@dcloudio/uni-app'
+import { useAsyncAction } from '@/composables/useAsyncAction'
 import {
   exportBackup,
   hasAutomaticBackup,
@@ -17,29 +18,28 @@ import { restorePresetKnowledge } from '@/services/presetKnowledgeService'
 
 const backupText = ref('')
 const knowledgePackageText = ref('')
-const working = ref(false)
+const { running: working, run } = useAsyncAction()
 const automaticBackupAvailable = ref(false)
 
 onShow(async () => {
-  automaticBackupAvailable.value = await hasAutomaticBackup()
+  await run(async () => { automaticBackupAvailable.value = await hasAutomaticBackup() })
 })
 
 async function exportData(): Promise<void> {
-  working.value = true
-  try {
+  await run(async () => {
     backupText.value = await exportBackup()
     uni.setClipboardData({
       data: backupText.value,
       success: () => uni.showToast({ title: '备份已复制', icon: 'success' }),
+      fail: () => uni.showToast({ title: '复制失败，请从下方文本框手动复制备份', icon: 'none' }),
     })
-  } finally {
-    working.value = false
-  }
+  })
 }
 
 function importData(): void {
+  const source = backupText.value
   try {
-    parseBackup(backupText.value)
+    parseBackup(source)
   } catch (error) {
     uni.showToast({ title: (error as Error).message, icon: 'none', duration: 2600 })
     return
@@ -51,16 +51,11 @@ function importData(): void {
     confirmColor: '#a3453e',
     success: async ({ confirm }) => {
       if (!confirm) return
-      working.value = true
-      try {
-        await importBackup(backupText.value)
+      await run(async () => {
+        await importBackup(source)
         automaticBackupAvailable.value = true
         uni.showToast({ title: '导入成功', icon: 'success' })
-      } catch (error) {
-        uni.showToast({ title: (error as Error).message, icon: 'none' })
-      } finally {
-        working.value = false
-      }
+      })
     },
   })
 }
@@ -72,15 +67,10 @@ function restoreAutomaticBackup(): void {
     confirmColor: '#28624f',
     success: async ({ confirm }) => {
       if (!confirm) return
-      working.value = true
-      try {
+      await run(async () => {
         await restoreAutomaticBackupData()
         uni.showToast({ title: '已恢复备份', icon: 'success' })
-      } catch (error) {
-        uni.showToast({ title: (error as Error).message, icon: 'none' })
-      } finally {
-        working.value = false
-      }
+      })
     },
   })
 }
@@ -88,19 +78,14 @@ function restoreAutomaticBackup(): void {
 function restoreDefaultKnowledge(): void {
   uni.showModal({
     title: '恢复内置知识库',
-    content: '将补齐默认的操作系统与计算机系统原理知识库，并保留你自行创建的科目和卡片。',
+    content: '将恢复两套内置知识库的默认内容，覆盖你对内置科目、章节和卡片的编辑。自建知识库与仍有效的复习记录会保留。',
     confirmColor: '#28624f',
     success: async ({ confirm }) => {
       if (!confirm) return
-      working.value = true
-      try {
+      await run(async () => {
         await restorePresetKnowledge()
         uni.showToast({ title: '内置知识库已恢复', icon: 'success' })
-      } catch (error) {
-        uni.showToast({ title: (error as Error).message, icon: 'none' })
-      } finally {
-        working.value = false
-      }
+      })
     },
   })
 }
@@ -113,9 +98,10 @@ function copyAiPrompt(): void {
 }
 
 function importKnowledgePackage(): void {
+  const source = knowledgePackageText.value
   let knowledgePackage
   try {
-    knowledgePackage = parseAiKnowledgePackage(knowledgePackageText.value)
+    knowledgePackage = parseAiKnowledgePackage(source)
   } catch (error) {
     uni.showToast({ title: (error as Error).message, icon: 'none', duration: 3000 })
     return
@@ -136,23 +122,18 @@ function importKnowledgePackage(): void {
     confirmColor: '#28624f',
     success: async ({ confirm }) => {
       if (!confirm) return
-      working.value = true
-      try {
-        const result = await importAiKnowledgePackage(knowledgePackageText.value)
+      await run(async () => {
+        const result = await importAiKnowledgePackage(source)
         knowledgePackageText.value = ''
         uni.showToast({ title: `已导入 ${result.cardCount} 张`, icon: 'success' })
-      } catch (error) {
-        uni.showToast({ title: (error as Error).message, icon: 'none', duration: 3000 })
-      } finally {
-        working.value = false
-      }
+      })
     },
   })
 }
 </script>
 
 <template>
-  <view class="page-shell">
+  <view class="page-shell form-page">
     <view class="page-heading">
       <text class="eyebrow">偏好与数据</text>
       <text class="page-title">设置</text>

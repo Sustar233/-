@@ -2,6 +2,10 @@
 import { computed, ref, watch } from 'vue'
 import { onLoad, onShow } from '@dcloudio/uni-app'
 import EmptyState from '@/components/EmptyState.vue'
+import LoadingState from '@/components/LoadingState.vue'
+import LoadErrorState from '@/components/LoadErrorState.vue'
+import { useAsyncAction } from '@/composables/useAsyncAction'
+import { createCardSearchIndex, normalizeSearchQuery } from '@/utils/cardSearch'
 import KnowledgeCardItem from '@/components/KnowledgeCard.vue'
 import { useCardStore } from '@/stores/card'
 import { useSubjectStore } from '@/stores/subject'
@@ -17,18 +21,24 @@ const editingChapterId = ref('')
 const searchQuery = ref('')
 const displayLimit = ref(20)
 const masteredCardIds = ref(new Set<string>())
-const resettingProgress = ref(false)
+const { running: busy, run } = useAsyncAction()
+const loading = ref(true)
+const loadError = ref(false)
+const statusFilter = ref('all')
+const statusOptions = [
+  { value: 'all', label: '全部' }, { value: 'learning', label: '学习中' },
+  { value: 'mastered', label: '已掌握' }, { value: 'suspended', label: '已暂停' },
+]
 
 const subject = computed(() => subjectStore.subjects.find((item) => item.id === subjectId.value))
 const chapters = computed(() =>
   subjectStore.chapters.filter((chapter) => chapter.subjectId === subjectId.value),
 )
-const visibleCards = computed(() => {
-  if (selectedChapterId.value === 'all') return cardStore.cards
-  if (selectedChapterId.value === 'uncategorized') {
-    return cardStore.cards.filter((card) => !card.chapterId)
-  }
-  return cardStore.cards.filter((card) => card.chapterId === selectedChapterId.value)
+const searchIndex = computed(() => createCardSearchIndex(cardStore.cards))
+const chapterCounts = computed(() => {
+  const counts = new Map<string | undefined, number>()
+  for (const card of cardStore.cards) counts.set(card.chapterId, (counts.get(card.chapterId) ?? 0) + 1)
+  return counts
 })
 const selectedChapterName = computed(() => {
   if (selectedChapterId.value === 'all') return '全部知识卡'
@@ -36,19 +46,19 @@ const selectedChapterName = computed(() => {
   return chapters.value.find((item) => item.id === selectedChapterId.value)?.name ?? '知识卡'
 })
 const filteredCards = computed(() => {
-  const query = searchQuery.value.trim().toLocaleLowerCase()
-  if (!query) return visibleCards.value
-  return visibleCards.value.filter((card) =>
-    [card.question, card.answer, card.connection ?? '', card.note ?? '', ...card.tags]
-      .join(' ')
-      .toLocaleLowerCase()
-      .includes(query),
-  )
+  const query = normalizeSearchQuery(searchQuery.value)
+  return searchIndex.value.filter(({ card, text }) => {
+    const chapter = selectedChapterId.value
+    if (chapter === 'uncategorized' && card.chapterId) return false
+    if (!['all', 'uncategorized'].includes(chapter) && card.chapterId !== chapter) return false
+    const status = card.status === 'suspended' ? 'suspended' : masteredCardIds.value.has(card.id) ? 'mastered' : 'learning'
+    return (statusFilter.value === 'all' || status === statusFilter.value) && text.includes(query)
+  }).map(({ card }) => card)
 })
 const displayedCards = computed(() => filteredCards.value.slice(0, displayLimit.value))
 const hasMoreCards = computed(() => displayedCards.value.length < filteredCards.value.length)
 
-watch([selectedChapterId, searchQuery], () => {
+watch([selectedChapterId, searchQuery, statusFilter], () => {
   displayLimit.value = 20
 })
 
@@ -59,24 +69,32 @@ onLoad((query) => {
 onShow(refresh)
 
 async function refresh(): Promise<void> {
-  if (!subjectId.value) return
-  const [, , states] = await Promise.all([
-    subjectStore.load(),
-    cardStore.load(subjectId.value),
-    getReviewStates(),
-  ])
-  masteredCardIds.value = new Set(
-    states.filter((state) => Boolean(state.masteredAt)).map((state) => state.cardId),
-  )
-  if (subject.value) uni.setNavigationBarTitle({ title: subject.value.name })
+  loading.value = true
+  loadError.value = false
+  try {
+    if (!subjectId.value) throw new Error('科目不存在')
+    const [, , states] = await Promise.all([
+      subjectStore.load(), cardStore.load(subjectId.value), getReviewStates(),
+    ])
+    if (!subject.value) throw new Error('科目不存在')
+    masteredCardIds.value = new Set(states.filter((state) => Boolean(state.masteredAt)).map((state) => state.cardId))
+    if (!['all', 'uncategorized'].includes(selectedChapterId.value) && !chapters.value.some((chapter) => chapter.id === selectedChapterId.value)) {
+      selectedChapterId.value = 'all'
+    }
+    uni.setNavigationBarTitle({ title: subject.value.name })
+  } catch {
+    loadError.value = true
+  } finally {
+    loading.value = false
+  }
 }
 
 function countFor(chapterId?: string): number {
-  return cardStore.cards.filter((card) => card.chapterId === chapterId).length
+  return chapterCounts.value.get(chapterId) ?? 0
 }
 
 async function saveChapter(): Promise<void> {
-  try {
+  await run(async () => {
     if (editingChapterId.value) {
       await subjectStore.editChapter(editingChapterId.value, chapterName.value)
     } else {
@@ -84,13 +102,11 @@ async function saveChapter(): Promise<void> {
     }
     chapterName.value = ''
     editingChapterId.value = ''
-    await refresh()
-  } catch (error) {
-    uni.showToast({ title: (error as Error).message, icon: 'none' })
-  }
+  })
 }
 
 function beginChapterEdit(id: string): void {
+  if (busy.value) return
   const chapter = chapters.value.find((item) => item.id === id)
   if (!chapter) return
   editingChapterId.value = id
@@ -98,6 +114,7 @@ function beginChapterEdit(id: string): void {
 }
 
 function removeChapter(id: string): void {
+  if (busy.value) return
   const chapter = chapters.value.find((item) => item.id === id)
   if (!chapter) return
   const cardCount = countFor(id)
@@ -115,9 +132,11 @@ function removeChapter(id: string): void {
     confirmColor: '#a3453e',
     success: async ({ confirm }) => {
       if (!confirm) return
-      await subjectStore.removeChapter(id)
-      if (selectedChapterId.value === id) selectedChapterId.value = 'all'
-      await refresh()
+      await run(async () => {
+        await subjectStore.removeChapter(id)
+        if (selectedChapterId.value === id) selectedChapterId.value = 'all'
+        if (editingChapterId.value === id) { editingChapterId.value = ''; chapterName.value = '' }
+      })
     },
   })
 }
@@ -148,7 +167,7 @@ function removeCard(id: string): void {
     confirmColor: '#a3453e',
     success: async ({ confirm }) => {
       if (!confirm) return
-      await cardStore.remove(id, subjectId.value)
+      await run(() => cardStore.remove(id, subjectId.value))
     },
   })
 }
@@ -156,22 +175,20 @@ function removeCard(id: string): void {
 async function toggleCard(id: string): Promise<void> {
   const card = cardStore.cards.find((item) => item.id === id)
   if (!card) return
-  await cardStore.setSuspended(id, card.status !== 'suspended', subjectId.value)
+  await run(() => cardStore.setSuspended(id, card.status !== 'suspended', subjectId.value))
 }
 
 async function restoreCard(id: string): Promise<void> {
-  try {
+  await run(async () => {
     await restoreMasteredCard(id)
     await refresh()
     uni.showToast({ title: '已恢复学习', icon: 'success' })
-  } catch (error) {
-    uni.showToast({ title: (error as Error).message, icon: 'none' })
-  }
+  })
 }
 
 function resetProgress(): void {
   const currentSubject = subject.value
-  if (!currentSubject || resettingProgress.value) return
+  if (!currentSubject || busy.value) return
 
   uni.showModal({
     title: '重置学习进度',
@@ -180,16 +197,11 @@ function resetProgress(): void {
     confirmColor: '#a3453e',
     success: async ({ confirm }) => {
       if (!confirm) return
-      resettingProgress.value = true
-      try {
+      await run(async () => {
         await resetSubjectProgress(currentSubject.id)
         await refresh()
         uni.showToast({ title: '学习进度已重置', icon: 'success' })
-      } catch (error) {
-        uni.showToast({ title: (error as Error).message, icon: 'none' })
-      } finally {
-        resettingProgress.value = false
-      }
+      })
     },
   })
 }
@@ -197,22 +209,26 @@ function resetProgress(): void {
 
 <template>
   <view class="page-shell">
+    <LoadingState v-if="loading" />
+    <LoadErrorState v-else-if="loadError" @retry="refresh" />
+    <!-- Keep scroll-view mounted while a cached page is activated and refreshed. -->
+    <view v-show="!loading && !loadError">
     <view class="subject-header">
       <view class="subject-heading-copy">
         <text class="subject-title">{{ subject?.name ?? '科目' }}</text>
         <text class="subject-meta">{{ cardStore.cards.length }} 张知识卡 · {{ chapters.length }} 个章节</text>
       </view>
       <view class="subject-header-actions">
-        <button class="secondary-button header-action" @click="openStudy">脉络学习</button>
-        <button class="primary-button header-action" @click="openCardEditor()">+ 添加卡片</button>
+        <button class="secondary-button header-action" :disabled="busy" @click="openStudy">脉络学习</button>
+        <button class="primary-button header-action" :disabled="busy" @click="openCardEditor()">+ 添加卡片</button>
       </view>
     </view>
     <view class="library-actions">
       <button
         class="text-button reset-progress"
-        :disabled="resettingProgress"
+        :disabled="busy"
         @click="resetProgress"
-      >{{ resettingProgress ? '正在重置…' : '重置学习进度' }}</button>
+      >重置学习进度</button>
     </view>
 
     <view class="section-heading">
@@ -227,11 +243,12 @@ function resetProgress(): void {
     <view class="inline-form">
       <input
         v-model="chapterName"
+        :disabled="busy"
         class="field-input"
         maxlength="40"
         :placeholder="editingChapterId ? '修改章节名称' : '添加章节'"
       />
-      <button class="secondary-button" @click="saveChapter">
+      <button class="secondary-button" :loading="busy" :disabled="busy || !chapterName.trim()" @click="saveChapter">
         {{ editingChapterId ? '保存' : '添加' }}
       </button>
     </view>
@@ -275,9 +292,13 @@ function resetProgress(): void {
         v-model="searchQuery"
         class="field-input search-input"
         maxlength="100"
-        placeholder="搜索问题、答案或标签"
+        placeholder="搜索问题、答案、小节或标签"
       />
-      <text v-if="searchQuery" class="clear-search" @click="searchQuery = ''">清除</text>
+      <button v-if="searchQuery" class="text-button clear-search" aria-label="清除搜索" @click="searchQuery = ''">清除</button>
+    </view>
+
+    <view class="status-filters">
+      <button v-for="option in statusOptions" :key="option.value" class="status-filter" :class="{ active: statusFilter === option.value }" :aria-pressed="statusFilter === option.value" @click="statusFilter = option.value">{{ option.label }}</button>
     </view>
 
     <view class="section-heading">
@@ -289,28 +310,48 @@ function resetProgress(): void {
 
     <EmptyState
       v-if="!cardStore.loading && !filteredCards.length"
-      :title="searchQuery ? '没有找到相关知识卡' : '这里还没有知识卡'"
-      :description="searchQuery ? '换一个关键词，或清除搜索后再试。' : '添加一张问答卡，稍后它会进入今日复习。'"
+      :title="searchQuery || statusFilter !== 'all' ? '没有符合条件的知识卡' : '这里还没有知识卡'"
+      :description="searchQuery || statusFilter !== 'all' ? '尝试其他关键词或学习状态。' : '添加一张问答卡，稍后它会进入今日复习。'"
     >
-      <button v-if="!searchQuery" class="secondary-button empty-action" @click="openCardEditor()">添加知识卡</button>
+      <button v-if="searchQuery || statusFilter !== 'all'" class="secondary-button empty-action" @click="searchQuery = ''; statusFilter = 'all'">清除筛选</button>
+      <button v-else class="secondary-button empty-action" @click="openCardEditor()">添加知识卡</button>
     </EmptyState>
     <KnowledgeCardItem
       v-for="card in displayedCards"
       :key="card.id"
       :card="card"
       :mastered="masteredCardIds.has(card.id)"
+      :busy="busy"
       @edit="openCardEditor(card.id)"
       @toggle="toggleCard(card.id)"
       @restore="restoreCard(card.id)"
       @remove="removeCard(card.id)"
     />
     <button v-if="hasMoreCards" class="secondary-button load-more" @click="displayLimit += 20">
-      再显示 20 张
+      再显示 {{ Math.min(20, filteredCards.length - displayedCards.length) }} 张 · 剩余 {{ filteredCards.length - displayedCards.length }} 张
     </button>
+    </view>
   </view>
 </template>
 
 <style scoped>
+.status-filters {
+  display: flex;
+  gap: 10rpx;
+  margin-top: 20rpx;
+}
+.status-filter {
+  flex: 1;
+  padding: 18rpx 8rpx;
+  background: transparent;
+  color: var(--color-muted);
+  font-size: 23rpx;
+}
+.status-filter.active {
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+  font-weight: 700;
+}
 .subject-header {
   display: flex;
   align-items: flex-start;

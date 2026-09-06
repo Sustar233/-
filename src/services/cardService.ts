@@ -3,6 +3,7 @@ import { getStorage, setStorage, setStorageBatch, type StorageMutation } from '@
 import type { KnowledgeCard, KnowledgeCardInput } from '@/types/card'
 import type { ReviewLog, ReviewSession, ReviewState } from '@/types/review'
 import { generateId } from '@/utils/id'
+import { createCardSearchIndex, normalizeSearchQuery } from '@/utils/cardSearch'
 import { ensurePresetKnowledge, isPresetKnowledgeId } from './presetKnowledgeService'
 
 export async function getCards(subjectId?: string): Promise<KnowledgeCard[]> {
@@ -21,8 +22,8 @@ function normalizeInput(input: KnowledgeCardInput): KnowledgeCardInput {
     answer,
     tags: [...new Set((input.tags ?? []).map((tag) => tag.trim()).filter(Boolean))],
     note: input.note?.trim() || undefined,
-    sectionId: input.sectionId?.trim() || undefined,
-    sectionTitle: input.sectionTitle?.trim() || undefined,
+    ...('sectionId' in input ? { sectionId: input.sectionId?.trim() || undefined } : {}),
+    ...('sectionTitle' in input ? { sectionTitle: input.sectionTitle?.trim() || undefined } : {}),
     parentCardId: input.parentCardId?.trim() || undefined,
     connection: input.connection?.trim() || undefined,
     importance: input.importance ?? 2,
@@ -189,22 +190,12 @@ export async function setCardSuspended(id: string, suspended: boolean): Promise<
 }
 
 export async function searchCards(query: string): Promise<KnowledgeCard[]> {
-  const normalized = query.trim().toLocaleLowerCase()
+  const normalized = normalizeSearchQuery(query)
   const cards = await getCards()
   if (!normalized) return cards
-  return cards.filter((card) =>
-    [
-      card.question,
-      card.answer,
-      card.sectionTitle ?? '',
-      card.connection ?? '',
-      card.note ?? '',
-      ...card.tags,
-    ]
-      .join(' ')
-      .toLocaleLowerCase()
-      .includes(normalized),
-  )
+  return createCardSearchIndex(cards)
+    .filter((entry) => entry.text.includes(normalized))
+    .map((entry) => entry.card)
 }
 
 export function getKnowledgeContext(
@@ -212,6 +203,7 @@ export function getKnowledgeContext(
   cards: KnowledgeCard[],
   maxDepth = 3,
 ): KnowledgeCard[] {
+  if (maxDepth <= 0) return []
   const cardById = new Map(cards.map((item) => [item.id, item]))
   const path: KnowledgeCard[] = []
   const visited = new Set([card.id])
@@ -249,23 +241,26 @@ export function orderCardsByKnowledgePath(
   const included = new Map(cards.map((card) => [card.id, card]))
   const allById = new Map(allCards.map((card) => [card.id, card]))
   const visited = new Set<string>()
-  const visiting = new Set<string>()
   const ordered: KnowledgeCard[] = []
 
-  function visit(card: KnowledgeCard): void {
-    if (visited.has(card.id)) return
-    if (visiting.has(card.id)) return
-    visiting.add(card.id)
-    if (card.parentCardId) {
-      const parent = allById.get(card.parentCardId)
-      const includedParent = parent ? included.get(parent.id) : undefined
-      if (includedParent) visit(includedParent)
+  // Iterative traversal also handles imported paths deeper than the JS call stack.
+  for (const card of cards) {
+    const path: KnowledgeCard[] = []
+    const visiting = new Set<string>()
+    let cursor: KnowledgeCard | undefined = card
+    while (cursor && !visited.has(cursor.id) && !visiting.has(cursor.id)) {
+      visiting.add(cursor.id)
+      path.push(cursor)
+      const parent: KnowledgeCard | undefined = cursor.parentCardId
+        ? allById.get(cursor.parentCardId)
+        : undefined
+      cursor = parent ? included.get(parent.id) : undefined
     }
-    visiting.delete(card.id)
-    visited.add(card.id)
-    ordered.push(card)
+    while (path.length) {
+      const next = path.pop()!
+      visited.add(next.id)
+      ordered.push(next)
+    }
   }
-
-  cards.forEach(visit)
   return ordered
 }

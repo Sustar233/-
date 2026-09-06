@@ -4,7 +4,7 @@ import type { KnowledgeCard } from '@/types/card'
 
 const importanceLabels = ['', '一般', '重要', '非常重要']
 
-const props = defineProps<{ card: KnowledgeCard; mastered?: boolean }>()
+const props = defineProps<{ card: KnowledgeCard; mastered?: boolean; busy?: boolean }>()
 const noteVisible = ref(false)
 const hasNote = computed(() => Boolean(props.card.connection || props.card.note))
 
@@ -23,8 +23,8 @@ defineEmits<{
   >
     <view class="card-topline">
       <text class="importance">{{ importanceLabels[card.importance] }}知识</text>
-      <text v-if="mastered" class="status mastered-status">已掌握</text>
-      <text v-else-if="card.status === 'suspended'" class="status">已暂停</text>
+      <text v-if="card.status === 'suspended'" class="status">已暂停</text>
+      <text v-else-if="mastered" class="status mastered-status">已掌握</text>
     </view>
     <text class="question">{{ card.question }}</text>
     <text class="answer-preview">{{ card.answer }}</text>
@@ -32,7 +32,7 @@ defineEmits<{
       <text v-for="tag in card.tags" :key="tag" class="tag"># {{ tag }}</text>
     </view>
     <view v-if="hasNote && noteVisible" class="note-panel">
-      <text v-if="card.connection" class="note-copy">章节：{{ card.connection }}</text>
+      <text v-if="card.connection" class="note-copy">知识连接：{{ card.connection }}</text>
       <text v-if="card.note" class="note-copy">备注：{{ card.note }}</text>
     </view>
     <button
@@ -44,20 +44,21 @@ defineEmits<{
       {{ noteVisible ? '收起路径' : '路径' }}
     </button>
     <view class="card-actions">
-      <button class="text-button" size="mini" aria-label="编辑知识卡" @click="$emit('edit')">编辑</button>
+      <button class="text-button" size="mini" :disabled="busy" aria-label="编辑知识卡" @click="$emit('edit')">编辑</button>
       <button
-        v-if="mastered"
+        v-if="mastered && card.status !== 'suspended'"
         class="text-button"
+        :disabled="busy"
         size="mini"
         aria-label="恢复学习知识卡"
         @click="$emit('restore')"
       >
         恢复学习
       </button>
-      <button v-else class="text-button" size="mini" aria-label="切换知识卡状态" @click="$emit('toggle')">
+      <button v-else class="text-button" size="mini" :disabled="busy" aria-label="切换知识卡状态" @click="$emit('toggle')">
         {{ card.status === 'suspended' ? '恢复' : '暂停' }}
       </button>
-      <button class="text-button remove" size="mini" aria-label="删除知识卡" @click="$emit('remove')">删除</button>
+      <button class="text-button remove" size="mini" :disabled="busy" aria-label="删除知识卡" @click="$emit('remove')">删除</button>
     </view>
   </view>
 </template>
@@ -101,6 +102,7 @@ defineEmits<{
 .question,
 .answer-preview {
   display: block;
+  overflow-wrap: anywhere;
 }
 
 .question {

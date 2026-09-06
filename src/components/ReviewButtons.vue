@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import type { ReviewRating } from '@/types/review'
 
+defineProps<{ disabled?: boolean }>()
+
 const emit = defineEmits<{ rate: [rating: ReviewRating] }>()
 
 const options: Array<{ rating: ReviewRating; label: string; className: string }> = [
@@ -16,6 +18,7 @@ const options: Array<{ rating: ReviewRating; label: string; className: string }>
       :key="option.rating"
       class="rating-button"
       :class="option.className"
+      :disabled="disabled"
       @click="emit('rate', option.rating)"
     >
       <text class="rating-label">{{ option.label }}</text>

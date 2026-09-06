@@ -112,3 +112,22 @@ test('dashboard totals separate daily queues for different subjects', async () =
   assert.equal(snapshot.dueCount, 2)
   assert.deepEqual(snapshot.todaySubjectIds, [])
 })
+
+
+test('today subjects follow latest activity while the resumable subject stays first', async () => {
+  const now = new Date(2026, 8, 6, 12).getTime()
+  await Promise.all([
+    setStorage(STORAGE_KEYS.presetKnowledgeDismissed, true),
+    setStorage(STORAGE_KEYS.subjects, ['a', 'b', 'c'].map((id) => ({ id, name: id, createdAt: 1, updatedAt: 1 }))),
+    setStorage(STORAGE_KEYS.reviewSession, {
+      version: 1, filter: { subjectId: 'c' }, startedAt: now, cardIds: ['c-card'], currentIndex: 0,
+    }),
+    setStorage(STORAGE_KEYS.reviewLogs, [
+      { id: 'a-old', cardId: 'a-card', subjectId: 'a', rating: 3, reviewedAt: now - 100 },
+      { id: 'deleted', cardId: 'deleted-card', subjectId: 'deleted', rating: 3, reviewedAt: now },
+      { id: 'b-latest', cardId: 'b-card', subjectId: 'b', rating: 3, reviewedAt: now },
+      { id: 'a-latest', cardId: 'a-card', subjectId: 'a', rating: 3, reviewedAt: now - 1 },
+    ]),
+  ])
+  assert.deepEqual((await getDashboardSnapshot(now)).todaySubjectIds, ['c', 'b', 'a'])
+})

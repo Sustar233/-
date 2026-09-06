@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { onLoad } from '@dcloudio/uni-app'
+import { onLoad, onUnload } from '@dcloudio/uni-app'
+import LoadingState from '@/components/LoadingState.vue'
+import LoadErrorState from '@/components/LoadErrorState.vue'
+import { useAsyncAction } from '@/composables/useAsyncAction'
 import { createCard, getCards, updateCard } from '@/services/cardService'
 import { getChapters, getSubjects } from '@/services/subjectService'
 import type { CardImportance, KnowledgeCard } from '@/types/card'
@@ -13,19 +16,25 @@ const cardId = ref('')
 const subjectId = ref('')
 const chapterId = ref('')
 const parentCardId = ref('')
+const connection = ref('')
 const question = ref('')
 const answer = ref('')
 const tags = ref('')
 const importance = ref<CardImportance>(2)
 const note = ref('')
-const saving = ref(false)
+const { running: saving, run } = useAsyncAction()
 const loading = ref(true)
+const loadError = ref(false)
+const saved = ref(false)
+let returnTimer: ReturnType<typeof setTimeout> | undefined
 
 const subjectNames = computed(() => subjects.value.map((subject) => subject.name))
 const availableChapters = computed(() =>
   chapters.value.filter((chapter) => chapter.subjectId === subjectId.value),
 )
 const chapterNames = computed(() => availableChapters.value.map((chapter) => chapter.name))
+const subjectIndex = computed(() => Math.max(0, subjects.value.findIndex((item) => item.id === subjectId.value)))
+const chapterIndex = computed(() => Math.max(0, availableChapters.value.findIndex((item) => item.id === chapterId.value)))
 const selectedSubjectName = computed(
   () => subjects.value.find((subject) => subject.id === subjectId.value)?.name ?? '请选择科目',
 )
@@ -37,10 +46,12 @@ const parentCandidates = computed(() =>
     .filter((card) => card.subjectId === subjectId.value && card.id !== cardId.value)
     .sort((first, second) => first.createdAt - second.createdAt),
 )
+const chapterNamesById = computed(() => new Map(chapters.value.map((chapter) => [chapter.id, chapter.name])))
+const parentIndex = computed(() => parentCandidates.value.findIndex((card) => card.id === parentCardId.value) + 1)
 const parentOptions = computed(() => [
   '无（作为知识起点）',
   ...parentCandidates.value.map((card) => {
-    const chapter = chapters.value.find((item) => item.id === card.chapterId)?.name ?? '未分类'
+    const chapter = chapterNamesById.value.get(card.chapterId ?? '') ?? '未分类'
     const title = card.question.length > 28 ? `${card.question.slice(0, 28)}…` : card.question
     return `${chapter}｜${title}`
   }),
@@ -53,11 +64,11 @@ const selectedParentName = computed(() => {
 const importanceLabels = ['一般', '重要', '非常重要']
 const pageTitle = computed(() => (cardId.value ? '编辑知识卡' : '添加知识卡'))
 
-onLoad(async (query) => {
+async function load(): Promise<void> {
+  if (saving.value) return
+  loading.value = true
+  loadError.value = false
   try {
-    cardId.value = String(query?.cardId ?? '')
-    subjectId.value = String(query?.subjectId ?? '')
-    chapterId.value = String(query?.chapterId ?? '')
     ;[subjects.value, chapters.value, cards.value] = await Promise.all([
       getSubjects(),
       getChapters(),
@@ -66,36 +77,52 @@ onLoad(async (query) => {
     if (!subjectId.value && subjects.value.length) subjectId.value = subjects.value[0].id
     if (cardId.value) {
       const card = cards.value.find((item) => item.id === cardId.value)
-      if (card) {
-        subjectId.value = card.subjectId
-        chapterId.value = card.chapterId ?? ''
-        parentCardId.value = card.parentCardId ?? ''
-        question.value = card.question
-        answer.value = card.answer
-        tags.value = card.tags.join(', ')
-        importance.value = card.importance
-        note.value = card.note ?? ''
-      }
+      if (!card) throw new Error('知识卡不存在')
+      subjectId.value = card.subjectId
+      chapterId.value = card.chapterId ?? ''
+      parentCardId.value = card.parentCardId ?? ''
+      connection.value = card.connection ?? ''
+      question.value = card.question
+      answer.value = card.answer
+      tags.value = card.tags.join(', ')
+      importance.value = card.importance
+      note.value = card.note ?? ''
     }
     if (!cardId.value && !availableChapters.value.some((chapter) => chapter.id === chapterId.value)) {
       chapterId.value = availableChapters.value[0]?.id ?? ''
     }
     uni.setNavigationBarTitle({ title: pageTitle.value })
+  } catch {
+    loadError.value = true
   } finally {
     loading.value = false
   }
+}
+
+onLoad((query) => {
+  cardId.value = String(query?.cardId ?? '')
+  subjectId.value = String(query?.subjectId ?? '')
+  chapterId.value = String(query?.chapterId ?? '')
+  void load()
 })
+onUnload(() => clearTimeout(returnTimer))
 
 function changeSubject(event: { detail: { value: string | number } }): void {
   const index = Number(event.detail.value)
-  subjectId.value = subjects.value[index]?.id ?? ''
+  const nextSubjectId = subjects.value[index]?.id ?? ''
+  if (nextSubjectId === subjectId.value) return
+  subjectId.value = nextSubjectId
   chapterId.value = chapters.value.find((chapter) => chapter.subjectId === subjectId.value)?.id ?? ''
   parentCardId.value = ''
+  connection.value = ''
 }
 
 function changeParent(event: { detail: { value: string | number } }): void {
   const index = Number(event.detail.value)
-  parentCardId.value = index === 0 ? '' : parentCandidates.value[index - 1]?.id ?? ''
+  const nextParentId = index === 0 ? '' : parentCandidates.value[index - 1]?.id ?? ''
+  if (nextParentId === parentCardId.value) return
+  parentCardId.value = nextParentId
+  connection.value = ''
 }
 
 function changeChapter(event: { detail: { value: string | number } }): void {
@@ -108,7 +135,7 @@ function changeImportance(event: { detail: { value: string | number } }): void {
 }
 
 async function save(): Promise<void> {
-  if (saving.value) return
+  if (saving.value || saved.value || loading.value || loadError.value) return
   if (!subjectId.value) {
     uni.showToast({ title: '请先创建并选择科目', icon: 'none' })
     return
@@ -117,19 +144,12 @@ async function save(): Promise<void> {
     uni.showToast({ title: '请先为知识卡选择章节', icon: 'none' })
     return
   }
-  saving.value = true
-  try {
+  await run(async () => {
     const input = {
       subjectId: subjectId.value,
       chapterId: chapterId.value || undefined,
       parentCardId: parentCardId.value || undefined,
-      connection: parentCardId.value
-        ? chapters.value.find(
-            (chapter) =>
-              chapter.id ===
-              cards.value.find((card) => card.id === parentCardId.value)?.chapterId,
-          )?.name
-        : undefined,
+      connection: connection.value,
       question: question.value,
       answer: answer.value,
       tags: tags.value.split(/[,，]/),
@@ -138,13 +158,10 @@ async function save(): Promise<void> {
     }
     if (cardId.value) await updateCard(cardId.value, input)
     else await createCard(input)
+    saved.value = true
     uni.showToast({ title: '已保存', icon: 'success' })
-    setTimeout(() => uni.navigateBack(), 350)
-  } catch (error) {
-    uni.showToast({ title: (error as Error).message, icon: 'none' })
-  } finally {
-    saving.value = false
-  }
+    returnTimer = setTimeout(() => uni.navigateBack(), 350)
+  })
 }
 </script>
 
@@ -156,18 +173,21 @@ async function save(): Promise<void> {
       <text class="page-subtitle">用清晰的问题和简洁的答案，留下真正值得记住的内容。</text>
     </view>
 
-    <view v-if="!loading && !subjects.length" class="notice surface">
+    <LoadingState v-if="loading" />
+    <LoadErrorState v-else-if="loadError" description="知识卡可能已删除，或数据暂时无法读取。请重试或返回知识库。" @retry="load" />
+    <template v-else>
+    <view v-if="!subjects.length" class="notice surface">
       请先到知识库创建科目，再添加知识卡。
     </view>
 
     <view class="form-card surface">
       <text class="field-label first-label">科目</text>
-      <picker :range="subjectNames" @change="changeSubject">
+      <picker :range="subjectNames" :value="subjectIndex" :disabled="saving || saved" @change="changeSubject">
         <view class="picker-field">{{ selectedSubjectName }}</view>
       </picker>
 
       <text class="field-label">章节</text>
-      <picker :range="chapterNames" @change="changeChapter">
+      <picker :range="chapterNames" :value="chapterIndex" :disabled="!chapterNames.length || saving || saved" @change="changeChapter">
         <view class="picker-field">{{ selectedChapterName }}</view>
       </picker>
       <text v-if="subjectId && !availableChapters.length" class="field-help chapter-help">
@@ -178,10 +198,12 @@ async function save(): Promise<void> {
         <text class="field-label">前置知识</text>
         <text class="path-badge">知识路径</text>
       </view>
-      <picker :range="parentOptions" @change="changeParent">
+      <picker :range="parentOptions" :value="parentIndex" :disabled="saving || saved" @change="changeParent">
         <view class="picker-field path-picker">{{ selectedParentName }}</view>
       </picker>
       <text class="field-help">复习时会先呈现前置知识，再学习当前内容；不选择时按章节录入顺序衔接。</text>
+      <text class="field-label">知识连接说明</text>
+      <input v-model="connection" class="field-input" maxlength="1000" placeholder="与前置知识的关系（可选）" />
 
       <view class="form-divider" />
 
@@ -217,8 +239,9 @@ async function save(): Promise<void> {
         placeholder="来源或页码（可选）"
       />
 
-      <button class="primary-button save-button" :loading="saving" :disabled="saving || loading || !chapterId" @click="save">保存知识卡</button>
+      <button class="primary-button save-button" :loading="saving" :disabled="saving || saved || !chapterId || !question.trim() || !answer.trim()" @click="save">{{ saved ? '已保存' : '保存知识卡' }}</button>
     </view>
+    </template>
   </view>
 </template>
 

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { beforeEach, test } from 'node:test'
-import { getKnowledgeContext, updateCard } from '../src/services/cardService'
+import { getKnowledgeContext, orderCardsByKnowledgePath, updateCard } from '../src/services/cardService'
 import { STORAGE_KEYS } from '../src/storage/keys'
 import { setStorage } from '../src/storage/storage'
 import type { KnowledgeCard } from '../src/types/card'
@@ -110,4 +110,47 @@ test('moving a card between subjects repairs logs and dependent knowledge paths'
     readStored<Array<{ subjectId: string }>>(STORAGE_KEYS.reviewLogs)?.[0]?.subjectId,
     'subject_2',
   )
+})
+
+
+test('editing question or answer preserves the existing study section', async () => {
+  const target = { ...card('sectioned', 1), sectionId: 'section_1', sectionTitle: '第一节' }
+  await setStorage(STORAGE_KEYS.cards, [target])
+  const updated = await updateCard(target.id, {
+    subjectId: target.subjectId, chapterId: target.chapterId,
+    question: '修改后的问题', answer: target.answer,
+  })
+  assert.equal(updated.sectionId, 'section_1')
+  assert.equal(updated.sectionTitle, '第一节')
+  assert.equal(readStored<KnowledgeCard[]>(STORAGE_KEYS.cards)?.find((item) => item.id === target.id)?.sectionId, 'section_1')
+})
+
+test('section metadata can still be explicitly cleared', async () => {
+  const target = { ...card('sectioned', 1), sectionId: 'section_1', sectionTitle: '第一节' }
+  await setStorage(STORAGE_KEYS.cards, [target])
+  const updated = await updateCard(target.id, {
+    subjectId: target.subjectId, chapterId: target.chapterId,
+    question: target.question, answer: target.answer, sectionId: '', sectionTitle: '',
+  })
+  assert.equal(updated.sectionId, undefined)
+  assert.equal(updated.sectionTitle, undefined)
+})
+
+test('deep knowledge paths sort without overflowing the call stack or mutating input', () => {
+  const cards = Array.from({ length: 20000 }, (_, index) => card(String(index), index, index ? String(index - 1) : undefined)).reverse()
+  const ordered = orderCardsByKnowledgePath(cards)
+  assert.equal(ordered.length, cards.length)
+  assert.ok(ordered.every((item, index) => item.id === String(index)))
+  assert.equal(cards[0].id, '19999')
+})
+
+test('cyclic and missing prerequisites terminate and include every selected card once', () => {
+  const cards = [card('a', 1, 'b'), card('b', 2, 'a'), card('c', 3, 'missing')]
+  assert.deepEqual(orderCardsByKnowledgePath(cards).map((item) => item.id), ['b', 'a', 'c'])
+  assert.deepEqual(orderCardsByKnowledgePath([cards[0]], cards).map((item) => item.id), ['a'])
+})
+
+test('zero-depth context does not accidentally return every earlier legacy card', () => {
+  const cards = [card('a', 1), card('b', 2)]
+  assert.deepEqual(getKnowledgeContext(cards[1], cards, 0), [])
 })
